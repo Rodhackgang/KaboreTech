@@ -21,7 +21,6 @@ const os = require('os');
 const { GridFSBucket } = require('mongodb');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 
 let gridFSBucketVideo;
 let gridFSBucketImage;
