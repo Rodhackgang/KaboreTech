@@ -83,7 +83,7 @@ export default AppHeader;
 
 const styles = StyleSheet.create({
 	header: {
-	  height: 50,
+	  height: 70,
 	  elevation: 20,
 	  shadowColor: 'rgba(0, 0, 0, 0.2)',
 	  shadowOffset: { width: 0, height: 2 },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
 	  alignItems: 'center',
 	  flexDirection: 'row',
 	  paddingHorizontal: 5,
-	  paddingTop: 0, // Add this line to give some space from the top
+	  paddingTop: 20, // Add this line to give some space from the top
 	  borderBottomLeftRadius: 8,
 	  borderBottomRightRadius: 8,
 	},

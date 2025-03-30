@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Alert, BackHandler, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon, { Icons } from '../components/Icons';
 import Colors from '../constants/Colors';
 import * as Animatable from 'react-native-animatable';
@@ -40,8 +40,8 @@ const TabArr = [
     route: 'Energie Solaire',
     label: 'Energie Solaire',
     type: Icons.MaterialCommunityIcons,
-    activeIcon: 'solar-panel',
-    inActiveIcon: 'solar-panel',
+    activeIcon: 'solar-power',
+    inActiveIcon: 'lightning-bolt',
     component: Energie,
   },
   {
@@ -61,7 +61,13 @@ const TabArr = [
     component: Seeting, // Remplacer par le composant de service spécifique
   }
 ];
-
+/*
+isVIPInformatique= false
+isVIPMarketing= false
+isVIPEnergie=false
+isVIPReparation=false
+haveAccount=false
+*/
 
 const Tab = createBottomTabNavigator();
 
@@ -92,33 +98,7 @@ const TabButton = (props) => {
 };
 
 const Home = () => {
-  useEffect(() => {
-    const handleBackPress = () => {
-      Alert.alert(
-        'Confirmation',
-        'Voulez-vous vraiment quitter l\'application ?',
-        [
-          {
-            text: 'Annuler',
-            onPress: () => null,
-            style: 'cancel',
-          },
-          {
-            text: 'Oui',
-            onPress: () => BackHandler.exitApp(), // Fermer l'application
-          },
-        ],
-        { cancelable: false }
-      );
-      return true; // Empêche la fermeture immédiate de l'application
-    };
 
-    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-
-    return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
-    };
-  }, []);
 
   return (
     <Tab.Navigator
