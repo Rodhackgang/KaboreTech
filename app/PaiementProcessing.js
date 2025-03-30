@@ -44,7 +44,7 @@ const PaiementProcessing = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://192.168.1.82:3000/api/paiement', {
+      const response = await axios.post('https://kabore.pinetpi.fr/api/paiement', {
         phone: userPhone,
         numDepot,
         domaine: category,

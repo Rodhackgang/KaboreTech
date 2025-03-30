@@ -59,7 +59,7 @@ const Login = () => {
     setLoading(true);
   
     try {
-      const response = await axios.post('http://192.168.1.82:3000/api/login', loginData, {
+      const response = await axios.post('https://kabore.pinetpi.fr/api/login', loginData, {
         headers: {
           'Content-Type': 'application/json',
         },

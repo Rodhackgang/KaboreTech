@@ -142,7 +142,7 @@ const Seeting = ({ navigation }) => {
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
-        const response = await fetch('http://192.168.1.82:3000/api/vip-status?phone=' + userInfo.phoneNumber);
+        const response = await fetch('https://kabore.pinetpi.fr/api/vip-status?phone=' + userInfo.phoneNumber);
         const data = await response.json();
         console.log('VIP status data:', data); // Ajoutez cette ligne pour vérifier les données
         if (data.vipDomains) {

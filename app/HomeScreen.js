@@ -19,7 +19,7 @@ const HomeScreen = ({ navigation }) => {
   // Fonction pour récupérer les catégories depuis l'API et les stocker dans AsyncStorage
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://192.168.1.82:3000/api/videos');
+      const response = await fetch('https://kabore.pinetpi.fr/api/videos');
       const data = await response.json();
 
       // Sauvegarder les données dans AsyncStorage
@@ -59,7 +59,7 @@ const HomeScreen = ({ navigation }) => {
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch('http://192.168.1.82:3000/api/vip-status?phone=' + userInfo.phoneNumber);
+      const response = await fetch('https://kabore.pinetpi.fr/api/vip-status?phone=' + userInfo.phoneNumber);
       const data = await response.json();
       if (data.vipDomains) {
         const updatedVipStatus = {
@@ -103,7 +103,7 @@ const HomeScreen = ({ navigation }) => {
 
   // Fonction pour construire l'URL des images à partir de l'ID
   const getImageUrl = (imagePath) => {
-    return `http://192.168.1.82:3000${imagePath}`; // L'URL de l'image commence par "/api/image/", donc vous devez concaténer l'URL de base.
+    return `https://kabore.pinetpi.fr${imagePath}`; // L'URL de l'image commence par "/api/image/", donc vous devez concaténer l'URL de base.
   };
   const loadVipStatus = async () => {
     const vipInformatique = await AsyncStorage.getItem('isVIPInformatique') === 'true';
