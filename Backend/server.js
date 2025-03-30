@@ -151,8 +151,8 @@ Votre compte est en attente de validation.
 ${formationsMessage}
 
 Nos coordonnées de paiement :
-➡ Orange Money : +226 07 00 00 00
-➡ Moov Money : +226 01 00 00 00
+➡ Orange Money : +226 74 39 19 80
+➡ Moov Money : +226 02 18 04 25
 
 Cordialement,
 *Kabore Tech*
