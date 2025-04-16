@@ -19,28 +19,38 @@ const Paiement = () => {
 
     const handlePayment = async () => {
         try {
-            const hasAccount = await AsyncStorage.getItem('haveAccount');
-            
-            if (hasAccount === 'true') {
-                navigation.navigate('PaiementProcessing', {
-                    category: categoryName,
-                    mode: selectedMode,
-                    price: categoryPrices[categoryName][selectedMode]
-                });
-            } else {
-                navigation.navigate('Register', {
-                    redirectTo: 'Paiement',
-                    params: {
-                        categoryName: categoryName,
-                        selectedMode: selectedMode
-                    }
-                });
-            }
+          const hasAccount = await AsyncStorage.getItem("haveAccount");
+      
+          if (hasAccount === "true") {
+            // Afficher les informations envoyées en paramètre dans la console
+            console.log("Paramètres envoyés : ");
+            console.log({
+              category: categoryName,
+              mode: selectedMode,
+              price: categoryPrices[categoryName][selectedMode],
+            });
+      
+            // On navigue vers la page de traitement du paiement en passant les paramètres appropriés
+            navigation.navigate("PaiementProcessing", {
+              category: categoryName,
+              mode: selectedMode,
+              price: categoryPrices[categoryName][selectedMode],
+            });
+          } else {
+            // Si l'utilisateur n'a pas de compte, on le redirige vers la page d'inscription
+            navigation.navigate("Register", {
+              redirectTo: "Paiement",
+              params: {
+                categoryName: categoryName,
+                selectedMode: selectedMode,
+              },
+            });
+          }
         } catch (error) {
-            console.error('Erreur de vérification du compte:', error);
+          console.error("Erreur de vérification du compte:", error);
         }
-    };
-
+      };
+      
     if (!categoryName) {
         return (
             <View style={styles.container}>

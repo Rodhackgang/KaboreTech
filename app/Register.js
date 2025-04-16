@@ -83,7 +83,7 @@ const Register = () => {
         setLoading(true);  // Commence le chargement
 
         try {
-            const response = await axios.post('https://kabore.pinetpi.fr/register', userData, {
+            const response = await axios.post('http://192.168.1.82:8000/register', userData, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

@@ -13,66 +13,70 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const PaiementProcessing = () => {
   const [numDepot, setNumDepot] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [category, setCategory] = useState('');
-  const [mode, setMode] = useState('');
-  const [price, setPrice] = useState('');
   const [userPhone, setUserPhone] = useState('');
+  const [selectedPart, setSelectedPart] = useState('');  // State to store selected part
   const navigation = useNavigation();
+  const route = useRoute();
 
+  // Récupérer les paramètres passés
+  const { category, mode, price } = route.params;  // part is removed as we will select it
+
+  // Charger les données utilisateur (ex : téléphone)
   const loadUserData = async () => {
     try {
       const phone = await AsyncStorage.getItem('userPhone');
-      if (phone) setUserPhone(phone);
+      if (phone) setUserPhone(phone); // Récupérer le téléphone et l'ajouter à l'état
     } catch (error) {
       console.error('Erreur lors du chargement du téléphone:', error);
     }
   };
 
-  useEffect(() => { loadUserData(); }, []);
+  useEffect(() => {
+    loadUserData();
+  }, []);
 
+  // Handle the submission of the form and make the API request
   const handleVerification = async () => {
     if (!numDepot) {
       Alert.alert('Erreur', 'Veuillez entrer un numéro de dépôt');
       return;
     }
 
+    if (!selectedPart) {
+      Alert.alert('Erreur', 'Veuillez sélectionner une partie');
+      return;
+    }
+
+    // Envoie la requête POST avec les données nécessaires
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://kabore.pinetpi.fr/api/paiement', {
-        phone: userPhone,
-        numDepot,
-        domaine: category,
-        mode,
-        price,
+      const response = await axios.post('http://192.168.1.82:8000/api/paiement', {
+        phone: userPhone,         // Le numéro de téléphone récupéré
+        numDepot,                 // Le numéro de dépôt
+        domaine: category,        // Catégorie (Informatique, Marketing, etc.)
+        part: selectedPart,       // La partie sélectionnée
+        mode,                     // Mode (présentiel ou ligne)
+        price,                    // Prix
       });
 
+      // Affiche la réponse du serveur en cas de succès
       Alert.alert('Succès', response.data.message || 'Paiement vérifié !', [{
         text: 'OK',
         onPress: () => navigation.navigate('Home'),
       }]);
     } catch (error) {
+      // Gère l'erreur si quelque chose ne va pas
       Alert.alert('Erreur', 'Échec de la vérification du dépôt');
       console.error(error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Réinitialise l'état de chargement
     }
-  };
-
-  const handleModeChange = (selectedMode) => {
-    setMode(selectedMode);
-    const prices = {
-      Marketing: { presentiel: '30 000 🪙', ligne: '20 000 🪙' },
-      Informatique: { presentiel: '45 000 🪙', ligne: '30 000 🪙' },
-      Energie: { presentiel: '45 000 🪙', ligne: '30 000 🪙' },
-      Reparation: { presentiel: '45 000 🪙', ligne: '30 000 🪙' },
-    };
-    setPrice(prices[category]?.[selectedMode] || '');
   };
 
   return (
@@ -104,35 +108,51 @@ const PaiementProcessing = () => {
           />
         </View>
 
-        <CategorySelector 
-          categories={categoriesData} 
-          selected={category} 
-          onSelect={setCategory} 
-        />
+        {/* Afficher les informations de la catégorie, du mode, et du prix */}
+        <View style={styles.infoRow}>
+          <Text style={styles.infoText}>Catégorie : {category}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoText}>Mode : {mode}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoText}>Prix : {price}</Text>
+        </View>
 
-        <View style={styles.modeGrid}>
-          <ModeCard
-            icon="school"
-            label="Présentiel"
-            selected={mode === 'presentiel'}
-            onPress={() => handleModeChange('presentiel')}
-            price={category ? (category === 'Marketing' ? '30 000 🪙' : '45 000 🪙') : ''}
-          />
-
-          <ModeCard
-            icon="web"
-            label="En ligne"
-            selected={mode === 'ligne'}
-            onPress={() => handleModeChange('ligne')}
-            price={category ? (category === 'Marketing' ? '20 000 🪙' : '30 000 🪙') : ''}
-          />
+        {/* Sélectionner la partie */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Sélectionnez la partie :</Text>
+          <TouchableOpacity
+            style={styles.partButton}
+            onPress={() => setSelectedPart('Hardware')}
+          >
+            <Text style={styles.partText}>Hardware</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.partButton}
+            onPress={() => setSelectedPart('Software')}
+          >
+            <Text style={styles.partText}>Software</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.partButton}
+            onPress={() => setSelectedPart('Social')}
+          >
+            <Text style={styles.partText}>Social</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.partButton}
+            onPress={() => setSelectedPart('Content')}
+          >
+            <Text style={styles.partText}>Content</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       <TouchableOpacity
-        style={[styles.button, (!category || !mode) && styles.disabledButton]}
+        style={[styles.button, !numDepot && styles.disabledButton]}
         onPress={handleVerification}
-        disabled={isLoading || !category || !mode}
+        disabled={isLoading || !numDepot || !selectedPart}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" />
@@ -145,47 +165,6 @@ const PaiementProcessing = () => {
     </ScrollView>
   );
 };
-
-const ModeCard = ({ icon, label, selected, onPress, price }) => (
-  <TouchableOpacity
-    style={[styles.modeCard, selected && styles.selectedModeCard]}
-    onPress={onPress}
-  >
-    <Icon name={icon} size={30} color="#6C63FF" />
-    <Text style={styles.modeLabel}>{label}</Text>
-    {price && <Text style={styles.modePrice}>{price}</Text>}
-  </TouchableOpacity>
-);
-
-const CategorySelector = ({ categories, selected, onSelect }) => (
-  <View style={styles.categoryContainer}>
-    {categories.map((cat) => (
-      <TouchableOpacity
-        key={cat.id}
-        style={[
-          styles.categoryButton,
-          selected === cat.value && styles.selectedCategory
-        ]}
-        onPress={() => onSelect(cat.value)}
-      >
-        <Icon name={cat.icon} size={24} color={selected === cat.value ? '#fff' : '#6C63FF'} />
-        <Text style={[
-          styles.categoryText,
-          selected === cat.value && styles.selectedCategoryText
-        ]}>
-          {cat.label}
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
-
-const categoriesData = [
-  { id: 1, label: 'Informatique', value: 'Informatique', icon: 'computer' },
-  { id: 2, label: 'Marketing', value: 'Marketing', icon: 'trending-up' },
-  { id: 3, label: 'Energie', value: 'Energie', icon: 'wb-sunny' },
-  { id: 4, label: 'Réparation', value: 'Reparation', icon: 'build' },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -235,94 +214,38 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 10,
   },
-  inputIcon: {
-    marginHorizontal: 15,
-  },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
     color: '#2C3E50',
   },
-  phoneInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 15,
-    marginVertical: 10,
-  },
-  phoneInputText: {
+  label: {
     fontSize: 16,
-    color: '#2C3E50',
-    marginLeft: 10,
-    paddingVertical: 15,
-  },
-  phoneInput: {
-    flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: '#2C3E50',
-    paddingHorizontal: 10,
-  },
-  categoryContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-  },
-  categoryButton: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderRadius: 12,
-    backgroundColor: '#F8F9FA',
-    marginVertical: 5,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  selectedCategory: {
-    backgroundColor: '#6C63FF',
-    borderColor: '#6C63FF',
-  },
-  categoryText: {
-    marginLeft: 10,
-    fontSize: 14,
     fontWeight: '500',
     color: '#2C3E50',
+    marginBottom: 5,
   },
-  selectedCategoryText: {
-    color: '#fff',
+  partButton: {
+    padding: 10,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 10,
+    marginVertical: 5,
+    alignItems: 'center',
   },
-  modeGrid: {
+  partText: {
+    fontSize: 16,
+    color: '#2C3E50',
+  },
+  infoRow: {
+    marginVertical: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 15,
   },
-  modeCard: {
-    width: '48%',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 15,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  selectedModeCard: {
-    borderColor: '#6C63FF',
-    backgroundColor: '#F0EDFF',
-  },
-  modeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2C3E50',
-    marginTop: 10,
-  },
-  modePrice: {
+  infoText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#6C63FF',
-    marginTop: 5,
+    fontWeight: '500',
+    color: '#2C3E50',
   },
   button: {
     backgroundColor: '#6C63FF',

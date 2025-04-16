@@ -10,7 +10,7 @@ const Repair = ({ navigation }) => {
   const [isVIP, setIsVIP] = useState(false);
   const [categories, setCategories] = useState([]);
   const getImageUrl = (imagePath) => {
-    return `https://kabore.pinetpi.fr${imagePath}`;
+    return `http://192.168.1.82:8000${imagePath}`;
   };
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const Repair = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <MyHeader
-        title="Formation Réparation"
+        title="Formation GSM"
       />
       <TextInput
         style={styles.searchInput}

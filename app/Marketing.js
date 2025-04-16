@@ -8,9 +8,13 @@ const Marketing = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [isVIP, setIsVIP] = useState(false);
+  const [vipStatus, setVipStatus] = useState({
+    Marketing: { social: false, content: false }
+  });
   const [categories, setCategories] = useState([]);
+  
   const getImageUrl = (imagePath) => {
-    return `https://kabore.pinetpi.fr${imagePath}`;
+    return `http://192.168.1.82:8000${imagePath}`;
   };
 
   useEffect(() => {
@@ -31,9 +35,18 @@ const Marketing = ({ navigation }) => {
           console.log('Aucune donnée trouvée en cache.');
         }
 
-        // Charger l'état VIP depuis AsyncStorage
+        // Charger l'état VIP pour Marketing depuis AsyncStorage
         const vipStatus = await AsyncStorage.getItem('isVIPMarketing');
         setIsVIP(vipStatus === 'true');
+
+        // Charger le statut VIP pour les parts (social, content)
+        const vipStatusParts = {
+          Marketing: {
+            social: (await AsyncStorage.getItem('isVIPMarketingSocial')) === 'true',
+            content: (await AsyncStorage.getItem('isVIPMarketingContent')) === 'true'
+          }
+        };
+        setVipStatus(vipStatusParts);
       } catch (error) {
         console.error('Erreur de chargement des données:', error);
       }
@@ -57,9 +70,37 @@ const Marketing = ({ navigation }) => {
     }
   };
 
-  const renderCard = (video, index) => {
-    const isAccessible = !video.isPaid || isVIP;
+  const refreshData = async () => {
+    // Rafraîchir les données en récupérant les dernières informations de AsyncStorage
+    try {
+      const cachedData = await AsyncStorage.getItem('categoriesData');
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setCategories(parsedData);
 
+        // Filtrer la catégorie Marketing uniquement
+        const marketingCategory = parsedData.find(category => category.name === 'Marketing');
+        if (marketingCategory) {
+          setFilteredVideos(marketingCategory.videos);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement des données:', error);
+    }
+  };
+
+  // Vérifier l'accès en fonction du statut VIP pour les parts
+  const getPartVIPStatus = (part) => {
+    return vipStatus.Marketing?.[part] || false;
+  };
+
+  const renderCard = (video, index) => {
+    // Déterminer l'état d'accès pour chaque part de la vidéo
+    const isSocialVIP = getPartVIPStatus('social');
+    const isContentVIP = getPartVIPStatus('content');
+
+    const isAccessible = !video.isPaid || (isSocialVIP && video.part === 'social') || (isContentVIP && video.part === 'content');
+    
     return (
       <View
         style={[
@@ -112,6 +153,12 @@ const Marketing = ({ navigation }) => {
         renderItem={({ item, index }) => renderCard(item, index)}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={refreshData} // Rafraîchissement des données locales
+          />
+        }
       />
     </View>
   );

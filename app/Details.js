@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system'; // Pour la gestion des fichiers
 
-const BASE_URL = "https://kabore.pinetpi.fr";  // Remplacez par l'URL de votre API
+const BASE_URL = "http://192.168.1.82:8000";  // Remplacez par l'URL de votre API
 
 const Details = () => {
   const route = useRoute();

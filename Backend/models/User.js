@@ -14,19 +14,36 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  isVIPInformatique: { 
+  // Abonnements VIP pour chaque partie spécifique
+  isInformatiqueHardware: { 
     type: Boolean, 
     default: false 
   },
-  isVIPMarketing: { 
+  isInformatiqueSoftware: { 
     type: Boolean, 
     default: false 
   },
-  isVIPEnergie: { 
+  isBureautiqueHardware: { 
     type: Boolean, 
     default: false 
   },
-  isVIPReparation: { 
+  isBureautiqueSoftware: { 
+    type: Boolean, 
+    default: false 
+  },
+  isMarketingSocial: { 
+    type: Boolean, 
+    default: false 
+  },
+  isMarketingContent: { 
+    type: Boolean, 
+    default: false 
+  },
+  isVIPGsmHardware: { 
+    type: Boolean, 
+    default: false 
+  },
+  isVIPGsmSoftware: { 
     type: Boolean, 
     default: false 
   },

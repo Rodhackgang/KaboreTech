@@ -8,11 +8,14 @@ const Informatique = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredVideos, setFilteredVideos] = useState([]);
   const [isVIP, setIsVIP] = useState(false);
+  const [vipStatus, setVipStatus] = useState({
+    Informatique: { hardware: false, software: false }
+  });
   const [categories, setCategories] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const getImageUrl = (imagePath) => {
-    return `https://kabore.pinetpi.fr${imagePath}`;
+    return `http://192.168.1.82:8000${imagePath}`;
   };
 
   useEffect(() => {
@@ -33,9 +36,18 @@ const Informatique = ({ navigation }) => {
           console.log('Aucune donnée trouvée en cache.');
         }
 
-        // Charger l'état VIP depuis AsyncStorage
+        // Charger l'état VIP pour Informatique depuis AsyncStorage
         const vipStatus = await AsyncStorage.getItem('isVIPInformatique');
         setIsVIP(vipStatus === 'true');
+
+        // Charger le statut VIP pour les parts (hardware, software)
+        const vipStatusParts = {
+          Informatique: {
+            hardware: (await AsyncStorage.getItem('isVIPInformatiqueHardware')) === 'true',
+            software: (await AsyncStorage.getItem('isVIPInformatiqueSoftware')) === 'true'
+          }
+        };
+        setVipStatus(vipStatusParts);
       } catch (error) {
         console.error('Erreur de chargement des données:', error);
       }
@@ -75,8 +87,18 @@ const Informatique = ({ navigation }) => {
     setIsRefreshing(false);
   };
 
+  // Vérifier l'accès en fonction du statut VIP pour les parts
+  const getPartVIPStatus = (part) => {
+    return vipStatus.Informatique?.[part] || false;
+  };
+
   const renderCard = (video, index) => {
-    const isAccessible = !video.isPaid || isVIP;
+    // Déterminer l'état d'accès pour chaque part de la vidéo
+    const isHardwareVIP = getPartVIPStatus('hardware');
+    const isSoftwareVIP = getPartVIPStatus('software');
+
+    const isAccessible = !video.isPaid || (isHardwareVIP && video.part === 'hardware') || (isSoftwareVIP && video.part === 'software');
+    
     return (
       <View
         style={[

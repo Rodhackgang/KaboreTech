@@ -7,9 +7,9 @@ import * as Animatable from 'react-native-animatable';
 import HomeScreen from './HomeScreen';
 import Informatique from './Informatique';
 import Marketing from './Marketing';
-import Energie from './Energie';
 import Repair from './Repair';
 import Seeting from './Seeting';
+import Bureautique from './Bureautique';
 
 const TabArr = [
   {
@@ -29,6 +29,14 @@ const TabArr = [
     component: Informatique,
   },
   {
+    route: 'Bureautique',
+    label: 'Bureautique',
+    type: Icons.MaterialCommunityIcons,
+    activeIcon: 'folder-account',
+    inActiveIcon: 'folder-account-outline',
+    component: Bureautique,
+  },
+  {
     route: 'Marketing Digital',
     label: 'Marketing',
     type: Icons.MaterialCommunityIcons,
@@ -37,19 +45,11 @@ const TabArr = [
     component: Marketing,
   },
   {
-    route: 'Energie Solaire',
-    label: 'Energie Solaire',
-    type: Icons.MaterialCommunityIcons,
-    activeIcon: 'solar-power',
-    inActiveIcon: 'lightning-bolt',
-    component: Energie,
-  },
-  {
-    route: 'Réparation Téléphones',
+    route: 'Formation GSM',
     label: 'Réparation',
     type: Icons.MaterialCommunityIcons,
     activeIcon: 'cellphone',
-    inActiveIcon: 'cellphone',
+    inActiveIcon: 'cellphone-off',
     component: Repair,
   },
   {
@@ -61,11 +61,16 @@ const TabArr = [
     component: Seeting, // Remplacer par le composant de service spécifique
   }
 ];
+
 /*
-isVIPInformatique= false
-isVIPMarketing= false
-isVIPEnergie=false
-isVIPReparation=false
+isVIPInformatiqueHardware= false
+isVIPInformatiqueSoftware= false
+isVIPMarketingSocial= false
+isVIPMarketingContenu= false
+isVIPBureautiquePartone =false
+isVIPBureautiqueParttwo =false
+isVIPgsmHardware=false
+isVIPgsmSoftware=false
 haveAccount=false
 */
 

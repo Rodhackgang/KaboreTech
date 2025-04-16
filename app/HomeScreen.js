@@ -4,82 +4,91 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyHeader from '../components/MyHeader';
 import Colors from '../constants/Colors';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ route, navigation }) => {
   const [expandedCategory, setExpandedCategory] = useState(null);
-  const [isVIPInformatique, setIsVIPInformatique] = useState(false);
-  const [isVIPMarketing, setIsVIPMarketing] = useState(false);
-  const [isVIPEnergie, setIsVIPEnergie] = useState(false);
-  const [isVIPReparation, setIsVIPReparation] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    phoneNumber: ''
+  const [vipStatus, setVipStatus] = useState({
+    Informatique: { hardware: false, software: false },
+    Marketing: { social: false, content: false },
+    GSM: { hardware: false, software: false }
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // Fonction pour récupérer les catégories depuis l'API et les stocker dans AsyncStorage
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('https://kabore.pinetpi.fr/api/videos');
-      const data = await response.json();
-
-      // Sauvegarder les données dans AsyncStorage
-      await AsyncStorage.setItem('categoriesData', JSON.stringify(data));
-
-      // Mettre à jour l'état avec les catégories récupérées
-      setCategories(data);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des catégories:', error);
-    }
-  };
-
-  // Charger les catégories depuis le cache (AsyncStorage)
   const loadCategoriesFromCache = async () => {
     try {
       const cachedData = await AsyncStorage.getItem('categoriesData');
       if (cachedData) {
-        setCategories(JSON.parse(cachedData)); // Charger les données du cache
+        setCategories(JSON.parse(cachedData));
       } else {
-        fetchCategories(); // Si pas de cache, charger depuis l'API
+        fetchCategories();
       }
     } catch (error) {
-      console.error('Erreur lors de la lecture du cache:', error);
+      console.error('Error loading categories from cache:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('http://192.168.1.82:8000/api/videos');
+      const data = await response.json();
+      await AsyncStorage.setItem('categoriesData', JSON.stringify(data));
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
   useEffect(() => {
-    // Vérifier si les données sont déjà stockées dans le cache
     loadCategoriesFromCache();
   }, []);
 
-  const getVIPStatus = async (key) => {
-    const value = await AsyncStorage.getItem(key);
-    return value === 'true';
+  const loadVipStatus = async () => {
+    try {
+      const vipStatusFromStorage = {
+        Informatique: {
+          hardware: (await AsyncStorage.getItem('isVIPInformatiqueHardware')) === 'true',
+          software: (await AsyncStorage.getItem('isVIPInformatiqueSoftware')) === 'true'
+        },
+        Marketing: {
+          social: (await AsyncStorage.getItem('isVIPMarketingSocial')) === 'true',
+          content: (await AsyncStorage.getItem('isVIPMarketingContent')) === 'true'
+        },
+        GSM: {
+          hardware: (await AsyncStorage.getItem('isVIPGsmHardware')) === 'true',
+          software: (await AsyncStorage.getItem('isVIPGsmSoftware')) === 'true'
+        }
+      };
+      setVipStatus(vipStatusFromStorage);
+    } catch (error) {
+      console.error('Error loading VIP status:', error);
+    }
   };
+
+  useEffect(() => {
+    loadVipStatus();
+  }, []);
 
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch('https://kabore.pinetpi.fr/api/vip-status?phone=' + userInfo.phoneNumber);
+      const response = await fetch('http://192.168.1.82:8000/api/vip-status?phone=' + route.params?.phone);
       const data = await response.json();
+
       if (data.vipDomains) {
         const updatedVipStatus = {
-          Informatique: data.vipDomains.includes('Informatique'),
-          Marketing: data.vipDomains.includes('Marketing'),
-          Energie: data.vipDomains.includes('Energie'),
-          Reparation: data.vipDomains.includes('Réparation')
+          Informatique: { hardware: data.vipDomains.includes('Informatique Hardware'), software: data.vipDomains.includes('Informatique Software') },
+          Marketing: { social: data.vipDomains.includes('Marketing Social'), content: data.vipDomains.includes('Marketing Content') },
+          GSM: { hardware: data.vipDomains.includes('GSM Hardware'), software: data.vipDomains.includes('GSM Software') }
         };
 
-        // Mise à jour des statuts VIP dans AsyncStorage
-        await AsyncStorage.setItem('isVIPInformatique', updatedVipStatus.Informatique.toString());
-        await AsyncStorage.setItem('isVIPMarketing', updatedVipStatus.Marketing.toString());
-        await AsyncStorage.setItem('isVIPEnergie', updatedVipStatus.Energie.toString());
-        await AsyncStorage.setItem('isVIPReparation', updatedVipStatus.Reparation.toString());
+        setVipStatus(updatedVipStatus);
 
-        // Mettre à jour l'état local
-        setIsVIPInformatique(updatedVipStatus.Informatique);
-        setIsVIPMarketing(updatedVipStatus.Marketing);
-        setIsVIPEnergie(updatedVipStatus.Energie);
-        setIsVIPReparation(updatedVipStatus.Reparation);
+        // Update AsyncStorage
+        for (const category in updatedVipStatus) {
+          for (const part in updatedVipStatus[category]) {
+            await AsyncStorage.setItem(`isVIP${category}${capitalize(part)}`, updatedVipStatus[category][part].toString());
+          }
+        }
       }
     } catch (error) {
       console.error('Error refreshing VIP status:', error);
@@ -87,80 +96,42 @@ const HomeScreen = ({ navigation }) => {
     setIsRefreshing(false);
   };
 
-  const getCategoryVIPStatus = useCallback((categoryId) => {
-    switch (categoryId) {
-      case 'Informatique': return isVIPInformatique;
-      case 'Marketing': return isVIPMarketing;
-      case 'Energie': return isVIPEnergie;
-      case 'Réparation': return isVIPReparation;
-      default: return false;
-    }
-  }, [isVIPInformatique, isVIPMarketing, isVIPEnergie, isVIPReparation]);
+  const getPartVIPStatus = useCallback((categoryId, part) => {
+    return vipStatus[categoryId]?.[part] || false;
+  }, [vipStatus]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
-  // Fonction pour construire l'URL des images à partir de l'ID
-  const getImageUrl = (imagePath) => {
-    return `https://kabore.pinetpi.fr${imagePath}`; // L'URL de l'image commence par "/api/image/", donc vous devez concaténer l'URL de base.
-  };
-  const loadVipStatus = async () => {
-    const vipInformatique = await AsyncStorage.getItem('isVIPInformatique') === 'true';
-    const vipMarketing = await AsyncStorage.getItem('isVIPMarketing') === 'true';
-    const vipEnergie = await AsyncStorage.getItem('isVIPEnergie') === 'true';
-    const vipReparation = await AsyncStorage.getItem('isVIPReparation') === 'true';
-  
-    setIsVIPInformatique(vipInformatique);
-    setIsVIPMarketing(vipMarketing);
-    setIsVIPEnergie(vipEnergie);
-    setIsVIPReparation(vipReparation);
-  };
-  useEffect(() => {
-    loadCategoriesFromCache();
-    loadVipStatus();  // Ajouté pour charger les statuts VIP
-  }, []);
-    
+  const getImageUrl = (imagePath) => `http://192.168.1.82:8000${imagePath}`;
+
   const renderCard = (video) => {
-    const isVIP = video.categoryId === 'Informatique' ? isVIPInformatique :
-    video.categoryId === 'Marketing' ? isVIPMarketing :
-    video.categoryId === 'Energie' ? isVIPEnergie :
-    video.categoryId === 'Réparation' ? isVIPReparation : false;
-
-const effectiveIsFree = isVIP || !video.isPaid;
-const buttonText = effectiveIsFree ? 'Visionner' : 'S\'abonner'; // "Visionner" si VIP ou gratuit, sinon "S'abonner"
-
+    const isVIP = getPartVIPStatus(video.categoryId, video.part) || !video.isPaid;
+    const buttonText = isVIP ? 'Visionner' : 'S\'abonner';
 
     return (
-      <View style={[styles.card, effectiveIsFree ? styles.cardFree : styles.cardPaid]} key={video.id}>
+      <View style={[styles.card, isVIP ? styles.cardFree : styles.cardPaid]} key={video.id}>
         <Image source={{ uri: getImageUrl(video.image) }} style={styles.cardImage} />
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>{video.title}</Text>
-          <Text style={[styles.cardPrice, effectiveIsFree ? styles.cardPriceFree : styles.cardPricePaid]}>
-            {effectiveIsFree ? 'Gratuit' : 'Payant'}
+          <Text style={[styles.cardPrice, isVIP ? styles.cardPriceFree : styles.cardPricePaid]}>
+            {isVIP ? 'Gratuit' : 'Payant'}
           </Text>
+          <Text style={styles.partTag}>{video.part}</Text>
           <TouchableOpacity
-            style={[styles.toggleButton, effectiveIsFree ? styles.toggleButtonFree : styles.toggleButtonPaid]}
+            style={[styles.toggleButton, isVIP ? styles.toggleButtonFree : styles.toggleButtonPaid]}
             onPress={() => {
-              console.log({
-                title: video.details.title,
-                videoLink: video.details.video,
-                description: video.details.description,
-                categoryId: video.categoryId,
-                isPaid: !effectiveIsFree,
-              });
               navigation.navigate('Details', {
                 title: video.details.title,
                 videoLink: video.details.video,
                 description: video.details.description,
                 categoryId: video.categoryId,
-                isPaid: !effectiveIsFree,
+                isPaid: !isVIP,
               });
             }}
           >
-            <Text style={styles.toggleButtonText}>
-            {buttonText}
-            </Text>
+            <Text style={styles.toggleButtonText}>{buttonText}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -188,9 +159,7 @@ const buttonText = effectiveIsFree ? 'Visionner' : 'S\'abonner'; // "Visionner" 
 
   return (
     <View style={styles.container}>
-      <MyHeader
-        title="Toutes les formations"
-      />
+      <MyHeader title="Toutes les formations" />
       <FlatList
         data={categories}
         renderItem={({ item }) => renderCategory(item)}
@@ -200,8 +169,8 @@ const buttonText = effectiveIsFree ? 'Visionner' : 'S\'abonner'; // "Visionner" 
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={async () => {
-              await fetchCategories(); // Rafraîchissement de l'API
-              refreshVipStatus(); // Rafraîchissement des statuts VIP
+              await fetchCategories();
+              refreshVipStatus();
             }}
           />
         }
@@ -209,6 +178,8 @@ const buttonText = effectiveIsFree ? 'Visionner' : 'S\'abonner'; // "Visionner" 
     </View>
   );
 };
+
+const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
 const styles = StyleSheet.create({
   container: {
@@ -306,6 +277,12 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontWeight: 'bold',
     textTransform: 'uppercase',
+  },
+  partTag: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
 });
 

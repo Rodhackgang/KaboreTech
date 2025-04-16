@@ -56,37 +56,47 @@ const Login = () => {
     }
   
     const loginData = { phone, password };
+    console.log("Login Data Sent:", loginData);  // Log the login data
     setLoading(true);
   
     try {
-      const response = await axios.post('https://kabore.pinetpi.fr/api/login', loginData, {
+      const response = await axios.post('http://192.168.1.82:8000/api/login', loginData, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
   
+      console.log("Response from Server:", response.data);  // Log the server response
+  
       if (response.status === 200) {
         // Connexion réussie, sauvegarde des informations de l'utilisateur
         const user = response.data.user;
+        
+        // Safely handle undefined values by checking before calling .toString()
+        const vipInformatique = user.vipStatus?.informatique ? user.vipStatus.informatique.toString() : 'false';
+        const vipMarketing = user.vipStatus?.marketing ? user.vipStatus.marketing.toString() : 'false';
+        const vipEnergie = user.vipStatus?.energie ? user.vipStatus.energie.toString() : 'false';
+        const vipReparation = user.vipStatus?.reparation ? user.vipStatus.reparation.toString() : 'false';
+  
+        // Store data in AsyncStorage
         await AsyncStorage.setItem('haveAccount', 'true');
         await AsyncStorage.setItem('userName', user.name);
         await AsyncStorage.setItem('userPhone', user.phone);
         await AsyncStorage.setItem('userPassword', password);
   
-        // Mise à jour des statuts VIP dans AsyncStorage
-        await AsyncStorage.setItem('isVIPInformatique', user.vipStatus.informatique.toString());
-        await AsyncStorage.setItem('isVIPMarketing', user.vipStatus.marketing.toString());
-        await AsyncStorage.setItem('isVIPEnergie', user.vipStatus.energie.toString());
-        await AsyncStorage.setItem('isVIPReparation', user.vipStatus.reparation.toString());
+        // Update VIP statuses in AsyncStorage
+        await AsyncStorage.setItem('isVIPInformatique', vipInformatique);
+        await AsyncStorage.setItem('isVIPMarketing', vipMarketing);
+        await AsyncStorage.setItem('isVIPEnergie', vipEnergie);
+        await AsyncStorage.setItem('isVIPReparation', vipReparation);
   
-        // Rafraîchir toutes les données de l'application après connexion réussie
-        // Si vous voulez forcer la réinitialisation de la navigation pour redémarrer l'application
+        // Reset navigation to the Home screen after successful login
         navigation.reset({
-          index: 0, // Remettre la pile de navigation à zéro
-          routes: [{ name: 'Home' }], // Naviguer vers l'écran d'accueil
+          index: 0, // Reset navigation stack
+          routes: [{ name: 'Home' }], // Navigate to the Home screen
         });
       } else {
-        // Erreur de connexion
+        // Handle login failure
         setLoading(false);
         showErrorMessage(response.data.message || 'Erreur de connexion');
       }
@@ -96,6 +106,7 @@ const Login = () => {
       console.error(error);
     }
   };
+  
   
   return (
     <View style={styles.container}>

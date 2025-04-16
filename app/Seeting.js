@@ -7,45 +7,23 @@ import { FontAwesome5 } from '@expo/vector-icons';
 
 const Seeting = ({ navigation }) => {
   const [haveAccount, setHaveAccount] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    firstName: '',
-    lastName: '',
-    phoneNumber: ''
-  });
-  const [vipStatus, setVipStatus] = useState({
-    Informatique: false,
-    Marketing: false,
-    Energie: false,
-    Reparation: false
-  });
+  const [userInfo, setUserInfo] = useState({ firstName: '', lastName: '', phoneNumber: '' });
+  const [vipStatus, setVipStatus] = useState({});
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const loadStorageData = async () => {
       try {
         const accountStatus = await AsyncStorage.getItem('haveAccount');
-        const isVIPInformatique = await AsyncStorage.getItem('isVIPInformatique');
-        const isVIPMarketing = await AsyncStorage.getItem('isVIPMarketing');
-        const isVIPEnergie = await AsyncStorage.getItem('isVIPEnergie');
-        const isVIPReparation = await AsyncStorage.getItem('isVIPReparation');
-
         setHaveAccount(accountStatus === 'true');
-        setVipStatus({
-          Informatique: isVIPInformatique === 'true',
-          Marketing: isVIPMarketing === 'true',
-          Energie: isVIPEnergie === 'true',
-          Reparation: isVIPReparation === 'true'
-        });
 
         if (accountStatus === 'true') {
           const firstName = await AsyncStorage.getItem('userName') || '';
           const phoneNumber = await AsyncStorage.getItem('userPhone') || '';
-        
-          setUserInfo({
-            firstName,
-            phoneNumber
-          });
+          setUserInfo({ firstName, phoneNumber });
         }
+
+        await loadVipStatus();
       } catch (error) {
         console.error('Error loading storage data:', error);
       }
@@ -54,86 +32,85 @@ const Seeting = ({ navigation }) => {
     loadStorageData();
   }, []);
 
+  // Function to load VIP statuses dynamically
+  const loadVipStatus = async () => {
+    const categories = ['Informatique', 'Marketing', 'GSM', 'Energie', 'Reparation'];
+    const vipStatusFromStorage = {};
+
+    try {
+      // Iterate over categories and load hardware/software parts dynamically
+      for (const category of categories) {
+        const categoryParts = ['hardware', 'software'];
+        vipStatusFromStorage[category] = {};
+
+        for (const part of categoryParts) {
+          const key = `isVIP${category}${capitalize(part)}`;
+          vipStatusFromStorage[category][part] = (await AsyncStorage.getItem(key)) === 'true';
+        }
+      }
+
+      setVipStatus(vipStatusFromStorage);
+    } catch (error) {
+      console.error('Error loading VIP status:', error);
+    }
+  };
+
+  // Helper function to capitalize first letter of a string
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   const sections = [
-    {
-      route: 'Informatique',
-      label: 'Informatique',
-      icon: 'laptop',
-      vipKey: 'Informatique'
-    },
-    {
-      route: 'Marketing Digital',
-      label: 'Marketing',
-      icon: 'globe',
-      vipKey: 'Marketing'
-    },
-    {
-      route: 'Energie Solaire',
-      label: 'Energie Solaire',
-      icon: 'sun',
-      vipKey: 'Energie'
-    },
-    {
-      route: 'Réparation Téléphones',
-      label: 'Réparation',
-      icon: 'mobile-alt',
-      vipKey: 'Reparation'
-    },
+    { route: 'Informatique', label: 'Informatique', icon: 'laptop', vipKey: 'Informatique' },
+    { route: 'Marketing Digital', label: 'Marketing', icon: 'globe', vipKey: 'Marketing' },
+    { route: 'Energie Solaire', label: 'Energie Solaire', icon: 'sun', vipKey: 'Energie' },
+    { route: 'Réparation Téléphones', label: 'Réparation', icon: 'mobile-alt', vipKey: 'Reparation' },
   ];
 
   const handleLogout = async () => {
     try {
-      // Supprimer toutes les données pertinentes dans AsyncStorage
       await AsyncStorage.multiRemove([
-        'haveAccount',
-        'firstName',
-        'lastName',
-        'phoneNumber',
-        'isVIPInformatique',
-        'isVIPMarketing',
-        'isVIPEnergie',
-        'isVIPReparation'
+        'haveAccount', 'firstName', 'lastName', 'phoneNumber',
+        'isVIPInformatique', 'isVIPMarketing', 'isVIPEnergie', 'isVIPReparation'
       ]);
-  
-      // Réinitialiser l'état local
+
       setHaveAccount(false);
       setUserInfo({ firstName: '', lastName: '', phoneNumber: '' });
-      setVipStatus({
-        Informatique: false,
-        Marketing: false,
-        Energie: false,
-        Reparation: false
-      });
-  
-      // Réinitialiser la navigation et rediriger l'utilisateur vers l'écran de connexion ou d'accueil
+      setVipStatus({});
+
       navigation.reset({
-        index: 0,  // Remettre la pile de navigation à zéro
-        routes: [{ name: 'Login' }],  // Naviguer vers l'écran de connexion après la déconnexion
+        index: 0,
+        routes: [{ name: 'Login' }],
       });
     } catch (error) {
       console.error('Error during logout:', error);
     }
   };
-  
+
   const renderSection = (section) => {
-    const isVIP = vipStatus[section.vipKey];
+    const isVIPHardware = vipStatus[section.vipKey]?.hardware;
+    const isVIPSoftware = vipStatus[section.vipKey]?.software;
+
     return (
       <TouchableOpacity
         key={section.route}
-        style={[
-          styles.card,
-          isVIP ? styles.cardVIPActive : styles.cardVIPInactive,
-        ]}
-        onPress={() => navigation.navigate(section.route)}
+        style={[styles.card, isVIPHardware || isVIPSoftware ? styles.cardVIPActive : styles.cardVIPInactive]}
+        onPress={() => navigation.navigate(section.route, {
+          isVIPHardware: isVIPHardware,
+          isVIPSoftware: isVIPSoftware
+        })}
       >
         <FontAwesome5
           name={section.icon}
           size={30}
-          color={isVIP ? Colors.green : Colors.red}
+          color={isVIPHardware || isVIPSoftware ? Colors.green : Colors.red}
         />
         <Text style={styles.cardLabel}>{section.label}</Text>
-        <Text style={[styles.vipStatus, isVIP ? styles.vipActive : styles.vipInactive]}>
-          {isVIP ? 'Accès VIP activé' : 'Accès VIP désactivé'}
+
+        {/* Display active VIP parts */}
+        <Text style={[styles.vipStatus, isVIPHardware ? styles.vipActive : styles.vipInactive]}>
+          {isVIPHardware ? 'Hardware Actif' : 'Hardware Inactif'}
+        </Text>
+        <Text style={[styles.vipStatus, isVIPSoftware ? styles.vipActive : styles.vipInactive]}>
+          {isVIPSoftware ? 'Software Actif' : 'Software Inactif'}
         </Text>
       </TouchableOpacity>
     );
@@ -142,42 +119,38 @@ const Seeting = ({ navigation }) => {
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
-        const response = await fetch('https://kabore.pinetpi.fr/api/vip-status?phone=' + userInfo.phoneNumber);
-        const data = await response.json();
-        console.log('VIP status data:', data); // Ajoutez cette ligne pour vérifier les données
-        if (data.vipDomains) {
-            const updatedVipStatus = {
-                Informatique: data.vipDomains.includes('Informatique'),
-                Marketing: data.vipDomains.includes('Marketing'),
-                Energie: data.vipDomains.includes('Energie'),
-                Reparation: data.vipDomains.includes('Réparation')
-            };
-            await AsyncStorage.setItem('isVIPInformatique', updatedVipStatus.Informatique.toString());
-            await AsyncStorage.setItem('isVIPMarketing', updatedVipStatus.Marketing.toString());
-            await AsyncStorage.setItem('isVIPEnergie', updatedVipStatus.Energie.toString());
-            await AsyncStorage.setItem('isVIPReparation', updatedVipStatus.Reparation.toString());
-            setVipStatus(updatedVipStatus);
+      const response = await fetch('http://192.168.1.82:8000/api/vip-status?phone=' + userInfo.phoneNumber);
+      const data = await response.json();
+
+      if (data.vipDomains) {
+        const updatedVipStatus = { ...vipStatus };
+
+        Object.keys(updatedVipStatus).forEach((category) => {
+          updatedVipStatus[category].hardware = data.vipDomains.includes(`${category} Hardware`);
+          updatedVipStatus[category].software = data.vipDomains.includes(`${category} Software`);
+        });
+
+        setVipStatus(updatedVipStatus);
+
+        // Save updated VIP status in AsyncStorage
+        for (const category in updatedVipStatus) {
+          for (const part in updatedVipStatus[category]) {
+            await AsyncStorage.setItem(`isVIP${category}${capitalize(part)}`, updatedVipStatus[category][part].toString());
+          }
         }
+      }
     } catch (error) {
-        console.error('Error refreshing VIP status:', error);
+      console.error('Error refreshing VIP status:', error);
     }
     setIsRefreshing(false);
-};
-
+  };
 
   return (
     <View style={styles.container}>
-      <MyHeader
-        title="Paramètres"
-      />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refreshVipStatus} />
-        }
-      >
+      <MyHeader title="Paramètres" />
+      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshVipStatus} />}>
         <Text style={styles.sectionTitle}>Informations Personnelles</Text>
-        
+
         {/* Prénom */}
         <View style={styles.infoContainer}>
           <View style={styles.row}>
@@ -199,8 +172,8 @@ const Seeting = ({ navigation }) => {
           {sections.map(renderSection)}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.button, styles.marginBottom]} 
+        <TouchableOpacity
+          style={[styles.button, styles.marginBottom]}
           onPress={haveAccount ? handleLogout : () => navigation.navigate('Register')}
         >
           <Text style={styles.buttonText}>
@@ -213,87 +186,38 @@ const Seeting = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 50,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 20,
-    color: Colors.primary,
-    textAlign: 'center',
-  },
+  container: { flex: 1, backgroundColor: Colors.white },
+  content: { padding: 20, paddingBottom: 50 },
+  sectionTitle: { fontSize: 24, fontWeight: '700', marginBottom: 20, color: Colors.primary, textAlign: 'center' },
   infoContainer: {
     marginBottom: 20,
     padding: 18,
     backgroundColor: Colors.lightGray,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.gray, // Contours ajoutés
+    borderColor: Colors.gray,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  label: {
-    fontSize: 18,
-    color: Colors.darkGray,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  infoText: {
-    fontSize: 16,
-    color: Colors.black,
-    fontWeight: '500',
-  },
-  cardContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  label: { fontSize: 18, color: Colors.darkGray, marginBottom: 8, fontWeight: '600' },
+  infoText: { fontSize: 16, color: Colors.black, fontWeight: '500' },
+  cardContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: 20 },
   card: {
     width: '48%',
     marginBottom: 15,
     padding: 20,
     backgroundColor: Colors.lightGray,
     borderRadius: 20,
-    borderWidth: 1, // Contours ajoutés
-    borderColor: Colors.gray, // Contours ajoutés
+    borderWidth: 1,
+    borderColor: Colors.gray,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardVIPActive: {
-    backgroundColor: Colors.greenLight,
-  },
-  cardVIPInactive: {
-    backgroundColor: Colors.redLight,
-  },
-  cardLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-    color: Colors.darkGray,
-    textAlign: 'center',
-  },
-  vipStatus: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 5,
-    textAlign: 'center',
-  },
-  vipActive: {
-    color: Colors.green,
-  },
-  vipInactive: {
-    color: Colors.red,
-  },
+  cardVIPActive: { backgroundColor: Colors.greenLight },
+  cardVIPInactive: { backgroundColor: Colors.redLight },
+  cardLabel: { fontSize: 16, fontWeight: '600', marginTop: 12, color: Colors.darkGray, textAlign: 'center' },
+  vipStatus: { fontSize: 14, fontWeight: 'bold', marginTop: 5, textAlign: 'center' },
+  vipActive: { color: Colors.green },
+  vipInactive: { color: Colors.red },
   button: {
     marginTop: 35,
     paddingVertical: 15,
@@ -303,14 +227,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.white,
-  },
-  marginBottom: {
-    marginBottom: 20,
-  },
+  buttonText: { fontSize: 16, fontWeight: 'bold', color: Colors.white },
+  marginBottom: { marginBottom: 20 },
 });
 
 export default Seeting;

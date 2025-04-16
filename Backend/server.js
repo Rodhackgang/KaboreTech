@@ -21,6 +21,9 @@ const os = require('os');
 const { GridFSBucket } = require('mongodb');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yml');
 
 let gridFSBucketVideo;
 let gridFSBucketImage;
@@ -28,6 +31,7 @@ let gridFSBucketImage;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -89,26 +93,30 @@ app.post('/register', async (req, res) => {
       name,
       phone: formattedPhone,  // Utilisation du numéro formaté
       password: hashedPassword,
-      isVIPInformatique: false,
-      isVIPMarketing: false,
-      isVIPEnergie: false,
-      isVIPReparation: false,
+      isInformatiqueHardware: false,
+      isInformatiqueSoftware: false,
+      isBureautiqueHardware: false,
+      isBureautiqueSoftware: false,
+      isMarketingSocial: false,
+      isMarketingContent: false,
+      isVIPGsmHardware: false,
+      isVIPGsmSoftware: false,
     });
     await newUser.save();
 
     // Message Telegram pour administrateur avec boutons pour chaque service
     const formations = [
-      { type: 'Informatique', price: '30 000 FCFA' },
-      { type: 'Marketing', price: '20 000 FCFA' },
-      { type: 'Energie', price: '30 000 FCFA' },
-      { type: 'Réparation', price: '30 000 FCFA' },
+      { type: 'Informatique', price: '30 000 FCFA', parts: ['Hardware', 'Software'] },
+      { type: 'Bureautique', price: '10 000 FCFA', parts: ['Hardware', 'Software'] },
+      { type: 'Marketing', price: '10 000 FCFA', parts: ['Social', 'Content'] },
+      { type: 'GSM', price: '30 000 FCFA', parts: ['Hardware', 'Software'] },
     ];
 
     let telegramMessage = `👤 *Nouvel utilisateur inscrit* :
 📛 *Nom* : ${name}
 📞 *Téléphone* : ${formattedPhone}
 
-Veuillez valider ou annuler les formations demandées par cet utilisateur :\n`;
+Bienvenue parmi nous ! Voici les services que vous pouvez souscrire, chacun peut être payé par partie. Veuillez valider ou annuler les formations demandées par cet utilisateur :\n`;
 
     formations.forEach((formation, index) => {
       telegramMessage += `\n💼 *${formation.type}* : ${formation.price}`;
@@ -116,18 +124,20 @@ Veuillez valider ou annuler les formations demandées par cet utilisateur :\n`;
 
     // Crée un tableau de lignes de boutons, où chaque ligne contient 2 boutons (valider et annuler)
     const inlineKeyboard = formations.map((formation) => {
-      return [
-        { 
-          text: `✅ ${formation.type}`, 
-          callback_data: `validate_${formation.type}_${newUser._id}` // Ordre inversé ici
-        },
-        { 
-          text: `❌ ${formation.type}`, 
-          callback_data: `reject_${formation.type}_${newUser._id}` 
-        }
-      ];
-    });
-    
+      return formation.parts.map((part) => {
+        return [
+          { 
+            text: `✅ ${formation.type} - ${part}`, 
+            callback_data: `validate_${formation.type}_${part}_${newUser._id}` // Validation d'une partie spécifique
+          },
+          { 
+            text: `❌ ${formation.type} - ${part}`, 
+            callback_data: `reject_${formation.type}_${part}_${newUser._id}` // Annulation d'une partie spécifique
+          }
+        ];
+      });
+    }).flat();
+
     // Envoi du message avec les boutons formatés correctement
     await bot.telegram.sendMessage(process.env.CHAT_ID, telegramMessage, {
       parse_mode: 'Markdown',
@@ -137,15 +147,19 @@ Veuillez valider ou annuler les formations demandées par cet utilisateur :\n`;
     });
 
     // Message WhatsApp avec formations et coordonnées de paiement
-    let formationsMessage = 'Voici nos différentes formations et leurs prix :\n\n';
-    formations.forEach(formation => {
-      formationsMessage += `💼 *${formation.type}* : ${formation.price}\n`;
-    });
+let formationsMessage = 'Voici nos différentes formations et leurs prix :\n\n';
+formations.forEach(formation => {
+  formationsMessage += `💼 *${formation.type}* : ${formation.price}\n`;
+});
 
-    const whatsappMessage = `
-🎉 *Bienvenue chez Kaboretech*
+const whatsappMessage = `
+🎉 *Bonjour ${name}* 👋
 
-Votre compte est en attente de validation.
+*Bienvenue chez Kaboretech* 🇧🇫
+
+Nous vous remercions de vous être inscrit. Vous êtes désormais membre de notre communauté et nous sommes ravis de vous accompagner dans votre parcours.
+
+Voici les formations disponibles pour vous, chaque formation peut être payée par "part" :
 
 ${formationsMessage}
 
@@ -154,10 +168,10 @@ Nos coordonnées de paiement :
 ➡ Moov Money : +226 02 18 04 25
 
 Cordialement,
-*Kabore Tech*
+*L’équipe Kabore Tech* 💼🚀
 `;
 
-    await sendWhatsAppMessage(formattedPhone, whatsappMessage);
+await sendWhatsAppMessage(formattedPhone, whatsappMessage);
 
     res.status(201).json({ message: 'En attente de validation VIP' });
   } catch (error) {
@@ -165,6 +179,7 @@ Cordialement,
     res.status(500).json({ message: 'Erreur d\'inscription' });
   }
 });
+
 
 app.post('/api/login', async (req, res) => {
   const { phone, password } = req.body;
@@ -197,52 +212,212 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+bot.action(/validate_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
+  const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
 
-// Modifier le handler des actions Telegram :
-bot.action(/validate_(Informatique|Marketing|Energie|Réparation)_([0-9a-fA-F]{24})/, async (ctx) => {
-  const [_, formationType, userId] = ctx.match; // Ordre corrigé
+  // Mapping des champs VIP
   const vipFieldMap = {
-    'Informatique': 'isVIPInformatique',
-    'Marketing': 'isVIPMarketing',
-    'Energie': 'isVIPEnergie',
-    'Réparation': 'isVIPReparation'
+    'Informatique_Hardware': 'isInformatiqueHardware',
+    'Informatique_Software': 'isInformatiqueSoftware',
+    'Bureautique_Hardware': 'isBureautiqueHardware',
+    'Bureautique_Software': 'isBureautiqueSoftware',
+    'Marketing_Social': 'isMarketingSocial',
+    'Marketing_Content': 'isMarketingContent',
+    'GSM_Hardware': 'isVIPGsmHardware',
+    'GSM_Software': 'isVIPGsmSoftware'
   };
 
-  const requiredPrice = formationType === 'Marketing' ? 20000 : 30000;
-  const vipField = vipFieldMap[formationType];
+  const vipField = vipFieldMap[`${formationType}_${part}`]; // Récupérer le champ VIP correspondant à la formation et la partie
 
   try {
-    // Validation stricte de l'ID
+    // Validation de l'ID utilisateur (Assurez-vous que l'ID est bien un ObjectId valide)
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return ctx.answerCbQuery('❌ ID utilisateur invalide');
     }
 
-    const user = await User.findById(userId);
-    if (!user) return ctx.answerCbQuery('❌ Utilisateur introuvable');
-
-    // Vérification du prix
-    if (user.price !== requiredPrice) {
-      return ctx.answerCbQuery(`❌ Erreur: ${user.price}F au lieu de ${requiredPrice}F !`);
+    const user = await User.findById(userId); // Recherche de l'utilisateur par son ID
+    if (!user) {
+      return ctx.answerCbQuery('❌ Utilisateur introuvable');
     }
 
-    // Mise à jour du statut VIP
-    await User.updateOne({ _id: userId }, { $set: { [vipField]: true } });
-    
-    // Message de confirmation
-    await ctx.answerCbQuery('✅ VIP validé avec succès !');
-    await ctx.editMessageText(`✅ Statut ${formationType} activé pour ${user.name}`);
+    // Vérifier si l'utilisateur a déjà ce statut VIP
+    if (user[vipField]) {
+      return ctx.answerCbQuery(`❌ L'utilisateur a déjà activé cette partie : ${formationType} - ${part}`);
+    }
 
-    // Notification WhatsApp
-    await sendWhatsAppMessage(
-      user.phone,
-      `🎉 Félicitations ${user.name} !\nVotre accès VIP ${formationType} est maintenant actif.`
+    // Mise à jour du statut VIP pour la partie spécifique
+    await User.updateOne({ _id: userId }, { $set: { [vipField]: true } });
+
+    // Message de confirmation dans Telegram
+    await ctx.answerCbQuery('✅ VIP validé avec succès !');
+    await ctx.editMessageText(`✅ Statut ${formationType} ${part} activé pour ${user.name}`);
+
+    // Configuration des boutons pour annuler la validation
+    const inlineKeyboard = [
+      [
+        { 
+          text: `❌ Annuler ${formationType} - ${part}`, 
+          callback_data: `cancel_${formationType}_${part}_${userId}` 
+        }
+      ]
+    ];
+
+    // Mise à jour du message avec les boutons d'annulation
+    await ctx.editMessageText(
+      `✅ Statut ${formationType} ${part} activé pour ${user.name}. Vous pouvez annuler cette action.`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: inlineKeyboard // Ajout des boutons d'annulation
+        }
+      }
+    );
+
+    // Envoi du message WhatsApp à l'utilisateur pour l'informer
+    const whatsappMessage = `
+🎉 Félicitations ${user.name} !\n
+Votre accès VIP ${formationType} ${part} est maintenant actif. Nous vous remercions de votre inscription et vous souhaitons un excellent parcours avec Kaboretech !
+
+Cordialement,
+*L’équipe Kabore Tech* 💼🚀
+    `;
+
+    await sendWhatsAppMessage(user.phone, whatsappMessage);
+
+  } catch (error) {
+    console.error('Erreur lors de la validation:', error);
+    ctx.answerCbQuery('❌ Erreur lors de l\'activation du statut VIP');
+  }
+});
+
+
+// Annulation d'une validation VIP
+bot.action(/cancel_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
+  const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
+
+  // Mapping des champs VIP
+  const vipFieldMap = {
+    'Informatique_Hardware': 'isInformatiqueHardware',
+    'Informatique_Software': 'isInformatiqueSoftware',
+    'Bureautique_Hardware': 'isBureautiqueHardware',
+    'Bureautique_Software': 'isBureautiqueSoftware',
+    'Marketing_Social': 'isMarketingSocial',
+    'Marketing_Content': 'isMarketingContent',
+    'GSM_Hardware': 'isVIPGsmHardware',
+    'GSM_Software': 'isVIPGsmSoftware'
+  };
+
+  const vipField = vipFieldMap[`${formationType}_${part}`]; // Récupérer le champ VIP correspondant à la formation et la partie
+
+  try {
+    // Validation de l'ID utilisateur
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return ctx.answerCbQuery('❌ ID utilisateur invalide');
+    }
+
+    const user = await User.findById(userId); // Recherche de l'utilisateur par son ID
+    if (!user) {
+      return ctx.answerCbQuery('❌ Utilisateur introuvable');
+    }
+
+    // Mise à jour du statut VIP pour annuler la partie spécifique
+    await User.updateOne({ _id: userId }, { $set: { [vipField]: false } });
+
+    // Message de confirmation dans Telegram
+    await ctx.answerCbQuery('🗑️ VIP annulé avec succès !');
+    await ctx.editMessageText(`🗑️ Statut ${formationType} ${part} annulé pour ${user.name}`);
+
+    // Réinitialisation des boutons (ajout des boutons pour activer la partie à nouveau)
+    const inlineKeyboard = [
+      [
+        { 
+          text: `✅ Activer ${formationType} - ${part}`, 
+          callback_data: `validate_${formationType}_${part}_${userId}` 
+        }
+      ]
+    ];
+
+    // Mise à jour du message avec les boutons d'activation
+    await ctx.editMessageText(
+      `🗑️ Statut ${formationType} ${part} annulé pour ${user.name}. Vous pouvez maintenant réactiver cette partie.`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: inlineKeyboard // Réactivation des boutons d'activation
+        }
+      }
     );
 
   } catch (error) {
-    console.error('Erreur validation:', error);
-    ctx.answerCbQuery('❌ Erreur lors de la validation');
+    console.error('Erreur lors de l\'annulation:', error);
+    ctx.answerCbQuery('❌ Erreur lors de l\'annulation du statut VIP');
   }
 });
+
+
+// Annulation d'une validation VIP
+bot.action(/cancel_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
+  const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
+
+  // Mapping des champs VIP
+  const vipFieldMap = {
+    'Informatique_Hardware': 'isInformatiqueHardware',
+    'Informatique_Software': 'isInformatiqueSoftware',
+    'Bureautique_Hardware': 'isBureautiqueHardware',
+    'Bureautique_Software': 'isBureautiqueSoftware',
+    'Marketing_Social': 'isMarketingSocial',
+    'Marketing_Content': 'isMarketingContent',
+    'GSM_Hardware': 'isVIPGsmHardware',
+    'GSM_Software': 'isVIPGsmSoftware'
+  };
+
+  const vipField = vipFieldMap[`${formationType}_${part}`]; // Récupérer le champ VIP correspondant à la formation et la partie
+
+  try {
+    // Validation de l'ID utilisateur
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return ctx.answerCbQuery('❌ ID utilisateur invalide');
+    }
+
+    const user = await User.findById(userId); // Recherche de l'utilisateur par son ID
+    if (!user) {
+      return ctx.answerCbQuery('❌ Utilisateur introuvable');
+    }
+
+    // Mise à jour du statut VIP pour annuler la partie spécifique
+    await User.updateOne({ _id: userId }, { $set: { [vipField]: false } });
+
+    // Message de confirmation dans Telegram
+    await ctx.answerCbQuery('🗑️ VIP annulé avec succès !');
+    await ctx.editMessageText(`🗑️ Statut ${formationType} ${part} annulé pour ${user.name}`);
+
+    // Réinitialisation des boutons (ajout des boutons pour activer la partie à nouveau)
+    const inlineKeyboard = [
+      [
+        { 
+          text: `✅ Activer ${formationType} - ${part}`, 
+          callback_data: `validate_${formationType}_${part}_${userId}` 
+        }
+      ]
+    ];
+
+    // Mise à jour du message avec les boutons d'activation
+    await ctx.editMessageText(
+      `🗑️ Statut ${formationType} ${part} annulé pour ${user.name}. Vous pouvez maintenant réactiver cette partie.`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: inlineKeyboard // Réactivation des boutons d'activation
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation:', error);
+    ctx.answerCbQuery('❌ Erreur lors de l\'annulation du statut VIP');
+  }
+});
+
 // Route pour oublier le mot de passe
 app.post('/api/forgot-password', async (req, res) => {
   const { phone } = req.body;
@@ -350,12 +525,18 @@ app.get('/api/vip-status', async (req, res) => {
 
     console.log(`Utilisateur trouvé pour le numéro : ${phone}`);
 
+    // Tableau pour les domaines VIP actifs
     const activeVipDomains = [];
-    if (user.isVIPInformatique) activeVipDomains.push('Informatique');
-    if (user.isVIPMarketing) activeVipDomains.push('Marketing');
-    if (user.isVIPEnergie) activeVipDomains.push('Energie');
-    if (user.isVIPReparation) activeVipDomains.push('Réparation');
+    if (user.isInformatiqueHardware) activeVipDomains.push('Informatique Hardware');
+    if (user.isInformatiqueSoftware) activeVipDomains.push('Informatique Software');
+    if (user.isBureautiqueHardware) activeVipDomains.push('Bureautique Hardware');
+    if (user.isBureautiqueSoftware) activeVipDomains.push('Bureautique Software');
+    if (user.isMarketingSocial) activeVipDomains.push('Marketing Social');
+    if (user.isMarketingContent) activeVipDomains.push('Marketing Content');
+    if (user.isVIPGsmHardware) activeVipDomains.push('GSM Hardware');
+    if (user.isVIPGsmSoftware) activeVipDomains.push('GSM Software');
 
+    // Réponse avec les domaines VIP actifs
     res.status(200).json({
       message: 'Statuts VIP récupérés avec succès',
       vipDomains: activeVipDomains
@@ -367,85 +548,88 @@ app.get('/api/vip-status', async (req, res) => {
   }
 });
 
-// Nouvelle route pour vérifier le paiement et envoyer sur Telegram
+// API pour vérifier le paiement
 app.post('/api/paiement', async (req, res) => {
-  const { phone, numDepot, domaine, mode, price } = req.body;
+  const { phone, numDepot, domaine, part, mode, price } = req.body;
 
-  // Log du numéro de téléphone reçu
-  console.log(`Numéro de téléphone reçu pour le paiement : ${phone.trim()}`);
+  // Vérification des domaines et parties valides
+  const validDomains = ['Informatique', 'Marketing', 'Bureautique', 'GSM'];
+  const validParts = ['Hardware', 'Software', 'Social', 'Content'];
 
-  // Vérification du domaine
-  const validDomains = ['Informatique', 'Marketing', 'Energie', 'Reparation'];
-  if (!validDomains.includes(domaine)) {
-    return res.status(400).json({ message: 'Domaine invalide. Les domaines possibles sont : Informatique, Marketing, Energie, Reparation.' });
+  if (!validDomains.includes(domaine) || !validParts.includes(part)) {
+    return res.status(400).json({ message: 'Domaine ou partie invalide. Vérifiez les options possibles.' });
   }
 
-  // Vérification du mode de paiement
   const validModes = ['presentiel', 'ligne'];
   if (!validModes.includes(mode)) {
     return res.status(400).json({ message: 'Mode de paiement invalide. Les modes possibles sont : presentiel, ligne.' });
   }
 
-  // Vérification du prix (en fonction du domaine et du mode)
-  const categoryPrices = {
-    'Informatique': { presentiel: '45 000 🪙', ligne: '30 000 🪙' },
-    'Marketing': { presentiel: '30 000 🪙', ligne: '20 000 🪙' },
-    'Energie': { presentiel: '45 000 🪙', ligne: '30 000 🪙' },
-    'Reparation': { presentiel: '45 000 🪙', ligne: '30 000 🪙' }
+  // Vérification du prix attendu
+  const requiredPriceMap = {
+    'Informatique_Hardware': 15000,
+    'Informatique_Software': 15000,
+    'Bureautique_Hardware': 5000,
+    'Bureautique_Software': 5000,
+    'Marketing_Social': 5000,
+    'Marketing_Content': 5000,
+    'GSM_Hardware': 15000,
+    'GSM_Software': 15000,
   };
 
-  if (categoryPrices[domaine][mode] !== price) {
-    return res.status(400).json({ message: 'Erreur de prix. Le prix ne correspond pas au mode de paiement sélectionné.' });
+  const requiredPrice = requiredPriceMap[`${domaine}_${part}`];
+  if (price !== requiredPrice) {
+    return res.status(400).json({ message: `Erreur de prix. Le prix doit être ${requiredPrice}F pour cette partie.` });
   }
 
-  // Aucune modification du numéro n'est effectuée ici, on l'accepte tel quel
-  let formattedPhone = phone.trim();
-  console.log(`Recherche du paiement pour le numéro de téléphone : ${formattedPhone}`);
-
   // Ajouter le "+" si nécessaire avant de procéder à la recherche
+  let formattedPhone = phone.trim();
   if (!formattedPhone.startsWith('+')) {
     formattedPhone = '+' + formattedPhone;
   }
 
   try {
-    // Recherche de l'utilisateur avec le numéro tel quel
-    console.log(`Recherche de l'utilisateur avec le numéro : ${formattedPhone}`);
+    // Recherche de l'utilisateur
     const user = await User.findOne({ phone: formattedPhone });
 
     if (!user) {
-      console.log(`Utilisateur non trouvé pour le numéro : ${formattedPhone}`);
       return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
 
-    console.log(`Utilisateur trouvé pour le numéro : ${formattedPhone}`);
+    // Vérification du statut VIP pour le domaine et la partie
+    const isVipForPart = user[`is${domaine}${part}`] || false;
+    if (isVipForPart) {
+      return res.status(200).json({ message: 'Accès VIP validé', isPaid: false });
+    }
 
-    // Envoi d'un message sur Telegram avec les informations
+    // Envoi d'un message Telegram pour la validation
     const telegramMessage = `
     📩 *Nouveau Paiement Reçu*:
 
     📝 *Numéro de Dépôt*: ${numDepot}
     📞 *Numéro d'Utilisateur*: ${formattedPhone}
     💼 *Domaine*: ${domaine}
+    🧩 *Partie*: ${part}
     🌐 *Mode de Paiement*: ${mode}
     💰 *Prix*: ${price}
 
-    Veuillez procéder à la validation du paiement et du statut VIP de l'utilisateur.
+    Veuillez procéder à la validation du paiement.
     `;
 
-    // Envoi du message sur Telegram
     await bot.telegram.sendMessage(process.env.CHAT_ID, telegramMessage, {
       parse_mode: 'Markdown'
     });
 
     res.status(200).json({ message: 'Paiement vérifié et message envoyé sur Telegram.' });
   } catch (error) {
-    console.error('Erreur lors de l\'envoi du message Telegram:', error);
+    console.error('Erreur lors de la vérification du paiement:', error);
     res.status(500).json({ message: 'Erreur interne lors de la vérification du paiement.' });
   }
 });
 
+
 app.post('/api/add-video', upload.fields([{ name: 'videoFile', maxCount: 1 }, { name: 'imageFile', maxCount: 1 }]), async (req, res) => {
-  const { title, categoryId, isPaid, description } = req.body;
+  const { title, categoryId, part, isPaid, description } = req.body;
 
   try {
     // Vérifiez si les fichiers existent dans la mémoire (buffer)
@@ -463,6 +647,7 @@ app.post('/api/add-video', upload.fields([{ name: 'videoFile', maxCount: 1 }, { 
     const newVideo = new Video({
       title,
       categoryId,
+      part, // Partie spécifique (Hardware, Software, etc.)
       isPaid: isPaid === 'true',
       description,
       videoFileId,
@@ -481,6 +666,7 @@ app.post('/api/add-video', upload.fields([{ name: 'videoFile', maxCount: 1 }, { 
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 const storeFileInGridFS = (file, bucket) => {
@@ -505,38 +691,39 @@ const storeFileInGridFS = (file, bucket) => {
 
 app.get('/api/video/:id', (req, res) => {
   const videoId = new mongoose.Types.ObjectId(req.params.id);
-  
+
   const downloadStream = gridFSBucketVideo.openDownloadStream(videoId);
-  
-  downloadStream.on('error', () => {
+
+  downloadStream.on('error', (err) => {
+    console.error('Erreur lors du téléchargement de la vidéo:', err);
     res.status(404).json({ message: 'Vidéo introuvable' });
   });
 
   downloadStream.pipe(res);
 });
+
 app.get('/api/image/:id', (req, res) => {
   const imageId = new mongoose.Types.ObjectId(req.params.id);
-  
+
   const downloadStream = gridFSBucketImage.openDownloadStream(imageId);
-  
-  downloadStream.on('error', () => {
+
+  downloadStream.on('error', (err) => {
+    console.error('Erreur lors du téléchargement de l\'image:', err);
     res.status(404).json({ message: 'Image introuvable' });
   });
 
   downloadStream.pipe(res);
 });
+
 app.get('/api/videos', async (req, res) => {
   try {
     // Récupérer toutes les vidéos
     const videos = await Video.find();
 
     // Organiser les vidéos par catégorie
-    const categories = [];
-
     const categoriesMap = {};
 
     for (let video of videos) {
-      // Vérification de la catégorie de la vidéo
       const categoryId = video.categoryId;
 
       if (!categoriesMap[categoryId]) {
@@ -556,26 +743,26 @@ app.get('/api/videos', async (req, res) => {
         title: video.title,
         isPaid: video.isPaid,
         categoryId: categoryId,
-        image: imageUrl, // Utiliser l'URL générée pour l'image
+        part: video.part,  // Ajout du champ 'part'
+        image: imageUrl,
         details: {
-          title: video.details?.title || 'Pas de titre',
-          video: videoUrl, // Utiliser l'URL générée pour la vidéo
-          description: video.details?.description || 'Pas de description'
+          title: video.description?.title || 'Pas de titre',
+          video: videoUrl,
+          description: video.description?.description || 'Pas de description'
         }
       });
     }
 
     // Convertir l'objet en tableau de catégories
-    for (const categoryId in categoriesMap) {
-      categories.push(categoriesMap[categoryId]);
-    }
+    const categories = Object.values(categoriesMap);
 
     res.status(200).json(categories);
   } catch (error) {
     console.error('Erreur lors de la récupération des vidéos :', error);
-    res.status(500).json({ message: 'Erreur interne du serveur' });
+    res.status(500).json({ message: 'Erreur interne lors de la récupération des vidéos' });
   }
 });
+
 
 // Lancement du serveur
 server.listen(PORT, () => {
