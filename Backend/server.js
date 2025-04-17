@@ -211,88 +211,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Erreur de connexion' });
   }
 });
-
 bot.action(/validate_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
-  const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
-
-  // Mapping des champs VIP
-  const vipFieldMap = {
-    'Informatique_Hardware': 'isInformatiqueHardware',
-    'Informatique_Software': 'isInformatiqueSoftware',
-    'Bureautique_Hardware': 'isBureautiqueHardware',
-    'Bureautique_Software': 'isBureautiqueSoftware',
-    'Marketing_Social': 'isMarketingSocial',
-    'Marketing_Content': 'isMarketingContent',
-    'GSM_Hardware': 'isVIPGsmHardware',
-    'GSM_Software': 'isVIPGsmSoftware'
-  };
-
-  const vipField = vipFieldMap[`${formationType}_${part}`]; // Récupérer le champ VIP correspondant à la formation et la partie
-
-  try {
-    // Validation de l'ID utilisateur (Assurez-vous que l'ID est bien un ObjectId valide)
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return ctx.answerCbQuery('❌ ID utilisateur invalide');
-    }
-
-    const user = await User.findById(userId); // Recherche de l'utilisateur par son ID
-    if (!user) {
-      return ctx.answerCbQuery('❌ Utilisateur introuvable');
-    }
-
-    // Vérifier si l'utilisateur a déjà ce statut VIP
-    if (user[vipField]) {
-      return ctx.answerCbQuery(`❌ L'utilisateur a déjà activé cette partie : ${formationType} - ${part}`);
-    }
-
-    // Mise à jour du statut VIP pour la partie spécifique
-    await User.updateOne({ _id: userId }, { $set: { [vipField]: true } });
-
-    // Message de confirmation dans Telegram
-    await ctx.answerCbQuery('✅ VIP validé avec succès !');
-    await ctx.editMessageText(`✅ Statut ${formationType} ${part} activé pour ${user.name}`);
-
-    // Configuration des boutons pour annuler la validation
-    const inlineKeyboard = [
-      [
-        { 
-          text: `❌ Annuler ${formationType} - ${part}`, 
-          callback_data: `cancel_${formationType}_${part}_${userId}` 
-        }
-      ]
-    ];
-
-    // Mise à jour du message avec les boutons d'annulation
-    await ctx.editMessageText(
-      `✅ Statut ${formationType} ${part} activé pour ${user.name}. Vous pouvez annuler cette action.`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: inlineKeyboard // Ajout des boutons d'annulation
-        }
-      }
-    );
-
-    // Envoi du message WhatsApp à l'utilisateur pour l'informer
-    const whatsappMessage = `
-🎉 Félicitations ${user.name} !\n
-Votre accès VIP ${formationType} ${part} est maintenant actif. Nous vous remercions de votre inscription et vous souhaitons un excellent parcours avec Kaboretech !
-
-Cordialement,
-*L’équipe Kabore Tech* 💼🚀
-    `;
-
-    await sendWhatsAppMessage(user.phone, whatsappMessage);
-
-  } catch (error) {
-    console.error('Erreur lors de la validation:', error);
-    ctx.answerCbQuery('❌ Erreur lors de l\'activation du statut VIP');
-  }
-});
-
-
-// Annulation d'une validation VIP
-bot.action(/cancel_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
   const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
 
   // Mapping des champs VIP
@@ -320,37 +239,64 @@ bot.action(/cancel_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|S
       return ctx.answerCbQuery('❌ Utilisateur introuvable');
     }
 
-    // Mise à jour du statut VIP pour annuler la partie spécifique
-    await User.updateOne({ _id: userId }, { $set: { [vipField]: false } });
+    // Vérifier si l'utilisateur a déjà validé cette section
+    if (user[vipField]) {
+      return ctx.answerCbQuery(`❌ Cette section est déjà activée pour l'utilisateur : ${formationType} - ${part}`);
+    }
+
+    // Mise à jour du statut VIP pour la partie spécifique
+    await User.updateOne({ _id: userId }, { $set: { [vipField]: true } });
 
     // Message de confirmation dans Telegram
-    await ctx.answerCbQuery('🗑️ VIP annulé avec succès !');
-    await ctx.editMessageText(`🗑️ Statut ${formationType} ${part} annulé pour ${user.name}`);
+    await ctx.answerCbQuery('✅ Section validée avec succès !');
+    await ctx.editMessageText(`✅ Statut ${formationType} - ${part} activé pour ${user.name}`);
 
-    // Réinitialisation des boutons (ajout des boutons pour activer la partie à nouveau)
+    // Mise à jour des boutons pour permettre la validation d'autres sections
     const inlineKeyboard = [
       [
-        { 
-          text: `✅ Activer ${formationType} - ${part}`, 
-          callback_data: `validate_${formationType}_${part}_${userId}` 
+        {
+          text: `✅ ${formationType} - ${part}`,
+          callback_data: `validate_${formationType}_${part}_${userId}` // Validation de cette section
+        },
+        {
+          text: `❌ Annuler ${formationType} - ${part}`,
+          callback_data: `cancel_${formationType}_${part}_${userId}` // Annulation de la section
         }
-      ]
+      ],
+      // Ajouter un bouton pour valider d'autres sections
+      ...['Informatique', 'Bureautique', 'Marketing', 'GSM'].map((type) => 
+        ['Hardware', 'Software', 'Social', 'Content'].map((subtype) => 
+          ({
+            text: `✅ ${type} - ${subtype}`,
+            callback_data: `validate_${type}_${subtype}_${userId}`
+          })
+        )
+      )
     ];
 
-    // Mise à jour du message avec les boutons d'activation
-    await ctx.editMessageText(
-      `🗑️ Statut ${formationType} ${part} annulé pour ${user.name}. Vous pouvez maintenant réactiver cette partie.`,
+    // Mise à jour du message avec les nouveaux boutons
+    await ctx.editMessageText(`✅ Statut ${formationType} - ${part} activé pour ${user.name}. Vous pouvez maintenant valider d'autres sections.`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
-          inline_keyboard: inlineKeyboard // Réactivation des boutons d'activation
+          inline_keyboard: inlineKeyboard // Ajout des nouveaux boutons pour valider d'autres sections
         }
       }
     );
 
+    // Envoi du message WhatsApp pour informer l'utilisateur
+    const whatsappMessage = `
+🎉 Félicitations ${user.name} !\n
+Votre accès VIP ${formationType} ${part} est maintenant actif. Nous vous remercions de votre inscription et vous souhaitons un excellent parcours avec Kaboretech !
+
+Cordialement,
+*L’équipe Kabore Tech* 💼🚀
+    `;
+    await sendWhatsAppMessage(user.phone, whatsappMessage);
+
   } catch (error) {
-    console.error('Erreur lors de l\'annulation:', error);
-    ctx.answerCbQuery('❌ Erreur lors de l\'annulation du statut VIP');
+    console.error('Erreur lors de la validation:', error);
+    ctx.answerCbQuery('❌ Erreur lors de l\'activation du statut VIP');
   }
 });
 
