@@ -7,16 +7,13 @@ import Colors from '../constants/Colors';
 const Informatique = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [filteredVideos, setFilteredVideos] = useState([]);
-  const [isVIP, setIsVIP] = useState(false);
   const [vipStatus, setVipStatus] = useState({
     Informatique: { hardware: false, software: false }
   });
   const [categories, setCategories] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const getImageUrl = (imagePath) => {
-    return `http://192.168.1.82:8000${imagePath}`;
-  };
+  const getImageUrl = (imagePath) => `http://192.168.1.82:8000${imagePath}`;
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,22 +29,18 @@ const Informatique = ({ navigation }) => {
           if (informatiqueCategory) {
             setFilteredVideos(informatiqueCategory.videos);
           }
-        } else {
-          console.log('Aucune donnée trouvée en cache.');
         }
 
         // Charger l'état VIP pour Informatique depuis AsyncStorage
-        const vipStatus = await AsyncStorage.getItem('isVIPInformatique');
-        setIsVIP(vipStatus === 'true');
+        const vipStatusInformatiqueHardware = await AsyncStorage.getItem('isVIPInformatiqueHardware') === 'true';
+        const vipStatusInformatiqueSoftware = await AsyncStorage.getItem('isVIPInformatiqueSoftware') === 'true';
 
-        // Charger le statut VIP pour les parts (hardware, software)
-        const vipStatusParts = {
+        setVipStatus({
           Informatique: {
-            hardware: (await AsyncStorage.getItem('isVIPInformatiqueHardware')) === 'true',
-            software: (await AsyncStorage.getItem('isVIPInformatiqueSoftware')) === 'true'
+            hardware: vipStatusInformatiqueHardware,
+            software: vipStatusInformatiqueSoftware
           }
-        };
-        setVipStatus(vipStatusParts);
+        });
       } catch (error) {
         console.error('Erreur de chargement des données:', error);
       }
@@ -60,16 +53,23 @@ const Informatique = ({ navigation }) => {
     setSearchText(text);
     const filtered = categories
       .find(category => category.name === 'Informatique')?.videos
-      .filter(video =>
-        video.title.toLowerCase().includes(text.toLowerCase())
+      .filter(video => 
+        (video.title.toLowerCase().includes(text.toLowerCase())) && 
+        // S'assurer que les vidéos filtrées respectent le statut VIP
+        (!video.isPaid || 
+          (getPartVIPStatus('hardware') && video.part === 'hardware') ||
+          (getPartVIPStatus('software') && video.part === 'software') ||
+          (!video.part && (getPartVIPStatus('hardware') || getPartVIPStatus('software')))
+        )
       );
     setFilteredVideos(filtered);
   };
+  
 
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
-      // Charger les catégories depuis AsyncStorage (données locales)
+      // Rafraîchir les catégories depuis AsyncStorage (données locales)
       const cachedData = await AsyncStorage.getItem('categoriesData');
       if (cachedData) {
         const parsedData = JSON.parse(cachedData);
@@ -78,7 +78,7 @@ const Informatique = ({ navigation }) => {
         // Filtrer la catégorie Informatique uniquement
         const informatiqueCategory = parsedData.find(category => category.name === 'Informatique');
         if (informatiqueCategory) {
-          setFilteredVideos(informatiqueCategory.videos);  // Mettre à jour les vidéos de la catégorie Informatique
+          setFilteredVideos(informatiqueCategory.videos);
         }
       }
     } catch (error) {
@@ -87,18 +87,23 @@ const Informatique = ({ navigation }) => {
     setIsRefreshing(false);
   };
 
-  // Vérifier l'accès en fonction du statut VIP pour les parts
-  const getPartVIPStatus = (part) => {
-    return vipStatus.Informatique?.[part] || false;
-  };
+// Vérification du statut VIP pour une partie donnée
+const getPartVIPStatus = (part) => {
+  return vipStatus.Informatique?.[part] || false;
+};
+
 
   const renderCard = (video, index) => {
-    // Déterminer l'état d'accès pour chaque part de la vidéo
+    // Vérification du statut VIP pour chaque partie de la catégorie Informatique
     const isHardwareVIP = getPartVIPStatus('hardware');
     const isSoftwareVIP = getPartVIPStatus('software');
-
-    const isAccessible = !video.isPaid || (isHardwareVIP && video.part === 'hardware') || (isSoftwareVIP && video.part === 'software');
     
+    // Règles d'accès aux vidéos en fonction des parties VIP
+    const isAccessible = !video.isPaid || 
+      (isHardwareVIP && video.part === 'hardware') || 
+      (isSoftwareVIP && video.part === 'software') || 
+      (!video.part && (isHardwareVIP || isSoftwareVIP));
+  
     return (
       <View
         style={[
@@ -109,7 +114,6 @@ const Informatique = ({ navigation }) => {
         key={video.id}
       >
         <Image source={{ uri: getImageUrl(video.image) }} style={styles.cardImage} />
-
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>{video.title}</Text>
           <Text style={[styles.cardPrice, isAccessible ? styles.cardPriceFree : styles.cardPricePaid]}>
@@ -135,12 +139,11 @@ const Informatique = ({ navigation }) => {
       </View>
     );
   };
+  
 
   return (
     <View style={styles.container}>
-      <MyHeader
-        title="Formation informatique"
-      />
+      <MyHeader title="Formation informatique" />
       <TextInput
         style={styles.searchInput}
         placeholder="Rechercher une vidéo..."

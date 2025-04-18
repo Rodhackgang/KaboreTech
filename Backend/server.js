@@ -251,23 +251,19 @@ bot.action(/validate_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software
     await ctx.answerCbQuery('✅ Section validée avec succès !');
     await ctx.editMessageText(`✅ Statut ${formationType} - ${part} activé pour ${user.name}`);
 
-    // Mise à jour des boutons pour permettre la validation d'autres sections
+    // Mise à jour des boutons pour permettre la validation d'autres sections avec des icônes différentes
     const inlineKeyboard = [
       [
         {
           text: `✅ ${formationType} - ${part}`,
           callback_data: `validate_${formationType}_${part}_${userId}` // Validation de cette section
-        },
-        {
-          text: `❌ Annuler ${formationType} - ${part}`,
-          callback_data: `cancel_${formationType}_${part}_${userId}` // Annulation de la section
         }
       ],
       // Ajouter un bouton pour valider d'autres sections
       ...['Informatique', 'Bureautique', 'Marketing', 'GSM'].map((type) => 
         ['Hardware', 'Software', 'Social', 'Content'].map((subtype) => 
           ({
-            text: `✅ ${type} - ${subtype}`,
+            text: user[`is${type}${subtype}`] ? `✅ ${type} - ${subtype}` : `❌ ${type} - ${subtype}`,
             callback_data: `validate_${type}_${subtype}_${userId}`
           })
         )
@@ -297,70 +293,6 @@ Cordialement,
   } catch (error) {
     console.error('Erreur lors de la validation:', error);
     ctx.answerCbQuery('❌ Erreur lors de l\'activation du statut VIP');
-  }
-});
-
-
-// Annulation d'une validation VIP
-bot.action(/cancel_(Informatique|Marketing|Bureautique|GSM)_(Hardware|Software|Social|Content)_([0-9a-fA-F]{24})/, async (ctx) => {
-  const [_, formationType, part, userId] = ctx.match; // Récupérer les valeurs pour la formation, la partie et l'ID utilisateur
-
-  // Mapping des champs VIP
-  const vipFieldMap = {
-    'Informatique_Hardware': 'isInformatiqueHardware',
-    'Informatique_Software': 'isInformatiqueSoftware',
-    'Bureautique_Hardware': 'isBureautiqueHardware',
-    'Bureautique_Software': 'isBureautiqueSoftware',
-    'Marketing_Social': 'isMarketingSocial',
-    'Marketing_Content': 'isMarketingContent',
-    'GSM_Hardware': 'isVIPGsmHardware',
-    'GSM_Software': 'isVIPGsmSoftware'
-  };
-
-  const vipField = vipFieldMap[`${formationType}_${part}`]; // Récupérer le champ VIP correspondant à la formation et la partie
-
-  try {
-    // Validation de l'ID utilisateur
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return ctx.answerCbQuery('❌ ID utilisateur invalide');
-    }
-
-    const user = await User.findById(userId); // Recherche de l'utilisateur par son ID
-    if (!user) {
-      return ctx.answerCbQuery('❌ Utilisateur introuvable');
-    }
-
-    // Mise à jour du statut VIP pour annuler la partie spécifique
-    await User.updateOne({ _id: userId }, { $set: { [vipField]: false } });
-
-    // Message de confirmation dans Telegram
-    await ctx.answerCbQuery('🗑️ VIP annulé avec succès !');
-    await ctx.editMessageText(`🗑️ Statut ${formationType} ${part} annulé pour ${user.name}`);
-
-    // Réinitialisation des boutons (ajout des boutons pour activer la partie à nouveau)
-    const inlineKeyboard = [
-      [
-        { 
-          text: `✅ Activer ${formationType} - ${part}`, 
-          callback_data: `validate_${formationType}_${part}_${userId}` 
-        }
-      ]
-    ];
-
-    // Mise à jour du message avec les boutons d'activation
-    await ctx.editMessageText(
-      `🗑️ Statut ${formationType} ${part} annulé pour ${user.name}. Vous pouvez maintenant réactiver cette partie.`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: inlineKeyboard // Réactivation des boutons d'activation
-        }
-      }
-    );
-
-  } catch (error) {
-    console.error('Erreur lors de l\'annulation:', error);
-    ctx.answerCbQuery('❌ Erreur lors de l\'annulation du statut VIP');
   }
 });
 
@@ -445,7 +377,12 @@ app.post('/api/reset-password', async (req, res) => {
 
 app.get('/api/vip-status', async (req, res) => {
   let { phone } = req.query;
-  
+
+  // Vérification si le paramètre 'phone' existe
+  if (!phone) {
+    return res.status(400).json({ message: 'Le numéro de téléphone est requis' });
+  }
+
   // Conserver le '+' si présent dans le numéro
   phone = phone.trim();  // Supprimer les espaces superflus
 
@@ -493,6 +430,7 @@ app.get('/api/vip-status', async (req, res) => {
     res.status(500).json({ message: 'Erreur interne lors de la récupération des statuts VIP' });
   }
 });
+
 
 // API pour vérifier le paiement
 app.post('/api/paiement', async (req, res) => {

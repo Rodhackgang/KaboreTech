@@ -6,6 +6,7 @@ import Colors from '../constants/Colors';
 
 const HomeScreen = ({ route, navigation }) => {
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [userInfo, setUserInfo] = useState({ phoneNumber: '' });
   const [vipStatus, setVipStatus] = useState({
     Informatique: { hardware: false, software: false },
     Marketing: { social: false, content: false },
@@ -17,6 +18,8 @@ const HomeScreen = ({ route, navigation }) => {
   const loadCategoriesFromCache = async () => {
     try {
       const cachedData = await AsyncStorage.getItem('categoriesData');
+      const phoneNumber = await AsyncStorage.getItem('userPhone') || '';
+      setUserInfo({ phoneNumber });
       if (cachedData) {
         setCategories(JSON.parse(cachedData));
       } else {
@@ -71,9 +74,9 @@ const HomeScreen = ({ route, navigation }) => {
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
-      const response = await fetch('http://192.168.1.82:8000/api/vip-status?phone=' + route.params?.phone);
+      const response = await fetch('http://192.168.1.82:8000/api/vip-status?phone='+ userInfo.phoneNumber);
       const data = await response.json();
-
+      console.log(data.vipDomains)
       if (data.vipDomains) {
         const updatedVipStatus = {
           Informatique: { hardware: data.vipDomains.includes('Informatique Hardware'), software: data.vipDomains.includes('Informatique Software') },
@@ -106,10 +109,81 @@ const HomeScreen = ({ route, navigation }) => {
 
   const getImageUrl = (imagePath) => `http://192.168.1.82:8000${imagePath}`;
 
-  const renderCard = (video) => {
-    const isVIP = getPartVIPStatus(video.categoryId, video.part) || !video.isPaid;
+  const renderCard = async (video) => {
+    // Vérification du statut VIP pour chaque partie de la catégorie Informatique
+    let isVIP = false;
+  
+    // Informatique
+    if (video.categoryId === 'Informatique') {
+      if (video.part === 'Hardware' && vipStatus.Informatique.hardware) {
+        isVIP = true;
+      } else if (video.part === 'Software' && vipStatus.Informatique.software) {
+        isVIP = true;
+      } else if (!video.part && (vipStatus.Informatique.hardware || vipStatus.Informatique.software)) {
+        isVIP = true;
+      }
+    }
+  
+    // Marketing
+    if (video.categoryId === 'Marketing') {
+      if (video.part === 'Social' && vipStatus.Marketing.social) {
+        isVIP = true;
+      } else if (video.part === 'Content' && vipStatus.Marketing.content) {
+        isVIP = true;
+      } else if (!video.part && (vipStatus.Marketing.social || vipStatus.Marketing.content)) {
+        isVIP = true;
+      }
+    }
+  
+    // GSM
+    if (video.categoryId === 'Réparation') {
+      if (video.part === 'Hardware' && vipStatus.GSM.hardware) {
+        isVIP = true;
+      } else if (video.part === 'Software' && vipStatus.GSM.software) {
+        isVIP = true;
+      } else if (!video.part && (vipStatus.GSM.hardware || vipStatus.GSM.software)) {
+        isVIP = true;
+      }
+    }
+  
+    // Bureautique
+    if (video.categoryId === 'Bureautique') {
+      if (video.part === 'Hardware' && vipStatus.Bureautique.hardware) {
+        isVIP = true;
+      } else if (video.part === 'Software' && vipStatus.Bureautique.software) {
+        isVIP = true;
+      } else if (!video.part && (vipStatus.Bureautique.hardware || vipStatus.Bureautique.software)) {
+        isVIP = true;
+      }
+    }
+  
+    // Si la vidéo est VIP, elle devient gratuite
     const buttonText = isVIP ? 'Visionner' : 'S\'abonner';
-
+    const isPaid = isVIP ? false : video.isPaid;
+  
+    // Mise à jour de l'état de la vidéo pour le cache
+    const updatedVideo = { ...video, isPaid };
+  
+    // Mettre à jour AsyncStorage avec la nouvelle valeur isPaid (pour persister les modifications)
+    try {
+      const cachedData = await AsyncStorage.getItem('categoriesData');
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+  
+        // Trouver et mettre à jour la vidéo dans la catégorie correspondante
+        const categoryIndex = parsedData.findIndex(category => category.id === video.categoryId);
+        if (categoryIndex !== -1) {
+          const videoIndex = parsedData[categoryIndex].videos.findIndex(v => v.id === video.id);
+          if (videoIndex !== -1) {
+            parsedData[categoryIndex].videos[videoIndex] = updatedVideo;
+            await AsyncStorage.setItem('categoriesData', JSON.stringify(parsedData)); // Mettre à jour le cache
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error updating video in cache:', error);
+    }
+  
     return (
       <View style={[styles.card, isVIP ? styles.cardFree : styles.cardPaid]} key={video.id}>
         <Image source={{ uri: getImageUrl(video.image) }} style={styles.cardImage} />
@@ -127,7 +201,7 @@ const HomeScreen = ({ route, navigation }) => {
                 videoLink: video.details.video,
                 description: video.details.description,
                 categoryId: video.categoryId,
-                isPaid: !isVIP,
+                isPaid: isPaid,
               });
             }}
           >
@@ -137,6 +211,7 @@ const HomeScreen = ({ route, navigation }) => {
       </View>
     );
   };
+  
 
   const renderCategory = (category) => (
     <View key={category.id} style={styles.category}>

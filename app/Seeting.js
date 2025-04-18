@@ -9,6 +9,7 @@ const Seeting = ({ navigation }) => {
   const [haveAccount, setHaveAccount] = useState(false);
   const [userInfo, setUserInfo] = useState({ firstName: '', lastName: '', phoneNumber: '' });
   const [vipStatus, setVipStatus] = useState({});
+  const [categories, setCategories] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -32,49 +33,64 @@ const Seeting = ({ navigation }) => {
     loadStorageData();
   }, []);
 
-  // Function to load VIP statuses dynamically
+  // Load VIP status based on the AsyncStorage keys
   const loadVipStatus = async () => {
-    const categories = ['Informatique', 'Marketing', 'GSM', 'Energie', 'Reparation'];
     const vipStatusFromStorage = {};
 
     try {
-      // Iterate over categories and load hardware/software parts dynamically
-      for (const category of categories) {
-        const categoryParts = ['hardware', 'software'];
-        vipStatusFromStorage[category] = {};
+      // Retrieve VIP status for each category and part (hardware/software)
+      vipStatusFromStorage['Informatique'] = {
+        hardware: (await AsyncStorage.getItem('isVIPInformatiqueHardware')) === 'true',
+        software: (await AsyncStorage.getItem('isVIPInformatiqueSoftware')) === 'true',
+      };
 
-        for (const part of categoryParts) {
-          const key = `isVIP${category}${capitalize(part)}`;
-          vipStatusFromStorage[category][part] = (await AsyncStorage.getItem(key)) === 'true';
-        }
-      }
+      vipStatusFromStorage['Marketing'] = {
+        social: (await AsyncStorage.getItem('isVIPMarketingSocial')) === 'true',
+        content: (await AsyncStorage.getItem('isVIPMarketingContent')) === 'true',
+      };
 
+      vipStatusFromStorage['GSM'] = {
+        hardware: (await AsyncStorage.getItem('isVIPGsmHardware')) === 'true',
+        software: (await AsyncStorage.getItem('isVIPGsmSoftware')) === 'true',
+      };
+
+      vipStatusFromStorage['Bureautique'] = {
+        hardware: (await AsyncStorage.getItem('isVIPBureautiqueHardware')) === 'true',
+        software: (await AsyncStorage.getItem('isVIPBureautiqueSoftware')) === 'true',
+      };
+
+      console.log('Avant mise à jour des statuts VIP:', vipStatusFromStorage);
       setVipStatus(vipStatusFromStorage);
     } catch (error) {
       console.error('Error loading VIP status:', error);
     }
   };
 
-  // Helper function to capitalize first letter of a string
+  // Helper function to capitalize the first letter of a string
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
   const sections = [
     { route: 'Informatique', label: 'Informatique', icon: 'laptop', vipKey: 'Informatique' },
     { route: 'Marketing Digital', label: 'Marketing', icon: 'globe', vipKey: 'Marketing' },
-    { route: 'Energie Solaire', label: 'Energie Solaire', icon: 'sun', vipKey: 'Energie' },
-    { route: 'Réparation Téléphones', label: 'Réparation', icon: 'mobile-alt', vipKey: 'Reparation' },
+    { route: 'Réparation Téléphones', label: 'Réparation', icon: 'mobile-alt', vipKey: 'GSM' },
+    { route: 'Bureautique', label: 'Bureautique', icon: 'keyboard', vipKey: 'Bureautique' }
   ];
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.multiRemove([
         'haveAccount', 'firstName', 'lastName', 'phoneNumber',
-        'isVIPInformatique', 'isVIPMarketing', 'isVIPEnergie', 'isVIPReparation'
+        'isVIPInformatiqueHardware', 'isVIPInformatiqueSoftware',
+        'isVIPMarketingSocial', 'isVIPMarketingContent',
+        'isVIPGsmHardware', 'isVIPGsmSoftware',
+        'isVIPBureautiqueHardware', 'isVIPBureautiqueSoftware',
+        'categoriesData'
       ]);
 
       setHaveAccount(false);
       setUserInfo({ firstName: '', lastName: '', phoneNumber: '' });
       setVipStatus({});
+      setCategories([]);
 
       navigation.reset({
         index: 0,
@@ -105,7 +121,6 @@ const Seeting = ({ navigation }) => {
         />
         <Text style={styles.cardLabel}>{section.label}</Text>
 
-        {/* Display active VIP parts */}
         <Text style={[styles.vipStatus, isVIPHardware ? styles.vipActive : styles.vipInactive]}>
           {isVIPHardware ? 'Hardware Actif' : 'Hardware Inactif'}
         </Text>
@@ -116,6 +131,7 @@ const Seeting = ({ navigation }) => {
     );
   };
 
+  // Function to refresh the VIP status based on the API response
   const refreshVipStatus = async () => {
     setIsRefreshing(true);
     try {
@@ -125,9 +141,23 @@ const Seeting = ({ navigation }) => {
       if (data.vipDomains) {
         const updatedVipStatus = { ...vipStatus };
 
-        Object.keys(updatedVipStatus).forEach((category) => {
-          updatedVipStatus[category].hardware = data.vipDomains.includes(`${category} Hardware`);
-          updatedVipStatus[category].software = data.vipDomains.includes(`${category} Software`);
+        const vipCategoryMap = {
+          'GSM Hardware': 'GSM',
+          'GSM Software': 'GSM',
+          'Marketing Social': 'Marketing',
+          'Marketing Content': 'Marketing',
+          'Informatique Hardware': 'Informatique',
+          'Informatique Software': 'Informatique',
+          'Bureautique Hardware': 'Bureautique',
+          'Bureautique Software': 'Bureautique'
+        };
+
+        data.vipDomains.forEach(domain => {
+          const category = vipCategoryMap[domain];
+          if (category) {
+            const part = domain.includes('Hardware') ? 'hardware' : 'software';
+            updatedVipStatus[category][part] = true;
+          }
         });
 
         setVipStatus(updatedVipStatus);
@@ -139,6 +169,7 @@ const Seeting = ({ navigation }) => {
           }
         }
       }
+
     } catch (error) {
       console.error('Error refreshing VIP status:', error);
     }
@@ -151,7 +182,6 @@ const Seeting = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshVipStatus} />}>
         <Text style={styles.sectionTitle}>Informations Personnelles</Text>
 
-        {/* Prénom */}
         <View style={styles.infoContainer}>
           <View style={styles.row}>
             <Text style={styles.label}>Nom :</Text>
@@ -159,7 +189,6 @@ const Seeting = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Numéro */}
         <View style={styles.infoContainer}>
           <View style={styles.row}>
             <Text style={styles.label}>Numéro :</Text>
@@ -225,7 +254,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: 30,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center', 
   },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: Colors.white },
   marginBottom: { marginBottom: 20 },
