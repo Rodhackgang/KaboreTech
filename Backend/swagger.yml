@@ -14,7 +14,7 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
+            schema: http://localhost:8000
               type: object
               required:
                 - name
