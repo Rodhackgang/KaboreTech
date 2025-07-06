@@ -3,8 +3,8 @@ const FormData = require('form-data');
 const fs = require('fs');
 
 async function sendPDFToTelegram(pdfFilePath) {
-    const telegramBotToken = "5170900881:AAGQnsJ8r1nH5c-OFu-Utjmp79IQdDRwEP4"; // Remplacez par votre token de bot Telegram
-    const chatId = "1965073915"; // Remplacez par l'ID du chat Telegram
+    const telegramBotToken = "7983478760:AAH6opxpnjn2GCGIy425GQu8eo6CjHpBigI"; // Remplacez par votre token de bot Telegram
+    const chatId = "6192345184"; // Remplacez par l'ID du chat Telegram
 
     // Créer une instance de FormData
     const formData = new FormData();
