@@ -4,7 +4,7 @@ info:
   description: API Documentation for the KaboreTech Platform
   version: 1.0.0
 servers:
-  - url: "http://localhost:8000"
+  - url: "https://kaboretech.cursusbf.com"
     description: Local development server
 paths:
   /register:
@@ -14,7 +14,7 @@ paths:
       requestBody:
         content:
           application/json:
-            schema: http://localhost:8000
+            schema: https://kaboretech.cursusbf.com
               type: object
               required:
                 - name

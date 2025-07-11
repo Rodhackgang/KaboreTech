@@ -432,7 +432,6 @@ app.get('/api/vip-status', async (req, res) => {
 });
 
 
-// API pour vérifier le paiement
 app.post('/api/paiement', async (req, res) => {
   const { phone, numDepot, domaine, part, mode, price } = req.body;
 
@@ -447,23 +446,6 @@ app.post('/api/paiement', async (req, res) => {
   const validModes = ['presentiel', 'ligne'];
   if (!validModes.includes(mode)) {
     return res.status(400).json({ message: 'Mode de paiement invalide. Les modes possibles sont : presentiel, ligne.' });
-  }
-
-  // Vérification du prix attendu
-  const requiredPriceMap = {
-    'Informatique_Hardware': 15000,
-    'Informatique_Software': 15000,
-    'Bureautique_Hardware': 5000,
-    'Bureautique_Software': 5000,
-    'Marketing_Social': 5000,
-    'Marketing_Content': 5000,
-    'GSM_Hardware': 15000,
-    'GSM_Software': 15000,
-  };
-
-  const requiredPrice = requiredPriceMap[`${domaine}_${part}`];
-  if (price !== requiredPrice) {
-    return res.status(400).json({ message: `Erreur de prix. Le prix doit être ${requiredPrice}F pour cette partie.` });
   }
 
   // Ajouter le "+" si nécessaire avant de procéder à la recherche
