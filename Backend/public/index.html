@@ -509,20 +509,30 @@
                             <label for="title">Titre de la vidéo</label>
                             <input type="text" id="title" class="form-control" required>
                         </div>
-                        <div class="form-group">
-                            <label for="category">Catégorie</label>
-                            <select id="category" class="form-control" required>
-                                <option value="">Sélectionner une catégorie</option>
-                                <option value="Informatique">Informatique</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Bureautique">Bureautique</option>
-                                <option value="GSM">GSM</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="part">Partie</label>
-                            <input type="text" id="part" class="form-control" required>
-                        </div>
+                      <div class="form-group">
+    <label for="category">Catégorie</label>
+    <select id="category" class="form-control" required>
+        <option value="">Sélectionner une catégorie</option>
+        <option value="Informatique">Informatique</option>
+        <option value="Marketing">Marketing</option>
+        <option value="Energie">Energie</option>
+        <option value="Réparation">Réparation</option>
+        <option value="Bureautique">Bureautique</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="part">Partie</label>
+    <select id="part" class="form-control" required>
+        <option value="">Sélectionner une partie</option>
+        <option value="Hardware">Hardware</option>
+        <option value="Software">Software</option>
+        <option value="Partie1">Partie1</option>
+        <option value="Partie2">Partie2</option>
+        <option value="Social">Social</option>
+        <option value="Contenue">Contenue</option>
+    </select>
+</div>
                         <div class="form-group">
                             <label for="isPaid">Type de vidéo</label>
                             <select id="isPaid" class="form-control" required>
@@ -874,60 +884,61 @@
         });
     }
 
-    function handleVideoSubmit(e) {
-        e.preventDefault();
-        
-        const title = document.getElementById('title').value;
-        const category = document.getElementById('category').value;
-        const part = document.getElementById('part').value;
-        const isPaid = document.getElementById('isPaid').value === 'true';
-        const description = document.getElementById('description').value;
-        const videoFile = document.getElementById('videoFile').files[0];
-        const imageFile = document.getElementById('imageFile').files[0];
-        
-        if (!title || !category || !part || !description) {
-            showAlert('video-alert', 'Veuillez remplir tous les champs obligatoires', 'danger');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('categoryId', category);
-        formData.append('part', part);
-        formData.append('isPaid', isPaid);
-        formData.append('description', description);
-        if (videoFile) formData.append('videoFile', videoFile);
-        if (imageFile) formData.append('imageFile', imageFile);
-        
-        const url = currentVideoId ? `${BASE_URL}/api/update-video/${currentVideoId}` : `${BASE_URL}/api/add-video`;
-        const method = currentVideoId ? 'PUT' : 'POST';
-        
-        fetch(url, {
-            method: method,
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur lors de la requête');
-            return response.json();
-        })
-        .then(data => {
-            const message = currentVideoId ? 'Vidéo mise à jour avec succès' : 'Vidéo ajoutée avec succès';
-            showAlert('video-alert', message, 'success');
-            
-            resetVideoForm();
-            loadVideos();
-            loadDashboardData();
-            
-            // Revenir à la liste des vidéos après un délai
-            setTimeout(() => {
-                document.querySelector('.tab[data-tab="videos-list"]').click();
-            }, 1500);
-        })
-        .catch(error => {
-            console.error('Erreur lors de la soumission du formulaire:', error);
-            showAlert('video-alert', 'Erreur lors de la soumission du formulaire', 'danger');
-        });
+function handleVideoSubmit(e) {
+    e.preventDefault();
+    
+    const title = document.getElementById('title').value;
+    const category = document.getElementById('category').value;
+    const part = document.getElementById('part').value;
+    const isPaid = document.getElementById('isPaid').value === 'true'; // Conversion en booléen
+    const description = document.getElementById('description').value;
+    const videoFile = document.getElementById('videoFile').files[0];
+    const imageFile = document.getElementById('imageFile').files[0];
+    
+    if (!title || !category || !part || !description) {
+        showAlert('video-alert', 'Veuillez remplir tous les champs obligatoires', 'danger');
+        return;
     }
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('categoryId', category);
+    formData.append('part', part);
+    formData.append('isPaid', isPaid);  // Envoi du booléen
+    formData.append('description', description);
+    if (videoFile) formData.append('videoFile', videoFile);
+    if (imageFile) formData.append('imageFile', imageFile);
+    
+    const url = currentVideoId ? `${BASE_URL}/api/update-video/${currentVideoId}` : `${BASE_URL}/api/add-video`;
+    const method = currentVideoId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Erreur lors de la requête');
+        return response.json();
+    })
+    .then(data => {
+        const message = currentVideoId ? 'Vidéo mise à jour avec succès' : 'Vidéo ajoutée avec succès';
+        showAlert('video-alert', message, 'success');
+        
+        resetVideoForm();
+        loadVideos();
+        loadDashboardData();
+        
+        // Revenir à la liste des vidéos après un délai
+        setTimeout(() => {
+            document.querySelector('.tab[data-tab="videos-list"]').click();
+        }, 1500);
+    })
+    .catch(error => {
+        console.error('Erreur lors de la soumission du formulaire:', error);
+        showAlert('video-alert', 'Erreur lors de la soumission du formulaire', 'danger');
+    });
+}
+
 
     function resetVideoForm() {
         document.getElementById('video-form').reset();
@@ -943,46 +954,50 @@
     }
 
     // Fonctions pour la gestion des utilisateurs
-    function loadUsers() {
-        // Note: L'API pour récupérer les utilisateurs n'est pas définie dans votre backend
-        // Je suppose qu'il existe une route /api/users
-        fetch(`${BASE_URL}/api/users`)
-            .then(response => {
-                if (!response.ok) throw new Error('Erreur de réseau');
-                return response.json();
-            })
-            .then(users => {
-                const usersTable = document.getElementById('users-table').querySelector('tbody');
-                usersTable.innerHTML = '';
-                
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.name}</td>
-                        <td>${user.phone}</td>
-                        <td>${getUserStatus(user)}</td>
-                        <td>
-                            <button class="action-btn edit-btn" data-id="${user._id}"><i class="fas fa-edit"></i></button>
-                            <button class="action-btn delete-btn" data-id="${user._id}"><i class="fas fa-trash"></i></button>
-                            <button class="action-btn reset-btn" data-id="${user._id}" data-phone="${user.phone}"><i class="fas fa-key"></i></button>
-                        </td>
-                    `;
-                    usersTable.appendChild(row);
-                });
-                
-                if (usersTable.innerHTML === '') {
-                    usersTable.innerHTML = '<tr><td colspan="4">Aucun utilisateur disponible</td></tr>';
-                }
-                
-                // Ajouter les gestionnaires d'événements pour les boutons
-                addUserActionHandlers();
-            })
-            .catch(error => {
-                console.error('Erreur lors du chargement des utilisateurs:', error);
-                document.getElementById('users-table').querySelector('tbody').innerHTML = 
-                    '<tr><td colspan="4">Erreur lors du chargement des utilisateurs</td></tr>';
+   function loadUsers() {
+    // Note: L'API pour récupérer les utilisateurs n'est pas définie dans votre backend
+    // Je suppose qu'il existe une route /api/users
+    fetch(`${BASE_URL}/api/users`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur de réseau');
+            return response.json();
+        })
+        .then(data => {
+            // On accède à la liste des utilisateurs dans le champ "users"
+            const users = data.users;
+
+            const usersTable = document.getElementById('users-table').querySelector('tbody');
+            usersTable.innerHTML = '';
+
+            // Vérifiez si "users" est vide
+            if (users.length === 0) {
+                usersTable.innerHTML = '<tr><td colspan="4">Aucun utilisateur disponible</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.phone}</td>
+                    <td>${getUserStatus(user)}</td>
+                    <td>
+                        <button class="action-btn reset-btn" data-id="${user.id}" data-phone="${user.phone}"><i class="fas fa-key"></i></button>
+                    </td>
+                `;
+                usersTable.appendChild(row);
             });
-    }
+
+            // Ajouter les gestionnaires d'événements pour les boutons
+            addUserActionHandlers();
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des utilisateurs:', error);
+            document.getElementById('users-table').querySelector('tbody').innerHTML = 
+                '<tr><td colspan="4">Erreur lors du chargement des utilisateurs</td></tr>';
+        });
+}
+
 
     function getUserStatus(user) {
         const status = [];
