@@ -20,7 +20,11 @@ const path = require('path');
 const os = require('os');
 const { GridFSBucket } = require('mongodb');
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 200 * 1024 * 1024 } // Limite de taille des fichiers à 200MB
+});
+
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yml');
@@ -39,12 +43,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-app.use(bodyParser.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 
 app.use(bodyParser.json({ limit: '100mb' }));  // Augmenter la limite de taille pour le corps de la requête
-app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+
 
 
 mongoose.connect(process.env.MONGODB_URI, {
@@ -181,9 +184,32 @@ Voici les formations disponibles pour vous, chaque formation peut être payée p
 
 ${formationsMessage}
 
-Nos coordonnées de paiement :
-➡ Orange Money : +226 74 39 19 80
-➡ Moov Money : +226 02 18 04 25
+👉 ORANGE👉 MOOV 👉 UBA     👉wave👉Western Unions
+
+👉 Nom: kabore
+👉 Prénom : Dominique
+👉 Pays : Burkina Faso
+👉 Ville : Houndé
+
+👉Orange (+226) 74391980
+👉Wave +226 74 39 19 80
+👉 Moov (+226) 02180425
+
+👉 Western Unions
+Kabore Dominique
+Houndé Burkina Faso
++226 74 39 19 80
+
+👉 UBA  415800007247
+👉ID Binance: 776174244
+
+
+Possibilité de payer en deux tranches   
+
+
+Après payement Veillez nous signalé✍️   Avec capture d'écran
+
+Les informations a fournir c'est nom, prénom  , date et lieu de naissance
 
 Cordialement,
 *L’équipe Kabore Tech* 💼🚀
