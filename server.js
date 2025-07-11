@@ -20,7 +20,11 @@ const path = require('path');
 const os = require('os');
 const { GridFSBucket } = require('mongodb');
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 200 * 1024 * 1024 } // Limite de taille des fichiers à 200MB
+});
+
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./swagger.yml');
@@ -29,12 +33,20 @@ let gridFSBucketVideo;
 let gridFSBucketImage;
 
 // Middleware
-app.use(cors({
-  origin: 'https://kaboretech.cursusbf.com' // Autoriser uniquement ce domaine
-}));
+const corsOptions = {
+  origin: 'https://kaboretech.cursusbf.com',  // Autoriser uniquement ce domaine
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Spécifier les méthodes HTTP autorisées
+  allowedHeaders: ['Content-Type', 'Authorization'], // Autoriser les en-têtes spécifiques
+  credentials: true  // Permet les cookies si nécessaires
+};
 
-app.use(bodyParser.json());
+app.use(cors(corsOptions));
+
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
+app.use(bodyParser.json({ limit: '100mb' }));  // Augmenter la limite de taille pour le corps de la requête
 
 
 
