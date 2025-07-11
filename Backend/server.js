@@ -29,10 +29,22 @@ let gridFSBucketVideo;
 let gridFSBucketImage;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: 'https://kaboretech.cursusbf.com',  // Autoriser uniquement ce domaine
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Spécifier les méthodes HTTP autorisées
+  allowedHeaders: ['Content-Type', 'Authorization'], // Autoriser les en-têtes spécifiques
+  credentials: true  // Permet les cookies si nécessaires
+};
+
+app.use(cors(corsOptions));
+
+
 app.use(bodyParser.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+
+app.use(bodyParser.json({ limit: '100mb' }));  // Augmenter la limite de taille pour le corps de la requête
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
 
 mongoose.connect(process.env.MONGODB_URI, {
