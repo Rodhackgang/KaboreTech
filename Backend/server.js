@@ -33,6 +33,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -55,6 +57,10 @@ mongoose.connection.on('error', (err) => {
 });
 
 bot.launch();
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const compressVideo = (inputBuffer) => {
   return new Promise((resolve, reject) => {
@@ -375,6 +381,56 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
+// Route pour récupérer la liste des utilisateurs
+app.get('/api/users', async (req, res) => {
+  try {
+    // Récupérer tous les utilisateurs avec les champs nécessaires
+    const users = await User.find({}, {
+      name: 1,
+      phone: 1,
+      isInformatiqueHardware: 1,
+      isInformatiqueSoftware: 1,
+      isBureautiqueHardware: 1,
+      isBureautiqueSoftware: 1,
+      isMarketingSocial: 1,
+      isMarketingContent: 1,
+      isVIPGsmHardware: 1,
+      isVIPGsmSoftware: 1,
+      createdAt: 1
+    }).sort({ createdAt: -1 }); // Tri par date de création décroissante
+
+    // Formater les données pour la réponse
+    const formattedUsers = users.map(user => ({
+      id: user._id,
+      name: user.name,
+      phone: user.phone,
+      status: {
+        informatiqueHardware: user.isInformatiqueHardware,
+        informatiqueSoftware: user.isInformatiqueSoftware,
+        bureautiqueHardware: user.isBureautiqueHardware,
+        bureautiqueSoftware: user.isBureautiqueSoftware,
+        marketingSocial: user.isMarketingSocial,
+        marketingContent: user.isMarketingContent,
+        gsmHardware: user.isVIPGsmHardware,
+        gsmSoftware: user.isVIPGsmSoftware
+      },
+      createdAt: user.createdAt
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedUsers.length,
+      users: formattedUsers
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération des utilisateurs'
+    });
+  }
+});
+
 app.get('/api/vip-status', async (req, res) => {
   let { phone } = req.query;
 
@@ -525,6 +581,81 @@ app.post('/api/add-video', upload.fields([{ name: 'videoFile', maxCount: 1 }, { 
     res.status(201).json({ 
       message: 'Vidéo sauvegardée dans MongoDB !',
       video: newVideo 
+    });
+
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put('/api/update-video/:id', upload.fields([{ name: 'videoFile', maxCount: 1 }, { name: 'imageFile', maxCount: 1 }]), async (req, res) => {
+  const { title, categoryId, part, isPaid, description } = req.body;
+  const videoId = req.params.id; // Video ID from URL params
+
+  try {
+    // Find the video by ID
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({ message: 'Vidéo non trouvée.' });
+    }
+
+    // Optionally update files if new files are provided
+    let videoFileId = video.videoFileId;
+    let imageFileId = video.imageFileId;
+
+    if (req.files.videoFile) {
+      // If a new video file is uploaded, store it in GridFS and update the videoFileId
+      videoFileId = await storeFileInGridFS(req.files.videoFile[0], gridFSBucketVideo);
+    }
+
+    if (req.files.imageFile) {
+      // If a new image file is uploaded, store it in GridFS and update the imageFileId
+      imageFileId = await storeFileInGridFS(req.files.imageFile[0], gridFSBucketImage);
+    }
+
+    // Update video details
+    video.title = title || video.title;
+    video.categoryId = categoryId || video.categoryId;
+    video.part = part || video.part;
+    video.isPaid = isPaid === 'true' || video.isPaid;
+    video.description = description || video.description;
+    video.videoFileId = videoFileId;
+    video.imageFileId = imageFileId;
+
+    // Save the updated video
+    await video.save();
+
+    res.status(200).json({
+      message: 'Vidéo mise à jour avec succès!',
+      video
+    });
+
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/api/delete-video/:id', async (req, res) => {
+  const videoId = req.params.id; // Video ID from URL params
+
+  try {
+    // Find the video by ID
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json({ message: 'Vidéo non trouvée.' });
+    }
+
+    // Remove the video file and image file from GridFS
+    await gridFSBucketVideo.delete(video.videoFileId);
+    await gridFSBucketImage.delete(video.imageFileId);
+
+    // Delete the video from MongoDB
+    await video.remove();
+
+    res.status(200).json({
+      message: 'Vidéo supprimée avec succès!'
     });
 
   } catch (error) {
