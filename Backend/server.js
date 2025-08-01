@@ -20,6 +20,7 @@ const path = require('path');
 const os = require('os');
 const { GridFSBucket } = require('mongodb');
 const storage = multer.memoryStorage();
+const Setting = require('./models/Setting');
 const upload = multer({
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 } // Limite de taille des fichiers à 200MB
@@ -77,6 +78,43 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/api/screen-capture', async (req, res) => {
+  try {
+    const setting = await Setting.findOne({ key: 'allowScreenCapture' });
+
+    if (!setting) {
+      // Si non défini, on retourne une valeur par défaut
+      return res.json({ allowScreenCapture: false });
+    }
+
+    res.json({ allowScreenCapture: setting.value });
+  } catch (error) {
+    console.error('Erreur récupération config screenCapture:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+// 🔧 Modifier l’état de la capture d’écran (à protéger plus tard !)
+app.post('/api/screen-capture', async (req, res) => {
+  const { allowScreenCapture } = req.body;
+
+  if (typeof allowScreenCapture !== 'boolean') {
+    return res.status(400).json({ message: 'Le champ allowScreenCapture doit être un booléen' });
+  }
+
+  try {
+    const setting = await Setting.findOneAndUpdate(
+      { key: 'allowScreenCapture' },
+      { value: allowScreenCapture },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ message: 'Configuration mise à jour', allowScreenCapture: setting.value });
+  } catch (error) {
+    console.error('Erreur mise à jour config screenCapture:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
 const compressVideo = (inputBuffer) => {
   return new Promise((resolve, reject) => {
     // Créer un fichier temporaire pour la vidéo compressée
