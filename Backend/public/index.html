@@ -1419,70 +1419,71 @@
       async function loadDashboardData() {
         try {
           showLoading("recent-videos-table");
-
           const res = await fetch(`${BASE_URL}/api/videos`);
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
           const data = await res.json();
 
-          // Calculate statistics
-          const total = data.reduce((a, c) => a + c.videos.length, 0);
+          // Calculer les stats
+          const total = data.reduce((acc, cat) => acc + cat.videos.length, 0);
           const paid = data.reduce(
-            (a, c) => a + c.videos.filter((v) => v.isPaid).length,
+            (acc, cat) => acc + cat.videos.filter((v) => v.isPaid).length,
             0
           );
           const free = total - paid;
 
-          // Update dashboard cards with animation
           animateCounter("total-videos", total);
           animateCounter("paid-videos", paid);
           animateCounter("free-videos", free);
 
-          // Load recent videos table
+          // Remplir les 5 dernières vidéos
+          const recentVideos = [];
+          for (const cat of data) {
+            for (const video of cat.videos) {
+              recentVideos.push({ ...video, categoryName: cat.name });
+            }
+          }
+
+          // Trier par ID (ou par date si vous aviez un champ `createdAt`)
+          // On suppose que l'ID MongoDB est croissant
+          recentVideos.sort((a, b) => b.id.localeCompare(a.id));
+          const latest = recentVideos.slice(0, 5);
+
           const tbody = document
             .getElementById("recent-videos-table")
             .querySelector("tbody");
           tbody.innerHTML = "";
 
-          let count = 0;
-          for (const cat of data) {
-            for (const video of cat.videos) {
-              if (count >= 5) break;
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-              <td style="font-weight: 600;">${video.title}</td>
-              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-                video.categoryId
-              }</span></td>
-              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-                video.part
-              }</span></td>
-              <td><span class="status ${video.isPaid ? "paid" : "free"}">${
-                video.isPaid ? "Payante" : "Gratuite"
-              }</span></td>
-              <td>
-                <button class="action-btn edit-btn" data-id="${
-                  video.id
-                }" title="Modifier">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn delete-btn" data-id="${
-                  video.id
-                }" title="Supprimer">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </td>
-            `;
-              tbody.appendChild(tr);
-              count++;
-            }
-          }
+          latest.forEach((video) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+        <td style="font-weight: 600;">${video.title}</td>
+        <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
+          video.categoryName
+        }</span></td>
+        <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
+          video.part
+        }</span></td>
+        <td><span class="status ${video.isPaid ? "paid" : "free"}">${
+              video.isPaid ? "Payante" : "Gratuite"
+            }</span></td>
+        <td>
+          <button class="action-btn edit-btn" data-id="${
+            video.id
+          }" title="Modifier"><i class="fas fa-edit"></i></button>
+          <button class="action-btn delete-btn" data-id="${
+            video.id
+          }" title="Supprimer"><i class="fas fa-trash"></i></button>
+        </td>
+      `;
+            tbody.appendChild(tr);
+          });
 
           addVideoActionHandlers();
         } catch (e) {
-          console.error("Erreur lors du chargement du dashboard:", e);
-          showError(
-            "recent-videos-table",
-            "Erreur lors du chargement des données"
-          );
+          console.error("Erreur dashboard:", e);
+          showError("recent-videos-table", `Erreur: ${e.message}`);
         }
       }
 
@@ -1513,68 +1514,51 @@
       // Videos Functions
       async function loadVideos() {
         try {
-          showLoading("videos-table"); // Afficher le chargement
-
+          showLoading("videos-table");
           const res = await fetch(`${BASE_URL}/api/videos`);
-          const data = await res.json(); // Récupérer les données des vidéos depuis l'API
+          if (!res.ok) throw new Error(`Erreur serveur: ${res.status}`);
 
+          const data = await res.json();
           const tbody = document
             .getElementById("videos-table")
             .querySelector("tbody");
-          tbody.innerHTML = ""; // Réinitialiser la table
+          tbody.innerHTML = "";
 
-          // Parcours des catégories
-          data.forEach((cat) => {
-            // Parcours des vidéos dans chaque catégorie
-            cat.videos.forEach((video) => {
+          data.forEach((category) => {
+            category.videos.forEach((video) => {
               const tr = document.createElement("tr");
+              const desc = video.details?.description || "Pas de description";
               tr.innerHTML = `
           <td style="font-weight: 600;">${video.title}</td>
-          <td>
-            <span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">
-              ${cat.name}  <!-- Affiche le nom de la catégorie -->
-            </span>
-          </td>
-          <td>
-            <span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">
-              ${video.part}  <!-- Affiche la partie -->
-            </span>
-          </td>
-          <td>
-            <span class="status ${video.isPaid ? "paid" : "free"}">
-              ${video.isPaid ? "Payante" : "Gratuite"}
-            </span>
-          </td>
-          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${
-            video.details.description
-          }">
-            ${
-              video.details.description
-                ? video.details.description.substring(0, 50) + "..."
-                : "Pas de description"
-            }
+          <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
+            category.name
+          }</span></td>
+          <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
+            video.part
+          }</span></td>
+          <td><span class="status ${video.isPaid ? "paid" : "free"}">${
+                video.isPaid ? "Payante" : "Gratuite"
+              }</span></td>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${desc}">
+            ${desc.length > 50 ? desc.substring(0, 50) + "..." : desc}
           </td>
           <td>
             <button class="action-btn edit-btn" data-id="${
               video.id
-            }" title="Modifier">
-              <i class="fas fa-edit"></i>
-            </button>
+            }" title="Modifier"><i class="fas fa-edit"></i></button>
             <button class="action-btn delete-btn" data-id="${
               video.id
-            }" title="Supprimer">
-              <i class="fas fa-trash"></i>
-            </button>
+            }" title="Supprimer"><i class="fas fa-trash"></i></button>
           </td>
         `;
-              tbody.appendChild(tr); // Ajouter la ligne dans le tableau
+              tbody.appendChild(tr);
             });
           });
 
-          addVideoActionHandlers(); // Ajouter les gestionnaires d'événements pour les actions des vidéos
+          addVideoActionHandlers();
         } catch (e) {
-          console.error("Erreur lors du chargement des vidéos:", e);
-          showError("videos-table", "Erreur lors du chargement des vidéos");
+          console.error("Erreur videos:", e);
+          showError("videos-table", `Échec du chargement: ${e.message}`);
         }
       }
 
@@ -1797,9 +1781,18 @@
       async function loadUsers() {
         try {
           showLoading("users-table");
-
           const res = await fetch(`${BASE_URL}/api/users`);
+
+          if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+
           const data = await res.json();
+
+          if (!data.success || !Array.isArray(data.users)) {
+            throw new Error(
+              "Format de réponse invalide: 'users' non trouvé ou erreur API"
+            );
+          }
+
           const tbody = document
             .getElementById("users-table")
             .querySelector("tbody");
@@ -1808,31 +1801,30 @@
           data.users.forEach((u) => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-            <td style="font-weight: 600;">
-              <div style="display: flex; align-items: center;">
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">
-                  ${u.name.charAt(0).toUpperCase()}
-                </div>
-                ${u.name}
-              </div>
-            </td>
-            <td style="font-family: monospace; font-weight: 500;">${
-              u.phone
-            }</td>
-            <td><span style="font-size: 0.85rem; color: var(--gray);">${getUserStatus(
-              u
-            )}</span></td>
-            <td>
-              <button class="action-btn reset-btn" data-phone="${
-                u.phone
-              }" title="Réinitialiser le mot de passe">
-                <i class="fas fa-key"></i>
-              </button>
-            </td>
-          `;
+        <td style="font-weight: 600;">
+          <div style="display: flex; align-items: center;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">
+              ${u.name.trim().charAt(0).toUpperCase()}
+            </div>
+            ${u.name.trim()}
+          </div>
+        </td>
+        <td style="font-family: monospace; font-weight: 500;">${u.phone}</td>
+        <td><span style="font-size: 0.85rem; color: var(--gray);">${getUserStatus(
+          u
+        )}</span></td>
+        <td>
+          <button class="action-btn reset-btn" data-phone="${
+            u.phone
+          }" title="Réinitialiser le mot de passe">
+            <i class="fas fa-key"></i>
+          </button>
+        </td>
+      `;
             tbody.appendChild(tr);
           });
 
+          // Réattacher les événements
           document.querySelectorAll(".reset-btn").forEach((btn) => {
             btn.addEventListener("click", () =>
               openPasswordModal(btn.dataset.phone)
@@ -1840,10 +1832,7 @@
           });
         } catch (e) {
           console.error("Erreur lors du chargement des utilisateurs:", e);
-          showError(
-            "users-table",
-            "Erreur lors du chargement des utilisateurs"
-          );
+          showError("users-table", `Erreur: ${e.message}`);
         }
       }
 
@@ -2083,25 +2072,28 @@
       }
 
       function showLoading(tableId) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
+        const table = document.getElementById(tableId);
+        const colCount = table.querySelector("thead tr")?.children.length || 6;
+        const tbody = table.querySelector("tbody");
         tbody.innerHTML = `
     <tr>
-      <td colspan="6" class="loading">
-        <i class="fas fa-spinner fa-spin"></i> Chargement des vidéos...
+      <td colspan="${colCount}" class="loading">
+        <i class="fas fa-spinner fa-spin"></i> Chargement...
       </td>
     </tr>
   `;
       }
 
       function showError(tableId, message) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
+        const table = document.getElementById(tableId);
+        const colCount = table.querySelector("thead tr")?.children.length || 6;
+        const tbody = table.querySelector("tbody");
         tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="loading" style="color: var(--danger);">
-            <i class="fas fa-exclamation-triangle"></i>
-            ${message}
-          </td>
-        </tr>`;
+    <tr>
+      <td colspan="${colCount}" class="loading" style="color: var(--danger);">
+        <i class="fas fa-exclamation-triangle"></i> ${message}
+      </td>
+    </tr>`;
       }
 
       function showAlert(elementId, message, type) {
