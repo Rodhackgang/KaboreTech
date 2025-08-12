@@ -1001,9 +1001,29 @@
     <i class="fas fa-bars"></i>
   </button>
 
-  <script>
+<script>
     const BASE_URL = 'https://kaboretech.cursusbf.com';
     let currentVideoId = null;
+
+    // Configuration des catégories avec les nouveaux libellés
+    const categoryConfig = {
+      'Informatique': {
+        displayName: 'Informatique la affiche en frontend',
+        parts: ['Hardware', 'Software']
+      },
+      'Bureautique': {
+        displayName: 'Maintenance informatique, Bureautique ces Secretariat informatique',
+        parts: ['Partie1', 'Partie2']
+      },
+      'Marketing': {
+        displayName: 'Marketing ces marketing digital',
+        parts: ['Social', 'Content']
+      },
+      'GSM': {
+        displayName: 'Réparation téléphone',
+        parts: ['Hardware', 'Software']
+      }
+    };
 
     // DOM Elements
     const sections = {
@@ -1020,29 +1040,17 @@
     const sidebar = document.querySelector('.sidebar');
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 
-    // Category → Parts Mapping
-    const partOptions = {
-      Informatique: ['Hardware', 'Software'],
-      Marketing: ['Social', 'Content'],
-      Bureautique: ['Partie1', 'Partie2'],
-      GSM: ['Hardware', 'Software']
-    };
-
-    // Free video categories (random)
-    const freeCategories = Object.keys(partOptions);
-    const getRandomCategory = () => freeCategories[Math.floor(Math.random() * freeCategories.length)];
-    const getRandomPart = (cat) => partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
-
-    // Init
-    init();
-
-    function init() {
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
       initMenu();
       initTabs();
       initMobileMenu();
       loadScreenCaptureSetting();
-      
-      // Event Listeners
+      initEventListeners();
+      loadDashboardData();
+    });
+
+    function initEventListeners() {
       document.getElementById('isPaid').addEventListener('change', toggleCategoryGroup);
       document.getElementById('category').addEventListener('change', updatePartOptions);
       document.getElementById('video-form').addEventListener('submit', handleVideoSubmit);
@@ -1053,10 +1061,7 @@
       document.getElementById('cancel-edit-btn').addEventListener('click', cancelEdit);
       document.querySelector('.close').addEventListener('click', closeModal);
 
-      // Load initial data
-      loadDashboardData();
-      
-      // Add smooth scrolling
+      // Smooth scrolling
       document.documentElement.style.scrollBehavior = 'smooth';
     }
 
@@ -1066,54 +1071,9 @@
           e.preventDefault();
           const section = item.getAttribute('data-section');
           setActiveSection(section);
-          
-          // Load section-specific data
-          switch(section) {
-            case 'dashboard':
-              loadDashboardData();
-              break;
-            case 'videos':
-              loadVideos();
-              break;
-            case 'users':
-              loadUsers();
-              break;
-            case 'settings':
-              loadScreenCaptureSetting();
-              break;
-          }
-          
-          // Close mobile menu
+          loadSectionData(section);
           sidebar.classList.remove('mobile-open');
         });
-      });
-    }
-
-    function initMobileMenu() {
-      // Show mobile menu toggle on small screens
-      function checkScreenSize() {
-        if (window.innerWidth <= 768) {
-          mobileMenuToggle.style.display = 'block';
-        } else {
-          mobileMenuToggle.style.display = 'none';
-          sidebar.classList.remove('mobile-open');
-        }
-      }
-      
-      checkScreenSize();
-      window.addEventListener('resize', checkScreenSize);
-      
-      mobileMenuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('mobile-open');
-      });
-      
-      // Close mobile menu when clicking outside
-      document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && 
-            !sidebar.contains(e.target) && 
-            !mobileMenuToggle.contains(e.target)) {
-          sidebar.classList.remove('mobile-open');
-        }
       });
     }
 
@@ -1139,21 +1099,61 @@
       pageTitle.textContent = sectionNames[name];
     }
 
+    function loadSectionData(section) {
+      switch(section) {
+        case 'dashboard':
+          loadDashboardData();
+          break;
+        case 'videos':
+          loadVideos();
+          break;
+        case 'users':
+          loadUsers();
+          break;
+        case 'settings':
+          loadScreenCaptureSetting();
+          break;
+      }
+    }
+
+    function initMobileMenu() {
+      function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+          mobileMenuToggle.style.display = 'block';
+        } else {
+          mobileMenuToggle.style.display = 'none';
+          sidebar.classList.remove('mobile-open');
+        }
+      }
+      
+      checkScreenSize();
+      window.addEventListener('resize', checkScreenSize);
+      
+      mobileMenuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(e.target) && 
+            !mobileMenuToggle.contains(e.target)) {
+          sidebar.classList.remove('mobile-open');
+        }
+      });
+    }
+
     function initTabs() {
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
           const tabId = tab.getAttribute('data-tab');
           const parentSection = tab.closest('.section');
           
-          // Remove active class from tabs in current section
           parentSection.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           parentSection.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
           
-          // Add active class to selected tab and content
           tab.classList.add('active');
           document.getElementById(`${tabId}-tab`).classList.add('active');
           
-          // Special handling for add-video tab
           if (tabId === 'add-video') {
             resetVideoForm();
           }
@@ -1170,11 +1170,10 @@
         categoryGroup.style.opacity = '1';
       } else {
         categoryGroup.style.display = 'none';
-        // Auto-assign random category for free videos
-        const randomCat = getRandomCategory();
+        const randomCat = Object.keys(categoryConfig)[Math.floor(Math.random() * Object.keys(categoryConfig).length)];
         document.getElementById('category').value = randomCat;
         updatePartOptions();
-        document.getElementById('part').value = getRandomPart(randomCat);
+        document.getElementById('part').value = categoryConfig[randomCat].parts[0];
       }
     }
 
@@ -1183,8 +1182,8 @@
       const partSelect = document.getElementById('part');
       partSelect.innerHTML = '<option value="">Sélectionner une partie</option>';
       
-      if (partOptions[cat]) {
-        partOptions[cat].forEach(p => {
+      if (categoryConfig[cat]) {
+        categoryConfig[cat].parts.forEach(p => {
           const opt = document.createElement('option');
           opt.value = p;
           opt.textContent = p;
@@ -1199,6 +1198,8 @@
         showLoading('recent-videos-table');
         
         const res = await fetch(`${BASE_URL}/api/videos`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        
         const data = await res.json();
         
         // Calculate statistics
@@ -1206,7 +1207,6 @@
         const paid = data.reduce((a, c) => a + c.videos.filter(v => v.isPaid).length, 0);
         const free = total - paid;
 
-        // Update dashboard cards with animation
         animateCounter('total-videos', total);
         animateCounter('paid-videos', paid);
         animateCounter('free-videos', free);
@@ -1219,10 +1219,12 @@
         for (const cat of data) {
           for (const video of cat.videos) {
             if (count >= 5) break;
+            const displayCategory = categoryConfig[video.categoryId]?.displayName || video.categoryId;
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td style="font-weight: 600;">${video.title}</td>
-              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${video.categoryId}</span></td>
+              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${displayCategory}</span></td>
               <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${video.part}</span></td>
               <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
               <td>
@@ -1248,15 +1250,13 @@
 
     function animateCounter(elementId, targetValue) {
       const element = document.getElementById(elementId);
-      const duration = 1000; // 1 second
+      const duration = 1000;
       const start = parseInt(element.textContent) || 0;
       const startTime = performance.now();
 
       function updateCounter(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function for smooth animation
         const easeOut = 1 - Math.pow(1 - progress, 3);
         const current = Math.round(start + (targetValue - start) * easeOut);
         
@@ -1276,16 +1276,20 @@
         showLoading('videos-table');
         
         const res = await fetch(`${BASE_URL}/api/videos`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        
         const data = await res.json();
         const tbody = document.getElementById('videos-table').querySelector('tbody');
         tbody.innerHTML = '';
         
         data.forEach(cat => {
+          const displayCategory = categoryConfig[cat.id]?.displayName || cat.name;
+          
           cat.videos.forEach(video => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td style="font-weight: 600;">${video.title}</td>
-              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${video.categoryId}</span></td>
+              <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${displayCategory}</span></td>
               <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${video.part}</span></td>
               <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
               <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${video.details.description}">${video.details.description.substring(0, 50)}...</td>
@@ -1326,10 +1330,11 @@
     async function editVideo(id) {
       try {
         const res = await fetch(`${BASE_URL}/api/videos`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        
         const data = await res.json();
         let video = null;
         
-        // Find the video
         for (const cat of data) {
           video = cat.videos.find(v => v.id === id);
           if (video) break;
@@ -1340,7 +1345,6 @@
           return;
         }
 
-        // Populate form
         currentVideoId = id;
         document.getElementById('title').value = video.title;
         document.getElementById('isPaid').value = video.isPaid.toString();
@@ -1349,15 +1353,12 @@
         document.getElementById('part').value = video.part;
         document.getElementById('description').value = video.details.description;
 
-        // Update form UI
         document.getElementById('video-form-title').innerHTML = '<i class="fas fa-edit"></i> Modifier la Vidéo';
         document.getElementById('video-submit-btn').innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
         document.getElementById('cancel-edit-btn').style.display = 'inline-flex';
         document.getElementById('category-group').style.display = 'block';
 
-        // Switch to add-video tab
         document.querySelector('.tab[data-tab="add-video"]').click();
-        
         showAlert('video-alert', 'Mode édition activé', 'success');
       } catch (e) {
         console.error('Erreur lors du chargement de la vidéo:', e);
@@ -1405,9 +1406,9 @@
           formData.append('categoryId', document.getElementById('category').value);
           formData.append('part', document.getElementById('part').value);
         } else {
-          const cat = getRandomCategory();
+          const cat = Object.keys(categoryConfig)[Math.floor(Math.random() * Object.keys(categoryConfig).length)];
           formData.append('categoryId', cat);
-          formData.append('part', getRandomPart(cat));
+          formData.append('part', categoryConfig[cat].parts[0]);
         }
 
         const videoFile = document.getElementById('videoFile').files[0];
@@ -1418,7 +1419,6 @@
         const url = currentVideoId ? `${BASE_URL}/api/update-video/${currentVideoId}` : `${BASE_URL}/api/add-video`;
         const method = currentVideoId ? 'PUT' : 'POST';
 
-        // Show progress
         const progress = document.querySelector('.upload-progress');
         progress.style.display = 'block';
 
@@ -1433,7 +1433,7 @@
           }
         });
 
-        xhr.onload = function () {
+        xhr.onload = function() {
           if (xhr.status === 200 || xhr.status === 201) {
             const msg = currentVideoId ? 'mise à jour' : 'ajoutée';
             showAlert('video-alert', `<i class="fas fa-check-circle"></i> Vidéo ${msg} avec succès`, 'success');
@@ -1485,6 +1485,8 @@
         showLoading('users-table');
         
         const res = await fetch(`${BASE_URL}/api/users`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        
         const data = await res.json();
         const tbody = document.getElementById('users-table').querySelector('tbody');
         tbody.innerHTML = '';
@@ -1522,22 +1524,15 @@
 
     function getUserStatus(user) {
       const status = [];
-      const statusMap = {
-        informatiqueHardware: 'Info Hardware',
-        informatiqueSoftware: 'Info Software',
-        bureautiqueHardware: 'Bureau Hardware',
-        bureautiqueSoftware: 'Bureau Software',
-        marketingSocial: 'Marketing Social',
-        marketingContent: 'Marketing Content',
-        gsmHardware: 'GSM Hardware',
-        gsmSoftware: 'GSM Software'
-      };
       
-      Object.keys(statusMap).forEach(key => {
-        if (user.status && user.status[key]) {
-          status.push(statusMap[key]);
-        }
-      });
+      if (user.isInformatiqueHardware) status.push('Info Hardware');
+      if (user.isInformatiqueSoftware) status.push('Info Software');
+      if (user.isBureautiqueHardware) status.push('Bureau Hardware');
+      if (user.isBureautiqueSoftware) status.push('Bureau Software');
+      if (user.isMarketingSocial) status.push('Marketing Social');
+      if (user.isMarketingContent) status.push('Marketing Content');
+      if (user.isVIPGsmHardware) status.push('GSM Hardware');
+      if (user.isVIPGsmSoftware) status.push('GSM Software');
       
       return status.length ? status.join(', ') : 'Aucun accès';
     }
@@ -1670,6 +1665,8 @@
     async function loadScreenCaptureSetting() {
       try {
         const res = await fetch(`${BASE_URL}/api/screen-capture`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        
         const data = await res.json();
         document.getElementById('screen-capture-toggle').checked = data.allowScreenCapture;
       } catch (e) {
@@ -1684,21 +1681,6 @@
       try {
         const res = await fetch(`${BASE_URL}/api/screen-capture`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json'        }});
-        const data = await res.json();
-        document.getElementById('screen-capture-toggle').checked = data.allowScreenCapture;
-      } catch (e) {
-        console.error('Erreur lors du chargement des paramètres:', e);
-        showAlert('settings-alert', 'Impossible de charger les paramètres', 'danger');
-      }
-    }
-
-    async function toggleScreenCapture() {
-      const checkbox = this;
-      const enabled = checkbox.checked;
-      try {
-        const res = await fetch(`${BASE_URL}/api/screen-capture`, {
-          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ allowScreenCapture: enabled })
         });
@@ -1708,13 +1690,12 @@
         showAlert('settings-alert', `Capture d'écran ${enabled ? 'activée' : 'désactivée'} avec succès`, 'success');
       } catch (e) {
         console.error('Erreur lors de la mise à jour du paramètre:', e);
-        // Réinitialise le toggle en cas d'erreur
         checkbox.checked = !enabled;
         showAlert('settings-alert', `Erreur: ${e.message}`, 'danger');
       }
     }
 
-    // === Fonctions utilitaires ===
+    // Utility Functions
     function showLoading(tableId) {
       const tbody = document.querySelector(`#${tableId} tbody`);
       tbody.innerHTML = `
@@ -1733,8 +1714,21 @@
           <td colspan="6" class="loading" style="color: var(--danger);">
             <i class="fas fa-exclamation-triangle"></i>
             ${message}
+            <button onclick="retryLoading('${tableId}')" style="margin-left: 10px; padding: 5px 10px; background: var(--danger); color: white; border: none; border-radius: 5px; cursor: pointer;">
+              Réessayer
+            </button>
           </td>
         </tr>`;
+    }
+
+    function retryLoading(tableId) {
+      if (tableId.includes('video')) {
+        loadVideos();
+      } else if (tableId.includes('user')) {
+        loadUsers();
+      } else {
+        loadDashboardData();
+      }
     }
 
     function showAlert(elementId, message, type) {
@@ -1745,7 +1739,7 @@
           ${message}
         </div>
       `;
-      // Disparaît après 5 secondes
+      
       setTimeout(() => {
         if (container.innerHTML.includes(message)) {
           container.innerHTML = '';
@@ -1753,12 +1747,11 @@
       }, 5000);
     }
 
-    // === Initialisation des alertes dynamiques pour les sections ===
+    // Initialize dynamic alerts
     ['video-alert', 'user-alert', 'password-alert', 'settings-alert'].forEach(id => {
       if (!document.getElementById(id)) {
         const container = document.createElement('div');
         container.id = id;
-        // Ajoute au bon endroit (ex: form-container parent)
         const formContainer = document.querySelector('.form-container');
         if (formContainer) {
           formContainer.insertBefore(container, formContainer.firstChild);
@@ -1766,35 +1759,7 @@
       }
     });
 
-    // === Gestion du scroll doux et autres effets ===
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-
-    // === Événements au chargement ===
-    window.addEventListener('load', () => {
-      // Animation d'apparition
-      document.body.style.opacity = '0';
-      document.body.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => {
-        document.body.style.opacity = '1';
-      }, 100);
-
-      // Charger les données initiales
-      loadDashboardData();
-    });
-
-    // === Gestion du thème sombre (optionnel) ===
-    // Ajout d'un toggle thème sombre/clair
+    // Initialize theme toggle
     const themeToggle = document.createElement('button');
     themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
     themeToggle.style.position = 'fixed';
@@ -1817,10 +1782,8 @@
         : '<i class="fas fa-moon"></i>';
     });
 
-    // Injecter le bouton thème
     document.body.appendChild(themeToggle);
 
-    // Style pour le thème sombre
     const darkThemeStyle = document.createElement('style');
     darkThemeStyle.id = 'dark-theme-style';
     darkThemeStyle.textContent = `
@@ -1866,8 +1829,6 @@
       }
     `;
     document.head.appendChild(darkThemeStyle);
-
-    // Masquer le thème sombre par défaut
     document.body.classList.remove('dark-theme');
   </script>
 </body>
