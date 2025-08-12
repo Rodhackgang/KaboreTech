@@ -1782,20 +1782,22 @@
         try {
           showLoading("users-table");
           const res = await fetch(`${BASE_URL}/api/users`);
-
-          if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
           const data = await res.json();
 
+          // Vérifiez que la réponse est valide
           if (!data.success || !Array.isArray(data.users)) {
             throw new Error(
-              "Format de réponse invalide: 'users' non trouvé ou erreur API"
+              "Données utilisateurs invalides ou 'success: false'"
             );
           }
 
           const tbody = document
             .getElementById("users-table")
             .querySelector("tbody");
+          if (!tbody) return;
+
           tbody.innerHTML = "";
 
           data.users.forEach((u) => {
@@ -1824,15 +1826,14 @@
             tbody.appendChild(tr);
           });
 
-          // Réattacher les événements
           document.querySelectorAll(".reset-btn").forEach((btn) => {
             btn.addEventListener("click", () =>
               openPasswordModal(btn.dataset.phone)
             );
           });
         } catch (e) {
-          console.error("Erreur lors du chargement des utilisateurs:", e);
-          showError("users-table", `Erreur: ${e.message}`);
+          console.error("Erreur loadUsers:", e);
+          showError("users-table", e.message || "Échec du chargement");
         }
       }
 
@@ -2073,8 +2074,17 @@
 
       function showLoading(tableId) {
         const table = document.getElementById(tableId);
-        const colCount = table.querySelector("thead tr")?.children.length || 6;
+        if (!table) {
+          console.error(`Table ${tableId} introuvable`);
+          return;
+        }
+        const thead = table.querySelector("thead tr");
+        const colCount = thead ? thead.children.length : 6;
         const tbody = table.querySelector("tbody");
+        if (!tbody) {
+          console.error(`tbody introuvable dans #${tableId}`);
+          return;
+        }
         tbody.innerHTML = `
     <tr>
       <td colspan="${colCount}" class="loading">
