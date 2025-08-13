@@ -1131,7 +1131,7 @@
     >
       <i class="fas fa-bars"></i>
     </button>
-<script>
+  <script>
   const API_BASE = "https://kaboretech.cursusbf.com";
   let videosData = [];
   let currentVideoId = null;
@@ -1151,9 +1151,13 @@
   const getRandomPart = (cat) =>
     partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
 
-  // Initialisation
+  // Initialisation au chargement
   document.addEventListener("DOMContentLoaded", async () => {
-    await initializeApp();
+    initializeApp();
+    await loadVideosData();
+    loadUsers();
+    loadScreenCaptureSetting();
+    setupTabs();
   });
 
   async function initializeApp() {
@@ -1162,17 +1166,12 @@
     setupThemeToggle();
     setupTooltips();
 
-    // Charger les données
-    await loadVideosData();
-    await loadUsers();
-    await loadScreenCaptureSetting();
-
     // Animation d'apparition
     setTimeout(() => document.body.classList.add("loaded"), 100);
   }
 
   function setupEventListeners() {
-    // Menu
+    // Navigation menu
     document.querySelectorAll('.menu-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1181,28 +1180,14 @@
       });
     });
 
-    // Vidéos
+    // Formulaires
     document.getElementById("isPaid")?.addEventListener("change", toggleCategoryGroup);
     document.getElementById("category")?.addEventListener("change", updatePartOptions);
     document.getElementById("video-form")?.addEventListener("submit", handleVideoSubmit);
-
-    // ✅ Ajout du gestionnaire pour les utilisateurs
-    const userForm = document.getElementById("user-form");
-    if (userForm) {
-      userForm.addEventListener("submit", handleUserSubmit);
-    }
-
-    // Mot de passe
+    document.getElementById("user-form")?.addEventListener("submit", handleUserSubmit);
     document.getElementById("password-form")?.addEventListener("submit", handlePasswordReset);
     document.getElementById("send-otp-btn")?.addEventListener("click", sendOTP);
-
-    // Paramètres
-    const toggle = document.getElementById("screen-capture-toggle");
-    if (toggle) {
-      toggle.addEventListener("change", toggleScreenCapture);
-    }
-
-    // Autres boutons
+    document.getElementById("screen-capture-toggle")?.addEventListener("change", toggleScreenCapture);
     document.getElementById("cancel-edit-btn")?.addEventListener("click", cancelEdit);
     document.querySelector(".close")?.addEventListener("click", closeModal);
   }
@@ -1224,8 +1209,7 @@
 
   function switchSection(sectionName) {
     document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-    const menuItem = document.querySelector(`[data-section="${sectionName}"]`);
-    if (menuItem) menuItem.classList.add('active');
+    document.querySelector(`[data-section="${sectionName}"]`)?.classList.add('active');
 
     const titles = {
       dashboard: 'Tableau de Bord',
@@ -1233,23 +1217,24 @@
       users: 'Gestion des Utilisateurs',
       settings: 'Paramètres du Système'
     };
-    document.getElementById('page-title').textContent = titles[sectionName] || sectionName;
+    document.getElementById('page-title').textContent = titles[sectionName];
 
     document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    const section = document.getElementById(`${sectionName}-section`);
-    if (section) section.style.display = 'block';
+    document.getElementById(`${sectionName}-section`).style.display = 'block';
 
-    // Charger les données selon la section
+    if (sectionName === 'videos') {
+      if (!document.getElementById('videos-section').dataset.loaded) {
+        loadAllVideos();
+        document.getElementById('videos-section').dataset.loaded = 'true';
+      }
+    }
+
     if (sectionName === 'users') loadUsers();
     if (sectionName === 'settings') loadScreenCaptureSetting();
 
-    // Fermer menu mobile
-    document.querySelector('.sidebar')?.classList.remove('mobile-open');
+    sidebar.classList.remove('mobile-open');
   }
 
-  // ========================
-  // === CHARGEMENT VIDÉOS ===
-  // ========================
   async function loadVideosData() {
     try {
       const res = await fetch(`${API_BASE}/api/videos`);
@@ -1273,8 +1258,7 @@
         cat.videos.forEach(v => {
           allVideos.push({ ...v, categoryName: cat.name });
           total++;
-          if (v.isPaid) paid++;
-          else free++;
+          v.isPaid ? paid++ : free++;
         });
       }
     });
@@ -1283,39 +1267,77 @@
     animateCounter('paid-videos', paid);
     animateCounter('free-videos', free);
 
-    allVideos.sort((a, b) => {
-      const tA = parseInt(a.id.substring(0, 8), 16);
-      const tB = parseInt(b.id.substring(0, 8), 16);
-      return tB - tA;
-    });
-
+    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
     populateRecentVideosTable(allVideos.slice(0, 10));
   }
 
   function populateRecentVideosTable(videos) {
     const tbody = document.querySelector('#recent-videos-table tbody');
-    if (!tbody) return;
-
     tbody.innerHTML = '';
+
     if (videos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="loading">Aucune vidéo</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
       return;
     }
 
     videos.forEach(video => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="font-weight:600">${video.title}</td>
-        <td><span class="category-tag">${video.categoryName}</span></td>
-        <td><span class="category-tag">${video.part}</span></td>
-        <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
-        <td>
-          <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir"><i class="fas fa-eye"></i></button>
-          <button class="action-btn edit-btn" data-id="${video.id}" title="Modifier"><i class="fas fa-edit"></i></button>
-          <button class="action-btn delete-btn" data-id="${video.id}" title="Supprimer"><i class="fas fa-trash"></i></button>
-        </td>
-      `;
-      tbody.appendChild(tr);
+      const row = createVideoTableRow(video, false);
+      tbody.appendChild(row);
+    });
+  }
+
+  function createVideoTableRow(video, showDescription) {
+    const tr = document.createElement('tr');
+    tr.style.opacity = '0';
+    tr.style.transform = 'translateY(20px)';
+
+    const desc = video.details?.description || 'Pas de description';
+    const truncated = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
+
+    tr.innerHTML = `
+      <td><div class="video-thumbnail" title="Lire"><i class="fas fa-play"></i></div></td>
+      <td style="font-weight:600" title="${video.title}">${video.title}</td>
+      <td><span class="category-tag">${video.categoryName}</span></td>
+      <td><span class="category-tag">${video.part}</span></td>
+      <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
+      ${showDescription ? `<td style="max-width:250px" title="${desc}">${truncated}</td>` : ''}
+      <td>
+        <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="action-btn edit-btn" data-id="${video.id}" title="Modifier"><i class="fas fa-edit"></i></button>
+        <button class="action-btn delete-btn" data-id="${video.id}" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </td>
+    `;
+
+    setTimeout(() => {
+      tr.style.transition = 'all 0.5s ease';
+      tr.style.opacity = '1';
+      tr.style.transform = 'translateY(0)';
+    }, Math.random() * 300);
+
+    return tr;
+  }
+
+  function loadAllVideos() {
+    const tbody = document.querySelector('#all-videos-table tbody');
+    tbody.innerHTML = '';
+
+    if (!videosData || videosData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+      return;
+    }
+
+    const allVideos = [];
+    videosData.forEach(cat => {
+      if (cat.videos && Array.isArray(cat.videos)) {
+        cat.videos.forEach(v => allVideos.push({ ...v, categoryName: cat.name }));
+      }
+    });
+
+    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
+
+    allVideos.forEach(video => {
+      const row = createVideoTableRow(video, true);
+      tbody.appendChild(row);
     });
 
     addVideoActionHandlers();
@@ -1335,12 +1357,9 @@
     });
   }
 
-  // ========================
-  // === GESTION VIDÉOS ===
-  // ========================
   async function deleteVideo(id) {
     const btn = document.querySelector(`button[data-id="${id}"].delete-btn`);
-    if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btn.disabled = true;
 
     try {
@@ -1348,13 +1367,14 @@
       if (res.ok) {
         showAlert("video-alert", "✅ Vidéo supprimée", "success");
         await loadVideosData();
+        loadAllVideos();
       } else {
         throw new Error("Échec de suppression");
       }
     } catch (e) {
       showAlert("video-alert", "❌ " + e.message, "danger");
     } finally {
-      if (btn) btn.innerHTML = '<i class="fas fa-trash"></i>';
+      btn.innerHTML = '<i class="fas fa-trash"></i>';
       btn.disabled = false;
     }
   }
@@ -1381,6 +1401,7 @@
     document.getElementById("category-group").style.display = "block";
 
     switchSection("videos");
+    document.querySelector('.tab[data-tab="add-video"]')?.click();
     showAlert("video-alert", "Mode édition activé", "success");
   }
 
@@ -1422,8 +1443,8 @@
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 100);
-          document.getElementById("progress-fill")?.style.setProperty("width", percent + "%");
-          document.getElementById("progress-text")?.textContent = percent + "%";
+          document.getElementById("progress-fill").style.width = percent + "%";
+          document.getElementById("progress-text").textContent = percent + "%";
         }
       };
 
@@ -1432,7 +1453,8 @@
           showAlert("video-alert", "✅ Vidéo ajoutée/mise à jour", "success");
           resetVideoForm();
           await loadVideosData();
-          setTimeout(() => switchSection("dashboard"), 1000);
+          loadAllVideos();
+          setTimeout(() => document.querySelector('.tab[data-tab="videos-list"]')?.click(), 1000);
         } else {
           throw new Error("Erreur serveur");
         }
@@ -1445,7 +1467,7 @@
     } finally {
       btn.innerHTML = original;
       btn.disabled = false;
-      document.querySelector(".upload-progress")?.style.setProperty("display", "none");
+      document.querySelector(".upload-progress").style.display = "none";
     }
   }
 
@@ -1455,21 +1477,19 @@
     document.getElementById("video-submit-btn").innerHTML = '<i class="fas fa-save"></i> Ajouter';
     document.getElementById("cancel-edit-btn").style.display = "none";
     currentVideoId = null;
-    const fill = document.getElementById("progress-fill");
-    const text = document.getElementById("progress-text");
-    if (fill) fill.style.width = "0%";
-    if (text) text.textContent = "0%";
+    document.getElementById("progress-fill").style.width = "0%";
+    document.getElementById("progress-text").textContent = "0%";
   }
 
   function cancelEdit() {
     resetVideoForm();
-    switchSection("dashboard");
+    document.querySelector('.tab[data-tab="videos-list"]')?.click();
   }
 
   function toggleCategoryGroup() {
     const isPaid = document.getElementById("isPaid").value === "true";
     const group = document.getElementById("category-group");
-    if (group) group.style.display = isPaid ? "block" : "none";
+    group.style.display = isPaid ? "block" : "none";
     if (!isPaid) {
       const cat = getRandomCategory();
       document.getElementById("category").value = cat;
@@ -1481,7 +1501,6 @@
   function updatePartOptions() {
     const cat = document.getElementById("category").value;
     const select = document.getElementById("part");
-    if (!select) return;
     select.innerHTML = '<option value="">Sélectionner</option>';
     if (partOptions[cat]) {
       partOptions[cat].forEach(p => {
@@ -1493,23 +1512,16 @@
     }
   }
 
-  // ========================
-  // === GESTION UTILISATEURS ===
-  // ========================
+  // === GESTION DES UTILISATEURS ===
   async function loadUsers() {
-    const tbody = document.querySelector("#users-table tbody");
-    if (!tbody) {
-      console.warn("Tableau des utilisateurs non trouvé");
-      return;
-    }
-    tbody.innerHTML = '<tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>';
-
     try {
       const res = await fetch(`${API_BASE}/api/users`);
       if (!res.ok) throw new Error("Échec du chargement");
       const data = await res.json();
 
+      const tbody = document.querySelector("#users-table tbody");
       tbody.innerHTML = '';
+
       if (!data.users || data.users.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="loading">Aucun utilisateur</td></tr>`;
         return;
@@ -1541,46 +1553,7 @@
         btn.addEventListener("click", () => openPasswordModal(btn.dataset.phone));
       });
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="4" class="error-state">❌ Erreur: ${e.message}</td></tr>`;
-    }
-  }
-
-  // ✅ FONCTION AJOUTÉE ICI
-  async function handleUserSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ajout...';
-    submitBtn.disabled = true;
-
-    try {
-      const data = {
-        name: form["user-name"].value,
-        phone: form["user-phone"].value,
-        password: form["user-password"].value,
-      };
-
-      const res = await fetch(`${API_BASE}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        showAlert("user-alert", "✅ Utilisateur ajouté", "success");
-        form.reset();
-        await loadUsers();
-      } else {
-        const error = await res.text();
-        throw new Error(error || "Erreur serveur");
-      }
-    } catch (e) {
-      showAlert("user-alert", "❌ " + e.message, "danger");
-    } finally {
-      submitBtn.innerHTML = originalText;
-      submitBtn.disabled = false;
+      console.error("Erreur users:", e);
     }
   }
 
@@ -1599,9 +1572,6 @@
     return status.length ? status.join(", ") : "Aucun accès";
   }
 
-  // ========================
-  // === MOT DE PASSE ===
-  // ========================
   function openPasswordModal(phone) {
     document.getElementById("reset-phone").value = phone;
     const modal = document.getElementById("password-modal");
@@ -1681,23 +1651,21 @@
     }
   }
 
-  // ========================
-  // === PARAMÈTRES ===
-  // ========================
-  async function loadScreenCaptureSetting() {
-    try {
-      const res = await fetch(`${API_BASE}/api/screen-capture`);
-      if (!res.ok) throw new Error("Échec du chargement");
-      const data = await res.json();
-      const toggle = document.getElementById("screen-capture-toggle");
-      if (toggle) {
-        toggle.checked = data.allowScreenCapture;
-      }
-    } catch (e) {
-      console.error("Erreur paramètres:", e);
-      showAlert("settings-alert", "❌ Impossible de charger les paramètres", "danger");
+ async function loadScreenCaptureSetting() {
+  try {
+    const res = await fetch(`${API_BASE}/api/screen-capture`);
+    if (!res.ok) throw new Error("Échec du chargement des paramètres");
+    const data = await res.json();
+
+    const toggle = document.getElementById("screen-capture-toggle");
+    if (toggle) {
+      toggle.checked = data.allowScreenCapture; // ✅ Affectation simple, pas de if
     }
+  } catch (e) {
+    console.error("Erreur paramètres:", e);
+    showAlert("settings-alert", "❌ Impossible de charger les paramètres", "danger");
   }
+}
 
   async function toggleScreenCapture() {
     const enabled = this.checked;
@@ -1708,20 +1676,27 @@
         body: JSON.stringify({ allowScreenCapture: enabled })
       });
 
-      if (res.ok) {
-        showAlert("settings-alert", `Capture ${enabled ? "activée" : "désactivée"}`, "success");
-      } else {
-        throw new Error("Échec");
-      }
+      if (!res.ok) throw new Error("Échec");
+      showAlert("settings-alert", `Capture ${enabled ? "activée" : "désactivée"}`, "success");
     } catch (e) {
       this.checked = !enabled;
-      showAlert("settings-alert", "❌ Erreur réseau", "danger");
+      showAlert("settings-alert", "❌ Erreur", "danger");
     }
   }
 
-  // ========================
-  // === UTILITAIRES ===
-  // ========================
+  // === FONCTIONS UTILITAIRES ===
+  function setupTabs() {
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const tabId = tab.dataset.tab;
+        const parent = tab.closest(".section");
+        parent.querySelectorAll(".tab, .tab-content").forEach(el => el.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(`${tabId}-tab`).classList.add("active");
+      });
+    });
+  }
+
   function setupThemeToggle() {
     const btn = document.createElement("button");
     btn.innerHTML = '<i class="fas fa-moon"></i>';
@@ -1756,7 +1731,6 @@
 
   function animateCounter(id, target) {
     const el = document.getElementById(id);
-    if (!el) return;
     const start = parseInt(el.textContent) || 0;
     const duration = 1500;
     const startTime = performance.now();
@@ -1770,31 +1744,22 @@
     requestAnimationFrame(step);
   }
 
-  function showAlert(containerId, msg, type = "info") {
-    let container = document.getElementById(containerId);
-    if (!container) {
-      container = document.createElement("div");
-      container.id = containerId;
-      const form = document.querySelector(`#${containerId.split('-')[0]}-form`) || document.querySelector(".form-container");
-      if (form) {
-        form.insertBefore(container, form.firstChild);
-      }
+  function showAlert(id, msg, type = "info") {
+    const el = document.getElementById(id);
+    if (el) {
+      el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+      setTimeout(() => { if (el.innerHTML.includes(msg)) el.innerHTML = ""; }, 5000);
     }
-    container.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    setTimeout(() => {
-      if (container && container.innerHTML.includes(msg)) {
-        container.innerHTML = "";
-      }
-    }, 5000);
   }
 
   function showErrorState(tableId, message) {
     const tbody = document.querySelector(`#${tableId} tbody`);
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>`;
-    }
+    tbody.innerHTML = `
+      <tr><td colspan="6" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>
+    `;
   }
 
+  // === Gestion des vidéos (ouverture)
   function viewVideo(videoId) {
     const video = findVideoById(videoId);
     if (video?.details?.video) {
@@ -1812,7 +1777,7 @@
     return null;
   }
 
-  console.log("✅ KaboreTech Admin - Toutes les fonctionnalités sont corrigées et activées.");
+  console.log("✅ KaboreTech Admin - Toutes les fonctionnalités sont activées.");
 </script>
   </body>
 </html>
