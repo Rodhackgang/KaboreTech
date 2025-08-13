@@ -49,12 +49,6 @@
         line-height: 1.6;
         min-height: 100vh;
         display: flex;
-        opacity: 0;
-        transition: opacity 0.5s ease;
-      }
-
-      body.loaded {
-        opacity: 1;
       }
 
       /* Sidebar */
@@ -234,20 +228,6 @@
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
-        opacity: 0;
-        transform: translateY(20px);
-        animation: slideInUp 0.8s ease forwards;
-      }
-
-      .card:nth-child(1) { animation-delay: 0.1s; }
-      .card:nth-child(2) { animation-delay: 0.2s; }
-      .card:nth-child(3) { animation-delay: 0.3s; }
-
-      @keyframes slideInUp {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
       }
 
       .card::before {
@@ -289,7 +269,6 @@
         font-weight: 800;
         color: var(--dark);
         margin-bottom: 8px;
-        font-variant-numeric: tabular-nums;
       }
 
       .card .trend {
@@ -307,9 +286,6 @@
         padding: 30px;
         margin-bottom: 30px;
         border: 1px solid var(--border);
-        opacity: 0;
-        transform: translateY(20px);
-        animation: slideInUp 0.8s ease 0.4s forwards;
       }
 
       .table-container h3 {
@@ -317,19 +293,11 @@
         color: var(--dark);
         font-weight: 700;
         font-size: 1.3rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .table-wrapper {
-        overflow-x: auto;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 800px;
       }
 
       th {
@@ -342,7 +310,6 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border: none;
-        white-space: nowrap;
       }
 
       th:first-child {
@@ -356,10 +323,6 @@
         padding: 18px 20px;
         border-bottom: 1px solid var(--border);
         font-weight: 500;
-      }
-
-      tr {
-        transition: background-color 0.2s ease;
       }
 
       tr:hover {
@@ -377,20 +340,18 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border: 2px solid;
-        display: inline-block;
       }
 
       .status.paid {
         background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
         color: var(--success);
-        border-color: var(--success);
+        border: 2px solid var(--success);
       }
 
       .status.free {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         color: var(--warning);
-        border-color: var(--warning);
+        border: 2px solid var(--warning);
       }
 
       .action-btn {
@@ -402,8 +363,6 @@
         font-size: 0.9rem;
         transition: all 0.3s ease;
         font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
       }
 
       .action-btn:hover {
@@ -421,85 +380,275 @@
         color: white;
       }
 
-      .view-btn {
+      .reset-btn {
         background: var(--gradient-primary);
         color: white;
       }
 
-      .category-tag {
-        background: var(--gray-light);
-        padding: 4px 12px;
+      /* Form */
+      .form-container {
+        background: white;
         border-radius: 20px;
-        font-size: 0.85rem;
-        color: var(--gray);
+        box-shadow: var(--shadow);
+        padding: 35px;
         border: 1px solid var(--border);
       }
 
-      /* Loading States */
+      .form-container h3 {
+        margin-bottom: 30px;
+        color: var(--dark);
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.95rem;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 15px 18px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        margin-bottom: 30px;
+        background: var(--gray-light);
+        border-radius: 15px;
+        padding: 8px;
+        box-shadow: inset var(--shadow);
+      }
+
+      .tab {
+        padding: 15px 25px;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: var(--gray);
+        flex: 1;
+        text-align: center;
+      }
+
+      .tab.active {
+        background: white;
+        color: var(--primary);
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Upload Progress */
+      .upload-progress {
+        margin-top: 20px;
+        display: none;
+      }
+
+      .progress-bar {
+        height: 10px;
+        background: var(--gray-light);
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: inset var(--shadow);
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--gradient-primary);
+        transition: width 0.3s ease;
+        border-radius: 50px;
+        position: relative;
+      }
+
+      .progress-fill::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          transparent 30%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 70%
+        );
+        animation: shimmer 2s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .progress-text {
+        font-size: 0.9rem;
+        margin-top: 8px;
+        color: var(--gray);
+        text-align: center;
+        font-weight: 600;
+      }
+
+      /* Alert */
+      .alert {
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 2px solid;
+        display: flex;
+        align-items: center;
+      }
+
+      .alert i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+      }
+
+      .alert-success {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: var(--success);
+        border-color: var(--success);
+      }
+
+      .alert-danger {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: var(--danger);
+        border-color: var(--danger);
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+      }
+
+      .modal-content {
+        background: white;
+        padding: 35px;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+      }
+
+      .modal.show .modal-content {
+        transform: scale(1);
+      }
+
+      .close {
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--gray);
+        transition: color 0.3s ease;
+      }
+
+      .close:hover {
+        color: var(--danger);
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        color: white;
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, var(--gray) 0%, #4b5563 100%);
+        color: white;
+      }
+
+      .btn i {
+        font-size: 1.1rem;
+      }
+
+      /* Loading */
       .loading {
         text-align: center;
         color: var(--gray);
         font-style: italic;
-        padding: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-      }
-
-      .loading i {
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-
-      .error-state {
-        text-align: center;
-        color: var(--danger);
-        padding: 40px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .retry-btn {
-        background: var(--gradient-primary);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .retry-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
-      }
-
-      /* Video Thumbnail */
-      .video-thumbnail {
-        width: 80px;
-        height: 45px;
-        background: var(--gray-light);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gray);
-        font-size: 1.5rem;
-        border: 2px solid var(--border);
-        transition: all 0.3s ease;
-      }
-
-      .video-thumbnail:hover {
-        transform: scale(1.1);
-        box-shadow: var(--shadow);
+        padding: 30px;
       }
 
       /* Responsive */
@@ -555,32 +704,14 @@
           gap: 15px;
         }
 
-        .mobile-menu-toggle {
-          display: block !important;
+        .table-container {
+          overflow-x: auto;
         }
-      }
-
-      /* Mobile Menu Toggle */
-      .mobile-menu-toggle {
-        display: none;
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-        background: var(--gradient-primary);
-        border: none;
-        padding: 15px;
-        border-radius: 12px;
-        color: white;
-        font-size: 1.2rem;
-        cursor: pointer;
-        box-shadow: var(--shadow);
       }
 
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
-        height: 8px;
       }
 
       ::-webkit-scrollbar-track {
@@ -595,6 +726,42 @@
 
       ::-webkit-scrollbar-thumb:hover {
         background: var(--primary-dark);
+      }
+
+      /* Animations */
+      .slide-in {
+        animation: slideIn 0.5s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .bounce {
+        animation: bounce 0.6s ease;
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
       }
     </style>
   </head>
@@ -729,9 +896,279 @@
         </div>
       </section>
     </div>
+   <section id="videos-section" class="section">
 
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+          <div class="tab" data-tab="add-video">
+            <i class="fas fa-plus"></i>
+            Ajouter une Vidéo
+          </div>
+
+        <div class="tab-content" id="add-video-tab">
+          <div class="form-container">
+            <h3 id="video-form-title">
+              <i class="fas fa-video"></i> Ajouter une Vidéo
+            </h3>
+            <div id="video-alert"></div>
+            <form id="video-form">
+              <div class="form-group">
+                <label for="title"><i class="fas fa-heading"></i> Titre</label>
+                <input
+                  type="text"
+                  id="title"
+                  class="form-control"
+                  required
+                  placeholder="Entrez le titre de la vidéo"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="isPaid"><i class="fas fa-tag"></i> Type</label>
+                <select id="isPaid" class="form-control" required>
+                  <option value="false">Gratuite</option>
+                  <option value="true">Payante</option>
+                </select>
+              </div>
+
+              <div id="category-group">
+                <div class="form-group">
+                  <label for="category"
+                    ><i class="fas fa-folder"></i> Catégorie</label
+                  >
+                  <select id="category" class="form-control" required>
+                    <option value="">Sélectionner une catégorie</option>
+                    <option value="Informatique">
+                      Maintenance Informatique
+                    </option>
+                    <option value="Marketing">Marketing Digital</option>
+                    <option value="Bureautique">
+                      Sécretariat Informatique
+                    </option>
+                    <option value="GSM">Réparation Téléphone</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="part"
+                    ><i class="fas fa-puzzle-piece"></i> Partie</label
+                  >
+                  <select id="part" class="form-control" required>
+                    <option value="">Sélectionner une partie</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="description"
+                  ><i class="fas fa-align-left"></i> Description</label
+                >
+                <textarea
+                  id="description"
+                  class="form-control"
+                  rows="4"
+                  required
+                  placeholder="Décrivez votre vidéo..."
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="videoFile"
+                  ><i class="fas fa-film"></i> Fichier Vidéo</label
+                >
+                <input
+                  type="file"
+                  id="videoFile"
+                  class="form-control"
+                  accept="video/*"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="imageFile"
+                  ><i class="fas fa-image"></i> Image de Couverture</label
+                >
+                <input
+                  type="file"
+                  id="imageFile"
+                  class="form-control"
+                  accept="image/*"
+                />
+              </div>
+
+              <div class="upload-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">0%</div>
+              </div>
+
+              <div style="display: flex; gap: 15px; margin-top: 30px">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="video-submit-btn"
+                >
+                  <i class="fas fa-save"></i>
+                  Ajouter
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="cancel-edit-btn"
+                  style="display: none"
+                >
+                  <i class="fas fa-times"></i>
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="users-section" class="section">
+          <div class="tab" data-tab="add-user">
+            <i class="fas fa-user-plus"></i>
+            Ajouter un Utilisateur
+        </div>
+
+        <div class="tab-content" id="add-user-tab">
+          <div class="form-container">
+            <h3><i class="fas fa-user-plus"></i> Ajouter un Utilisateur</h3>
+            <div id="user-alert"></div>
+            <form id="user-form">
+              <div class="form-group">
+                <label><i class="fas fa-user"></i> Nom Complet</label>
+                <input
+                  type="text"
+                  id="user-name"
+                  class="form-control"
+                  required
+                  placeholder="Nom et prénom"
+                />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-phone"></i> Téléphone</label>
+                <input
+                  type="text"
+                  id="user-phone"
+                  class="form-control"
+                  placeholder="+226 XX XX XX XX"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-lock"></i> Mot de passe</label>
+                <input
+                  type="password"
+                  id="user-password"
+                  class="form-control"
+                  required
+                  placeholder="Mot de passe sécurisé"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i>
+                Ajouter Utilisateur
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings-section" class="section">
+        <div class="form-container">
+          <h3><i class="fas fa-cog"></i> Paramètres du Système</h3>
+          <div class="form-group">
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="screen-capture-toggle"
+                style="transform: scale(1.5)"
+              />
+              <span
+                ><i class="fas fa-camera"></i> Autoriser la capture
+                d'écran</span
+              >
+            </label>
+            <small style="color: var(--gray); margin-top: 10px; display: block">
+              Permet aux utilisateurs de faire des captures d'écran de
+              l'application
+            </small>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="password-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3><i class="fas fa-key"></i> Réinitialiser le mot de passe</h3>
+        <div id="password-alert"></div>
+        <form id="password-form">
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Téléphone</label>
+            <input type="text" id="reset-phone" class="form-control" readonly />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-shield-alt"></i> Code OTP</label>
+            <input
+              type="text"
+              id="reset-otp"
+              class="form-control"
+              required
+              placeholder="Entrez le code OTP"
+            />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-lock"></i> Nouveau mot de passe</label>
+            <input
+              type="password"
+              id="reset-new-password"
+              class="form-control"
+              required
+              placeholder="Nouveau mot de passe"
+            />
+          </div>
+          <div style="display: flex; gap: 15px; margin-top: 25px">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-check"></i>
+              Réinitialiser
+            </button>
+            <button type="button" class="btn btn-secondary" id="send-otp-btn">
+              <i class="fas fa-paper-plane"></i>
+              Envoyer OTP
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+   <button
+      id="mobile-menu-toggle"
+      style="
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: var(--gradient-primary);
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.2rem;
+      "
+    >
       <i class="fas fa-bars"></i>
     </button>
 
@@ -1361,6 +1798,170 @@
         };
         document.addEventListener('keydown', escHandler);
       }
+
+      // Fonction pour ajouter une vidéo
+async function handleVideoSubmit(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById("video-submit-btn");
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    submitBtn.disabled = true;
+
+    const videoData = {
+        title: document.getElementById("title").value,
+        isPaid: document.getElementById("isPaid").value === "true",
+        category: document.getElementById("category").value,
+        part: document.getElementById("part").value,
+        description: document.getElementById("description").value,
+        videoFile: document.getElementById("videoFile").files[0],
+        imageFile: document.getElementById("imageFile").files[0],
+    };
+
+    // Envoi des données via fetch API
+    try {
+        const formData = new FormData();
+        formData.append('title', videoData.title);
+        formData.append('isPaid', videoData.isPaid);
+        formData.append('category', videoData.category);
+        formData.append('part', videoData.part);
+        formData.append('description', videoData.description);
+        if (videoData.videoFile) formData.append('videoFile', videoData.videoFile);
+        if (videoData.imageFile) formData.append('imageFile', videoData.imageFile);
+
+        const res = await fetch(`${API_BASE}/api/videos`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) throw new Error("Échec de l'ajout de la vidéo");
+
+        // Actualiser l'affichage
+        loadVideosData();
+        switchSection("videos");
+        showAlert("video-alert", "Vidéo ajoutée avec succès", "success");
+    } catch (error) {
+        showAlert("video-alert", `Erreur: ${error.message}`, "danger");
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Fonction pour ajouter un utilisateur
+async function handleUserSubmit(e) {
+    e.preventDefault();
+
+    const submitBtn = document.querySelector("#user-form button[type='submit']");
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    submitBtn.disabled = true;
+
+    const userData = {
+        name: document.getElementById("user-name").value,
+        phone: document.getElementById("user-phone").value,
+        password: document.getElementById("user-password").value,
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/api/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!res.ok) throw new Error("Échec de l'ajout de l'utilisateur");
+
+        // Rafraîchir la liste des utilisateurs
+        loadUsers();
+        showAlert("user-alert", "Utilisateur ajouté avec succès", "success");
+        document.getElementById("user-form").reset();
+    } catch (error) {
+        showAlert("user-alert", `Erreur: ${error.message}`, "danger");
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Fonction pour activer ou désactiver la capture d'écran
+async function toggleScreenCapture(e) {
+    const isChecked = e.target.checked;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/screen-capture`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allowScreenCapture: isChecked })
+        });
+
+        if (!res.ok) throw new Error("Échec de la mise à jour des paramètres");
+
+        showAlert("settings-alert", `Capture d'écran ${isChecked ? "activée" : "désactivée"}`, "success");
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour des paramètres:", error);
+        showAlert("settings-alert", `Erreur: ${error.message}`, "danger");
+    }
+}
+
+// Fonction pour charger et afficher la liste des utilisateurs
+async function loadUsers() {
+    try {
+        const res = await fetch(`${API_BASE}/api/users`);
+        const usersData = await res.json();
+
+        const tbody = document.querySelector("#users-table tbody");
+        tbody.innerHTML = "";
+
+        usersData.forEach(user => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.phone}</td>
+                <td>
+                    <button class="action-btn reset-btn" data-phone="${user.phone}" title="Réinitialiser le mot de passe">
+                        <i class="fas fa-key"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Ajouter les événements de réinitialisation de mot de passe
+        document.querySelectorAll(".reset-btn").forEach(btn => {
+            btn.addEventListener("click", () => openPasswordModal(btn.dataset.phone));
+        });
+    } catch (error) {
+        console.error("Erreur lors du chargement des utilisateurs:", error);
+        showAlert("users-alert", "Erreur: Impossible de charger les utilisateurs", "danger");
+    }
+}
+
+// Fonction pour afficher l'alerte avec un message spécifique
+function showAlert(elementId, message, type) {
+    const alertContainer = document.getElementById(elementId);
+    alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+            <i class="fas fa-bell"></i> ${message}
+        </div>
+    `;
+    setTimeout(() => {
+        alertContainer.innerHTML = "";
+    }, 5000);
+}
+
+// Fonction pour ouvrir le modal de réinitialisation de mot de passe
+function openPasswordModal(phone) {
+    document.getElementById("reset-phone").value = phone;
+    document.getElementById("password-modal").style.display = "flex";
+}
+
+// Fonction pour fermer le modal
+document.querySelector(".close").addEventListener("click", () => {
+    document.getElementById("password-modal").style.display = "none";
+});
 
       console.log('KaboreTech Admin Interface chargée avec succès');
     </script>
