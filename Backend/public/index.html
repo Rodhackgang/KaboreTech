@@ -779,7 +779,7 @@
               <span>Tableau de Bord</span></a
             >
           </li>
-         
+
           <li>
             <a href="#" class="menu-item" data-section="settings"
               ><i class="fas fa-cog"></i> <span>Paramètres</span></a
@@ -856,11 +856,10 @@
 
       <!-- Videos -->
       <section id="videos-section" class="section">
-
-          <div class="tab" data-tab="add-video">
-            <i class="fas fa-plus"></i>
-            Ajouter une Vidéo
-          </div>
+        <div class="tab" data-tab="add-video">
+          <i class="fas fa-plus"></i>
+          Ajouter une Vidéo
+        </div>
 
         <div class="tab-content" id="add-video-tab">
           <div class="form-container">
@@ -986,9 +985,9 @@
 
       <!-- Users -->
       <section id="users-section" class="section">
-          <div class="tab" data-tab="add-user">
-            <i class="fas fa-user-plus"></i>
-            Ajouter un Utilisateur
+        <div class="tab" data-tab="add-user">
+          <i class="fas fa-user-plus"></i>
+          Ajouter un Utilisateur
         </div>
 
         <div class="tab-content" id="add-user-tab">
@@ -1034,7 +1033,28 @@
           </div>
         </div>
       </section>
-
+      <div class="tab" data-tab="users-list">
+        <i class="fas fa-users"></i>
+        Liste des Utilisateurs
+      </div>
+      <div class="tab-content" id="users-list-tab">
+        <div class="table-container">
+          <h3><i class="fas fa-users"></i> Liste des Utilisateurs</h3>
+          <table id="users-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Téléphone</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Les utilisateurs seront chargés ici via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
       <!-- Settings -->
       <section id="settings-section" class="section">
         <div class="form-container">
@@ -1131,456 +1151,542 @@
     >
       <i class="fas fa-bars"></i>
     </button>
-  <script>
-  const API_BASE = "https://kaboretech.cursusbf.com";
-  let videosData = [];
-  let currentVideoId = null;
+    <script>
+      const API_BASE = "https://kaboretech.cursusbf.com";
+      let videosData = [];
+      let currentVideoId = null;
 
-  // Mapping Catégorie → Parties
-  const partOptions = {
-    Informatique: ["Hardware", "Software"],
-    Marketing: ["Social", "Content"],
-    Bureautique: ["Partie1", "Partie2"],
-    GSM: ["Hardware", "Software"],
-  };
+      // Mapping Catégorie → Parties
+      const partOptions = {
+        Informatique: ["Hardware", "Software"],
+        Marketing: ["Social", "Content"],
+        Bureautique: ["Partie1", "Partie2"],
+        GSM: ["Hardware", "Software"],
+      };
 
-  // Catégories gratuites aléatoires
-  const freeCategories = Object.keys(partOptions);
-  const getRandomCategory = () =>
-    freeCategories[Math.floor(Math.random() * freeCategories.length)];
-  const getRandomPart = (cat) =>
-    partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
+      // Catégories gratuites aléatoires
+      const freeCategories = Object.keys(partOptions);
+      const getRandomCategory = () =>
+        freeCategories[Math.floor(Math.random() * freeCategories.length)];
+      const getRandomPart = (cat) =>
+        partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
 
-  // Initialisation au chargement
-  document.addEventListener("DOMContentLoaded", async () => {
-    initializeApp();
-    await loadVideosData();
-    loadUsers();
-    loadScreenCaptureSetting();
-    setupTabs();
-  });
-
-  async function initializeApp() {
-    setupEventListeners();
-    setupMobileMenu();
-    setupThemeToggle();
-    setupTooltips();
-
-    // Animation d'apparition
-    setTimeout(() => document.body.classList.add("loaded"), 100);
-  }
-
-  function setupEventListeners() {
-    // Navigation menu
-    document.querySelectorAll('.menu-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const section = item.dataset.section;
-        switchSection(section);
+      // Initialisation au chargement
+      document.addEventListener("DOMContentLoaded", async () => {
+        initializeApp();
+        await loadVideosData();
+        loadUsers();
+        loadScreenCaptureSetting();
+        setupTabs();
       });
-    });
-    async function handleUserSubmit(e) {
-      e.preventDefault();
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
 
-      submitBtn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
-      submitBtn.disabled = true;
+      async function initializeApp() {
+        setupEventListeners();
+        setupMobileMenu();
+        setupThemeToggle();
+        setupTooltips();
 
-      try {
-        const data = {
-          name: form["user-name"].value,
-          phone: form["user-phone"].value,
-          password: form["user-password"].value,
-        };
+        // Animation d'apparition
+        setTimeout(() => document.body.classList.add("loaded"), 100);
+      }
 
-        const res = await fetch(`${BASE_URL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+      function setupEventListeners() {
+        // Navigation menu
+        document.querySelectorAll(".menu-item").forEach((item) => {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+            const section = item.dataset.section;
+            switchSection(section);
+          });
         });
+        async function handleUserSubmit(e) {
+          e.preventDefault();
+          const form = e.target;
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
 
-        if (res.ok) {
-          showAlert(
-            "user-alert",
-            '<i class="fas fa-check-circle"></i> Utilisateur ajouté avec succès',
-            "success"
-          );
-          form.reset();
-          loadUsers();
-          setTimeout(
-            () => document.querySelector('.tab[data-tab="users-list"]').click(),
-            2000
-          );
-        } else {
-          const error = await res.text();
-          throw new Error(error || "Erreur serveur");
+          submitBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
+          submitBtn.disabled = true;
+
+          try {
+            const data = {
+              name: form["user-name"].value,
+              phone: form["user-phone"].value,
+              password: form["user-password"].value,
+            };
+
+            const res = await fetch(`${BASE_URL}/register`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+              showAlert(
+                "user-alert",
+                '<i class="fas fa-check-circle"></i> Utilisateur ajouté avec succès',
+                "success"
+              );
+              form.reset();
+              loadUsers();
+              setTimeout(
+                () =>
+                  document.querySelector('.tab[data-tab="users-list"]').click(),
+                2000
+              );
+            } else {
+              const error = await res.text();
+              throw new Error(error || "Erreur serveur");
+            }
+          } catch (e) {
+            console.error("Erreur lors de l'ajout:", e);
+            showAlert(
+              "user-alert",
+              `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
+              "danger"
+            );
+          } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
         }
-      } catch (e) {
-        console.error("Erreur lors de l'ajout:", e);
-        showAlert(
-          "user-alert",
-          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-          "danger"
-        );
-      } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+
+        // Formulaires
+        document
+          .getElementById("isPaid")
+          ?.addEventListener("change", toggleCategoryGroup);
+        document
+          .getElementById("category")
+          ?.addEventListener("change", updatePartOptions);
+        document
+          .getElementById("video-form")
+          ?.addEventListener("submit", handleVideoSubmit);
+        document
+          .getElementById("user-form")
+          ?.addEventListener("submit", handleUserSubmit);
+        document
+          .getElementById("password-form")
+          ?.addEventListener("submit", handlePasswordReset);
+        document
+          .getElementById("send-otp-btn")
+          ?.addEventListener("click", sendOTP);
+        document
+          .getElementById("screen-capture-toggle")
+          ?.addEventListener("change", toggleScreenCapture);
+        document
+          .getElementById("cancel-edit-btn")
+          ?.addEventListener("click", cancelEdit);
+        document.querySelector(".close")?.addEventListener("click", closeModal);
       }
-    }
 
-    // Formulaires
-    document.getElementById("isPaid")?.addEventListener("change", toggleCategoryGroup);
-    document.getElementById("category")?.addEventListener("change", updatePartOptions);
-    document.getElementById("video-form")?.addEventListener("submit", handleVideoSubmit);
-    document.getElementById("user-form")?.addEventListener("submit", handleUserSubmit);
-    document.getElementById("password-form")?.addEventListener("submit", handlePasswordReset);
-    document.getElementById("send-otp-btn")?.addEventListener("click", sendOTP);
-    document.getElementById("screen-capture-toggle")?.addEventListener("change", toggleScreenCapture);
-    document.getElementById("cancel-edit-btn")?.addEventListener("click", cancelEdit);
-    document.querySelector(".close")?.addEventListener("click", closeModal);
-  }
+      function setupMobileMenu() {
+        const toggle = document.getElementById("mobile-menu-toggle");
+        const sidebar = document.querySelector(".sidebar");
 
-  function setupMobileMenu() {
-    const toggle = document.getElementById('mobile-menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
+        toggle?.addEventListener("click", () => {
+          sidebar.classList.toggle("mobile-open");
+        });
 
-    toggle?.addEventListener('click', () => {
-      sidebar.classList.toggle('mobile-open');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggle?.contains(e.target)) {
-        sidebar.classList.remove('mobile-open');
-      }
-    });
-  }
-
-  function switchSection(sectionName) {
-    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-    document.querySelector(`[data-section="${sectionName}"]`)?.classList.add('active');
-
-    const titles = {
-      dashboard: 'Tableau de Bord',
-      videos: 'Gestion des Vidéos',
-      users: 'Gestion des Utilisateurs',
-      settings: 'Paramètres du Système'
-    };
-    document.getElementById('page-title').textContent = titles[sectionName];
-
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(`${sectionName}-section`).style.display = 'block';
-
-    if (sectionName === 'videos') {
-      if (!document.getElementById('videos-section').dataset.loaded) {
-        loadAllVideos();
-        document.getElementById('videos-section').dataset.loaded = 'true';
-      }
-    }
-
-    if (sectionName === 'users') loadUsers();
-    if (sectionName === 'settings') loadScreenCaptureSetting();
-
-    sidebar.classList.remove('mobile-open');
-  }
-
-  async function loadVideosData() {
-    try {
-      const res = await fetch(`${API_BASE}/api/videos`);
-      if (!res.ok) throw new Error(`Échec du chargement: ${res.status}`);
-      videosData = await res.json();
-      updateDashboard();
-    } catch (error) {
-      console.error('Erreur:', error);
-      showErrorState('recent-videos-table', error.message);
-    }
-  }
-
-  function updateDashboard() {
-    if (!videosData || videosData.length === 0) return;
-
-    let total = 0, paid = 0, free = 0;
-    const allVideos = [];
-
-    videosData.forEach(cat => {
-      if (cat.videos && Array.isArray(cat.videos)) {
-        cat.videos.forEach(v => {
-          allVideos.push({ ...v, categoryName: cat.name });
-          total++;
-          v.isPaid ? paid++ : free++;
+        document.addEventListener("click", (e) => {
+          if (
+            window.innerWidth <= 768 &&
+            !sidebar.contains(e.target) &&
+            !toggle?.contains(e.target)
+          ) {
+            sidebar.classList.remove("mobile-open");
+          }
         });
       }
-    });
 
-    animateCounter('total-videos', total);
-    animateCounter('paid-videos', paid);
-    animateCounter('free-videos', free);
+      function switchSection(sectionName) {
+        document
+          .querySelectorAll(".menu-item")
+          .forEach((item) => item.classList.remove("active"));
+        document
+          .querySelector(`[data-section="${sectionName}"]`)
+          ?.classList.add("active");
 
-    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
-    populateRecentVideosTable(allVideos.slice(0, 10));
-  }
+        const titles = {
+          dashboard: "Tableau de Bord",
+          videos: "Gestion des Vidéos",
+          users: "Gestion des Utilisateurs",
+          settings: "Paramètres du Système",
+        };
+        document.getElementById("page-title").textContent = titles[sectionName];
 
-  function populateRecentVideosTable(videos) {
-    const tbody = document.querySelector('#recent-videos-table tbody');
-    tbody.innerHTML = '';
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => (s.style.display = "none"));
+        document.getElementById(`${sectionName}-section`).style.display =
+          "block";
 
-    if (videos.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
-      return;
-    }
+        if (sectionName === "videos") {
+          if (!document.getElementById("videos-section").dataset.loaded) {
+            loadAllVideos();
+            document.getElementById("videos-section").dataset.loaded = "true";
+          }
+        }
 
-    videos.forEach(video => {
-      const row = createVideoTableRow(video, false);
-      tbody.appendChild(row);
-    });
-  }
+        if (sectionName === "users") loadUsers();
+        if (sectionName === "settings") loadScreenCaptureSetting();
 
-  function createVideoTableRow(video, showDescription) {
-    const tr = document.createElement('tr');
-    tr.style.opacity = '0';
-    tr.style.transform = 'translateY(20px)';
+        sidebar.classList.remove("mobile-open");
+      }
 
-    const desc = video.details?.description || 'Pas de description';
-    const truncated = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
+      async function loadVideosData() {
+        try {
+          const res = await fetch(`${API_BASE}/api/videos`);
+          if (!res.ok) throw new Error(`Échec du chargement: ${res.status}`);
+          videosData = await res.json();
+          updateDashboard();
+        } catch (error) {
+          console.error("Erreur:", error);
+          showErrorState("recent-videos-table", error.message);
+        }
+      }
 
-    tr.innerHTML = `
+      function updateDashboard() {
+        if (!videosData || videosData.length === 0) return;
+
+        let total = 0,
+          paid = 0,
+          free = 0;
+        const allVideos = [];
+
+        videosData.forEach((cat) => {
+          if (cat.videos && Array.isArray(cat.videos)) {
+            cat.videos.forEach((v) => {
+              allVideos.push({ ...v, categoryName: cat.name });
+              total++;
+              v.isPaid ? paid++ : free++;
+            });
+          }
+        });
+
+        animateCounter("total-videos", total);
+        animateCounter("paid-videos", paid);
+        animateCounter("free-videos", free);
+
+        allVideos.sort(
+          (a, b) =>
+            parseInt(b.id.substring(0, 8), 16) -
+            parseInt(a.id.substring(0, 8), 16)
+        );
+        populateRecentVideosTable(allVideos.slice(0, 10));
+      }
+
+      function populateRecentVideosTable(videos) {
+        const tbody = document.querySelector("#recent-videos-table tbody");
+        tbody.innerHTML = "";
+
+        if (videos.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+          return;
+        }
+
+        videos.forEach((video) => {
+          const row = createVideoTableRow(video, false);
+          tbody.appendChild(row);
+        });
+      }
+
+      function createVideoTableRow(video, showDescription) {
+        const tr = document.createElement("tr");
+        tr.style.opacity = "0";
+        tr.style.transform = "translateY(20px)";
+
+        const desc = video.details?.description || "Pas de description";
+        const truncated =
+          desc.length > 80 ? desc.substring(0, 80) + "..." : desc;
+
+        tr.innerHTML = `
       <td><div class="video-thumbnail" title="Lire"><i class="fas fa-play"></i></div></td>
       <td style="font-weight:600" title="${video.title}">${video.title}</td>
       <td><span class="category-tag">${video.categoryName}</span></td>
       <td><span class="category-tag">${video.part}</span></td>
-      <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
-      ${showDescription ? `<td style="max-width:250px" title="${desc}">${truncated}</td>` : ''}
+      <td><span class="status ${video.isPaid ? "paid" : "free"}">${
+          video.isPaid ? "Payante" : "Gratuite"
+        }</span></td>
+      ${
+        showDescription
+          ? `<td style="max-width:250px" title="${desc}">${truncated}</td>`
+          : ""
+      }
       <td>
-        <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir"><i class="fas fa-eye"></i></button>
-        <button class="action-btn edit-btn" data-id="${video.id}" title="Modifier"><i class="fas fa-edit"></i></button>
-        <button class="action-btn delete-btn" data-id="${video.id}" title="Supprimer"><i class="fas fa-trash"></i></button>
+        <button class="action-btn view-btn" onclick="viewVideo('${
+          video.id
+        }')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="action-btn edit-btn" data-id="${
+          video.id
+        }" title="Modifier"><i class="fas fa-edit"></i></button>
+        <button class="action-btn delete-btn" data-id="${
+          video.id
+        }" title="Supprimer"><i class="fas fa-trash"></i></button>
       </td>
     `;
 
-    setTimeout(() => {
-      tr.style.transition = 'all 0.5s ease';
-      tr.style.opacity = '1';
-      tr.style.transform = 'translateY(0)';
-    }, Math.random() * 300);
+        setTimeout(() => {
+          tr.style.transition = "all 0.5s ease";
+          tr.style.opacity = "1";
+          tr.style.transform = "translateY(0)";
+        }, Math.random() * 300);
 
-    return tr;
-  }
-
-  function loadAllVideos() {
-    const tbody = document.querySelector('#all-videos-table tbody');
-    tbody.innerHTML = '';
-
-    if (!videosData || videosData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
-      return;
-    }
-
-    const allVideos = [];
-    videosData.forEach(cat => {
-      if (cat.videos && Array.isArray(cat.videos)) {
-        cat.videos.forEach(v => allVideos.push({ ...v, categoryName: cat.name }));
+        return tr;
       }
-    });
 
-    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
+      function loadAllVideos() {
+        const tbody = document.querySelector("#all-videos-table tbody");
+        tbody.innerHTML = "";
 
-    allVideos.forEach(video => {
-      const row = createVideoTableRow(video, true);
-      tbody.appendChild(row);
-    });
-
-    addVideoActionHandlers();
-  }
-
-  function addVideoActionHandlers() {
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => editVideo(e.target.closest("button").dataset.id));
-    });
-
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        if (confirm("Supprimer cette vidéo ? Cette action est irréversible.")) {
-          deleteVideo(e.target.closest("button").dataset.id);
+        if (!videosData || videosData.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+          return;
         }
-      });
-    });
-  }
 
-  async function deleteVideo(id) {
-    const btn = document.querySelector(`button[data-id="${id}"].delete-btn`);
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    btn.disabled = true;
+        const allVideos = [];
+        videosData.forEach((cat) => {
+          if (cat.videos && Array.isArray(cat.videos)) {
+            cat.videos.forEach((v) =>
+              allVideos.push({ ...v, categoryName: cat.name })
+            );
+          }
+        });
 
-    try {
-      const res = await fetch(`${API_BASE}/api/videos/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        showAlert("video-alert", "✅ Vidéo supprimée", "success");
-        await loadVideosData();
-        loadAllVideos();
-      } else {
-        throw new Error("Échec de suppression");
-      }
-    } catch (e) {
-      showAlert("video-alert", "❌ " + e.message, "danger");
-    } finally {
-      btn.innerHTML = '<i class="fas fa-trash"></i>';
-      btn.disabled = false;
-    }
-  }
+        allVideos.sort(
+          (a, b) =>
+            parseInt(b.id.substring(0, 8), 16) -
+            parseInt(a.id.substring(0, 8), 16)
+        );
 
-  async function editVideo(id) {
-    let video = null;
-    for (const cat of videosData) {
-      video = cat.videos.find(v => v.id === id);
-      if (video) break;
-    }
-    if (!video) return;
+        allVideos.forEach((video) => {
+          const row = createVideoTableRow(video, true);
+          tbody.appendChild(row);
+        });
 
-    currentVideoId = id;
-    document.getElementById("title").value = video.title;
-    document.getElementById("isPaid").value = video.isPaid.toString();
-    document.getElementById("category").value = video.categoryId || "";
-    updatePartOptions();
-    document.getElementById("part").value = video.part || "";
-    document.getElementById("description").value = video.details?.description || "";
-
-    document.getElementById("video-form-title").innerHTML = '<i class="fas fa-edit"></i> Modifier la Vidéo';
-    document.getElementById("video-submit-btn").innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
-    document.getElementById("cancel-edit-btn").style.display = "inline-flex";
-    document.getElementById("category-group").style.display = "block";
-
-    switchSection("videos");
-    document.querySelector('.tab[data-tab="add-video"]')?.click();
-    showAlert("video-alert", "Mode édition activé", "success");
-  }
-
-  async function handleVideoSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById("video-submit-btn");
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-    btn.disabled = true;
-
-    try {
-      const formData = new FormData();
-      formData.append("title", document.getElementById("title").value);
-      formData.append("isPaid", document.getElementById("isPaid").value);
-      formData.append("description", document.getElementById("description").value);
-
-      const isPaid = document.getElementById("isPaid").value === "true";
-      if (isPaid) {
-        formData.append("categoryId", document.getElementById("category").value);
-        formData.append("part", document.getElementById("part").value);
-      } else {
-        const cat = getRandomCategory();
-        formData.append("categoryId", cat);
-        formData.append("part", getRandomPart(cat));
+        addVideoActionHandlers();
       }
 
-      const videoFile = document.getElementById("videoFile").files[0];
-      const imageFile = document.getElementById("imageFile").files[0];
-      if (videoFile) formData.append("videoFile", videoFile);
-      if (imageFile) formData.append("imageFile", imageFile);
+      function addVideoActionHandlers() {
+        document.querySelectorAll(".edit-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) =>
+            editVideo(e.target.closest("button").dataset.id)
+          );
+        });
 
-      const url = currentVideoId
-        ? `${API_BASE}/api/update-video/${currentVideoId}`
-        : `${API_BASE}/api/add-video`;
-      const method = currentVideoId ? "PUT" : "POST";
+        document.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            if (
+              confirm("Supprimer cette vidéo ? Cette action est irréversible.")
+            ) {
+              deleteVideo(e.target.closest("button").dataset.id);
+            }
+          });
+        });
+      }
 
-      const xhr = new XMLHttpRequest();
-      xhr.open(method, url, true);
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          document.getElementById("progress-fill").style.width = percent + "%";
-          document.getElementById("progress-text").textContent = percent + "%";
+      async function deleteVideo(id) {
+        const btn = document.querySelector(
+          `button[data-id="${id}"].delete-btn`
+        );
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/videos/${id}`, {
+            method: "DELETE",
+          });
+          if (res.ok) {
+            showAlert("video-alert", "✅ Vidéo supprimée", "success");
+            await loadVideosData();
+            loadAllVideos();
+          } else {
+            throw new Error("Échec de suppression");
+          }
+        } catch (e) {
+          showAlert("video-alert", "❌ " + e.message, "danger");
+        } finally {
+          btn.innerHTML = '<i class="fas fa-trash"></i>';
+          btn.disabled = false;
         }
-      };
-
-      xhr.onload = async () => {
-        if (xhr.status === 200 || xhr.status === 201) {
-          showAlert("video-alert", "✅ Vidéo ajoutée/mise à jour", "success");
-          resetVideoForm();
-          await loadVideosData();
-          loadAllVideos();
-          setTimeout(() => document.querySelector('.tab[data-tab="videos-list"]')?.click(), 1000);
-        } else {
-          throw new Error("Erreur serveur");
-        }
-      };
-
-      xhr.onerror = () => showAlert("video-alert", "❌ Erreur réseau", "danger");
-      xhr.send(formData);
-    } catch (e) {
-      showAlert("video-alert", "❌ " + e.message, "danger");
-    } finally {
-      btn.innerHTML = original;
-      btn.disabled = false;
-      document.querySelector(".upload-progress").style.display = "none";
-    }
-  }
-
-  function resetVideoForm() {
-    document.getElementById("video-form").reset();
-    document.getElementById("video-form-title").innerHTML = '<i class="fas fa-video"></i> Ajouter une Vidéo';
-    document.getElementById("video-submit-btn").innerHTML = '<i class="fas fa-save"></i> Ajouter';
-    document.getElementById("cancel-edit-btn").style.display = "none";
-    currentVideoId = null;
-    document.getElementById("progress-fill").style.width = "0%";
-    document.getElementById("progress-text").textContent = "0%";
-  }
-
-  function cancelEdit() {
-    resetVideoForm();
-    document.querySelector('.tab[data-tab="videos-list"]')?.click();
-  }
-
-  function toggleCategoryGroup() {
-    const isPaid = document.getElementById("isPaid").value === "true";
-    const group = document.getElementById("category-group");
-    group.style.display = isPaid ? "block" : "none";
-    if (!isPaid) {
-      const cat = getRandomCategory();
-      document.getElementById("category").value = cat;
-      updatePartOptions();
-      document.getElementById("part").value = getRandomPart(cat);
-    }
-  }
-
-  function updatePartOptions() {
-    const cat = document.getElementById("category").value;
-    const select = document.getElementById("part");
-    select.innerHTML = '<option value="">Sélectionner</option>';
-    if (partOptions[cat]) {
-      partOptions[cat].forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.textContent = p;
-        select.appendChild(opt);
-      });
-    }
-  }
-
-  // === GESTION DES UTILISATEURS ===
-  async function loadUsers() {
-    try {
-      const res = await fetch(`${API_BASE}/api/users`);
-      if (!res.ok) throw new Error("Échec du chargement");
-      const data = await res.json();
-
-      const tbody = document.querySelector("#users-table tbody");
-      tbody.innerHTML = '';
-
-      if (!data.users || data.users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="loading">Aucun utilisateur</td></tr>`;
-        return;
       }
 
-      data.users.forEach(u => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
+      async function editVideo(id) {
+        let video = null;
+        for (const cat of videosData) {
+          video = cat.videos.find((v) => v.id === id);
+          if (video) break;
+        }
+        if (!video) return;
+
+        currentVideoId = id;
+        document.getElementById("title").value = video.title;
+        document.getElementById("isPaid").value = video.isPaid.toString();
+        document.getElementById("category").value = video.categoryId || "";
+        updatePartOptions();
+        document.getElementById("part").value = video.part || "";
+        document.getElementById("description").value =
+          video.details?.description || "";
+
+        document.getElementById("video-form-title").innerHTML =
+          '<i class="fas fa-edit"></i> Modifier la Vidéo';
+        document.getElementById("video-submit-btn").innerHTML =
+          '<i class="fas fa-save"></i> Mettre à jour';
+        document.getElementById("cancel-edit-btn").style.display =
+          "inline-flex";
+        document.getElementById("category-group").style.display = "block";
+
+        switchSection("videos");
+        document.querySelector('.tab[data-tab="add-video"]')?.click();
+        showAlert("video-alert", "Mode édition activé", "success");
+      }
+
+      async function handleVideoSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById("video-submit-btn");
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+        btn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append("title", document.getElementById("title").value);
+          formData.append("isPaid", document.getElementById("isPaid").value);
+          formData.append(
+            "description",
+            document.getElementById("description").value
+          );
+
+          const isPaid = document.getElementById("isPaid").value === "true";
+          if (isPaid) {
+            formData.append(
+              "categoryId",
+              document.getElementById("category").value
+            );
+            formData.append("part", document.getElementById("part").value);
+          } else {
+            const cat = getRandomCategory();
+            formData.append("categoryId", cat);
+            formData.append("part", getRandomPart(cat));
+          }
+
+          const videoFile = document.getElementById("videoFile").files[0];
+          const imageFile = document.getElementById("imageFile").files[0];
+          if (videoFile) formData.append("videoFile", videoFile);
+          if (imageFile) formData.append("imageFile", imageFile);
+
+          const url = currentVideoId
+            ? `${API_BASE}/api/update-video/${currentVideoId}`
+            : `${API_BASE}/api/add-video`;
+          const method = currentVideoId ? "PUT" : "POST";
+
+          const xhr = new XMLHttpRequest();
+          xhr.open(method, url, true);
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const percent = Math.round((e.loaded / e.total) * 100);
+              document.getElementById("progress-fill").style.width =
+                percent + "%";
+              document.getElementById("progress-text").textContent =
+                percent + "%";
+            }
+          };
+
+          xhr.onload = async () => {
+            if (xhr.status === 200 || xhr.status === 201) {
+              showAlert(
+                "video-alert",
+                "✅ Vidéo ajoutée/mise à jour",
+                "success"
+              );
+              resetVideoForm();
+              await loadVideosData();
+              loadAllVideos();
+              setTimeout(
+                () =>
+                  document
+                    .querySelector('.tab[data-tab="videos-list"]')
+                    ?.click(),
+                1000
+              );
+            } else {
+              throw new Error("Erreur serveur");
+            }
+          };
+
+          xhr.onerror = () =>
+            showAlert("video-alert", "❌ Erreur réseau", "danger");
+          xhr.send(formData);
+        } catch (e) {
+          showAlert("video-alert", "❌ " + e.message, "danger");
+        } finally {
+          btn.innerHTML = original;
+          btn.disabled = false;
+          document.querySelector(".upload-progress").style.display = "none";
+        }
+      }
+
+      function resetVideoForm() {
+        document.getElementById("video-form").reset();
+        document.getElementById("video-form-title").innerHTML =
+          '<i class="fas fa-video"></i> Ajouter une Vidéo';
+        document.getElementById("video-submit-btn").innerHTML =
+          '<i class="fas fa-save"></i> Ajouter';
+        document.getElementById("cancel-edit-btn").style.display = "none";
+        currentVideoId = null;
+        document.getElementById("progress-fill").style.width = "0%";
+        document.getElementById("progress-text").textContent = "0%";
+      }
+
+      function cancelEdit() {
+        resetVideoForm();
+        document.querySelector('.tab[data-tab="videos-list"]')?.click();
+      }
+
+      function toggleCategoryGroup() {
+        const isPaid = document.getElementById("isPaid").value === "true";
+        const group = document.getElementById("category-group");
+        group.style.display = isPaid ? "block" : "none";
+        if (!isPaid) {
+          const cat = getRandomCategory();
+          document.getElementById("category").value = cat;
+          updatePartOptions();
+          document.getElementById("part").value = getRandomPart(cat);
+        }
+      }
+
+      function updatePartOptions() {
+        const cat = document.getElementById("category").value;
+        const select = document.getElementById("part");
+        select.innerHTML = '<option value="">Sélectionner</option>';
+        if (partOptions[cat]) {
+          partOptions[cat].forEach((p) => {
+            const opt = document.createElement("option");
+            opt.value = p;
+            opt.textContent = p;
+            select.appendChild(opt);
+          });
+        }
+      }
+
+      // === GESTION DES UTILISATEURS ===
+      async function loadUsers() {
+        try {
+          const res = await fetch(`${API_BASE}/api/users`);
+          if (!res.ok) throw new Error("Échec du chargement");
+          const data = await res.json();
+
+          const tbody = document.querySelector("#users-table tbody");
+          tbody.innerHTML = "";
+
+          if (!data.users || data.users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="loading">Aucun utilisateur</td></tr>`;
+            return;
+          }
+
+          data.users.forEach((u) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
           <td style="font-weight:600">
             <div style="display:flex;align-items:center">
               <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient-primary);color:white;display:flex;align-items:center;justify-content:center;margin-right:12px">
@@ -1592,243 +1698,274 @@
           <td style="font-family:monospace">${u.phone}</td>
           <td><span style="color:var(--gray)">${getUserStatus(u)}</span></td>
           <td>
-            <button class="action-btn reset-btn" data-phone="${u.phone}" title="Réinitialiser">
+            <button class="action-btn reset-btn" data-phone="${
+              u.phone
+            }" title="Réinitialiser">
               <i class="fas fa-key"></i>
             </button>
           </td>
         `;
-        tbody.appendChild(tr);
-      });
+            tbody.appendChild(tr);
+          });
 
-      document.querySelectorAll(".reset-btn").forEach(btn => {
-        btn.addEventListener("click", () => openPasswordModal(btn.dataset.phone));
-      });
-    } catch (e) {
-      console.error("Erreur users:", e);
-    }
-  }
-
-  function getUserStatus(user) {
-    const map = {
-      informatiqueHardware: "Info Hardware",
-      informatiqueSoftware: "Info Software",
-      bureautiqueHardware: "Bureau Hardware",
-      bureautiqueSoftware: "Bureau Software",
-      marketingSocial: "Marketing Social",
-      marketingContent: "Marketing Content",
-      gsmHardware: "GSM Hardware",
-      gsmSoftware: "GSM Software"
-    };
-    const status = Object.keys(map).filter(k => user.status?.[k]).map(k => map[k]);
-    return status.length ? status.join(", ") : "Aucun accès";
-  }
-
-  function openPasswordModal(phone) {
-    document.getElementById("reset-phone").value = phone;
-    const modal = document.getElementById("password-modal");
-    modal.style.display = "flex";
-    setTimeout(() => modal.classList.add("show"), 10);
-  }
-
-  function closeModal() {
-    const modal = document.getElementById("password-modal");
-    modal.classList.remove("show");
-    setTimeout(() => {
-      modal.style.display = "none";
-      document.getElementById("password-form").reset();
-      document.getElementById("password-alert").innerHTML = "";
-    }, 300);
-  }
-
-  async function sendOTP() {
-    const phone = document.getElementById("reset-phone").value;
-    const btn = document.getElementById("send-otp-btn");
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone })
-      });
-
-      if (res.ok) {
-        showAlert("password-alert", "✅ Code envoyé", "success");
-      } else {
-        throw new Error("Échec de l'envoi");
+          document.querySelectorAll(".reset-btn").forEach((btn) => {
+            btn.addEventListener("click", () =>
+              openPasswordModal(btn.dataset.phone)
+            );
+          });
+        } catch (e) {
+          console.error("Erreur users:", e);
+        }
       }
-    } catch (e) {
-      showAlert("password-alert", "❌ " + e.message, "danger");
-    } finally {
-      btn.innerHTML = original;
-      btn.disabled = false;
-    }
-  }
 
-  async function handlePasswordReset(e) {
-    e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector("button[type='submit']");
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
-    btn.disabled = true;
-
-    try {
-      const data = {
-        phone: form["reset-phone"].value,
-        otp: form["reset-otp"].value,
-        newPassword: form["reset-new-password"].value
-      };
-
-      const res = await fetch(`${API_BASE}/api/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      if (res.ok) {
-        showAlert("password-alert", "✅ Mot de passe réinitialisé", "success");
-        setTimeout(closeModal, 2000);
-      } else {
-        throw new Error("Code invalide");
+      function getUserStatus(user) {
+        const map = {
+          informatiqueHardware: "Info Hardware",
+          informatiqueSoftware: "Info Software",
+          bureautiqueHardware: "Bureau Hardware",
+          bureautiqueSoftware: "Bureau Software",
+          marketingSocial: "Marketing Social",
+          marketingContent: "Marketing Content",
+          gsmHardware: "GSM Hardware",
+          gsmSoftware: "GSM Software",
+        };
+        const status = Object.keys(map)
+          .filter((k) => user.status?.[k])
+          .map((k) => map[k]);
+        return status.length ? status.join(", ") : "Aucun accès";
       }
-    } catch (e) {
-      showAlert("password-alert", "❌ " + e.message, "danger");
-    } finally {
-      btn.innerHTML = original;
-      btn.disabled = false;
-    }
-  }
 
- async function loadScreenCaptureSetting() {
-  try {
-    const res = await fetch(`${API_BASE}/api/screen-capture`);
-    if (!res.ok) throw new Error("Échec du chargement des paramètres");
-    const data = await res.json();
+      function openPasswordModal(phone) {
+        document.getElementById("reset-phone").value = phone;
+        const modal = document.getElementById("password-modal");
+        modal.style.display = "flex";
+        setTimeout(() => modal.classList.add("show"), 10);
+      }
 
-    const toggle = document.getElementById("screen-capture-toggle");
-    if (toggle) {
-      toggle.checked = data.allowScreenCapture; // ✅ Affectation simple, pas de if
-    }
-  } catch (e) {
-    console.error("Erreur paramètres:", e);
-    showAlert("settings-alert", "❌ Impossible de charger les paramètres", "danger");
-  }
-}
+      function closeModal() {
+        const modal = document.getElementById("password-modal");
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.style.display = "none";
+          document.getElementById("password-form").reset();
+          document.getElementById("password-alert").innerHTML = "";
+        }, 300);
+      }
 
-  async function toggleScreenCapture() {
-    const enabled = this.checked;
-    try {
-      const res = await fetch(`${API_BASE}/api/screen-capture`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ allowScreenCapture: enabled })
-      });
+      async function sendOTP() {
+        const phone = document.getElementById("reset-phone").value;
+        const btn = document.getElementById("send-otp-btn");
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+        btn.disabled = true;
 
-      if (!res.ok) throw new Error("Échec");
-      showAlert("settings-alert", `Capture ${enabled ? "activée" : "désactivée"}`, "success");
-    } catch (e) {
-      this.checked = !enabled;
-      showAlert("settings-alert", "❌ Erreur", "danger");
-    }
-  }
+        try {
+          const res = await fetch(`${API_BASE}/api/forgot-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone }),
+          });
 
-  // === FONCTIONS UTILITAIRES ===
-  function setupTabs() {
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        const tabId = tab.dataset.tab;
-        const parent = tab.closest(".section");
-        parent.querySelectorAll(".tab, .tab-content").forEach(el => el.classList.remove("active"));
-        tab.classList.add("active");
-        document.getElementById(`${tabId}-tab`).classList.add("active");
-      });
-    });
-  }
+          if (res.ok) {
+            showAlert("password-alert", "✅ Code envoyé", "success");
+          } else {
+            throw new Error("Échec de l'envoi");
+          }
+        } catch (e) {
+          showAlert("password-alert", "❌ " + e.message, "danger");
+        } finally {
+          btn.innerHTML = original;
+          btn.disabled = false;
+        }
+      }
 
-  function setupThemeToggle() {
-    const btn = document.createElement("button");
-    btn.innerHTML = '<i class="fas fa-moon"></i>';
-    btn.style.cssText = "position:fixed;bottom:20px;right:20px;padding:12px;border:none;border-radius:50%;background:var(--primary);color:white;cursor:pointer;z-index:1000;";
-    btn.onclick = () => {
-      document.body.classList.toggle("dark-theme");
-      btn.innerHTML = document.body.classList.contains("dark-theme") ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    };
-    document.body.appendChild(btn);
-  }
+      async function handlePasswordReset(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector("button[type='submit']");
+        const original = btn.innerHTML;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
+        btn.disabled = true;
 
-  function setupTooltips() {
-    document.querySelectorAll("[title]").forEach(el => {
-      el.addEventListener("mouseenter", function () {
-        const tooltip = document.createElement("div");
-        tooltip.className = "tooltip";
-        tooltip.textContent = this.title;
-        tooltip.style.cssText = `
+        try {
+          const data = {
+            phone: form["reset-phone"].value,
+            otp: form["reset-otp"].value,
+            newPassword: form["reset-new-password"].value,
+          };
+
+          const res = await fetch(`${API_BASE}/api/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          if (res.ok) {
+            showAlert(
+              "password-alert",
+              "✅ Mot de passe réinitialisé",
+              "success"
+            );
+            setTimeout(closeModal, 2000);
+          } else {
+            throw new Error("Code invalide");
+          }
+        } catch (e) {
+          showAlert("password-alert", "❌ " + e.message, "danger");
+        } finally {
+          btn.innerHTML = original;
+          btn.disabled = false;
+        }
+      }
+
+      async function loadScreenCaptureSetting() {
+        try {
+          const res = await fetch(`${API_BASE}/api/screen-capture`);
+          if (!res.ok) throw new Error("Échec du chargement des paramètres");
+          const data = await res.json();
+
+          const toggle = document.getElementById("screen-capture-toggle");
+          if (toggle) {
+            toggle.checked = data.allowScreenCapture; // ✅ Affectation simple, pas de if
+          }
+        } catch (e) {
+          console.error("Erreur paramètres:", e);
+          showAlert(
+            "settings-alert",
+            "❌ Impossible de charger les paramètres",
+            "danger"
+          );
+        }
+      }
+
+      async function toggleScreenCapture() {
+        const enabled = this.checked;
+        try {
+          const res = await fetch(`${API_BASE}/api/screen-capture`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ allowScreenCapture: enabled }),
+          });
+
+          if (!res.ok) throw new Error("Échec");
+          showAlert(
+            "settings-alert",
+            `Capture ${enabled ? "activée" : "désactivée"}`,
+            "success"
+          );
+        } catch (e) {
+          this.checked = !enabled;
+          showAlert("settings-alert", "❌ Erreur", "danger");
+        }
+      }
+
+      // === FONCTIONS UTILITAIRES ===
+      function setupTabs() {
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            const tabId = tab.dataset.tab;
+            const parent = tab.closest(".section");
+            parent
+              .querySelectorAll(".tab, .tab-content")
+              .forEach((el) => el.classList.remove("active"));
+            tab.classList.add("active");
+            document.getElementById(`${tabId}-tab`).classList.add("active");
+          });
+        });
+      }
+
+      function setupThemeToggle() {
+        const btn = document.createElement("button");
+        btn.innerHTML = '<i class="fas fa-moon"></i>';
+        btn.style.cssText =
+          "position:fixed;bottom:20px;right:20px;padding:12px;border:none;border-radius:50%;background:var(--primary);color:white;cursor:pointer;z-index:1000;";
+        btn.onclick = () => {
+          document.body.classList.toggle("dark-theme");
+          btn.innerHTML = document.body.classList.contains("dark-theme")
+            ? '<i class="fas fa-sun"></i>'
+            : '<i class="fas fa-moon"></i>';
+        };
+        document.body.appendChild(btn);
+      }
+
+      function setupTooltips() {
+        document.querySelectorAll("[title]").forEach((el) => {
+          el.addEventListener("mouseenter", function () {
+            const tooltip = document.createElement("div");
+            tooltip.className = "tooltip";
+            tooltip.textContent = this.title;
+            tooltip.style.cssText = `
           position:absolute;background:#333;color:white;padding:6px 10px;border-radius:6px;
           font-size:0.8rem;z-index:10000;opacity:0;transition:opacity 0.3s;left:50%;top:-40px;
           transform:translateX(-50%);white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,0.2);
         `;
-        document.body.appendChild(tooltip);
-        const rect = this.getBoundingClientRect();
-        tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
-        tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
-        setTimeout(() => tooltip.style.opacity = "1", 10);
-        this.addEventListener("mouseleave", () => tooltip.remove(), { once: true });
-      });
-    });
-  }
+            document.body.appendChild(tooltip);
+            const rect = this.getBoundingClientRect();
+            tooltip.style.left =
+              rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + "px";
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + "px";
+            setTimeout(() => (tooltip.style.opacity = "1"), 10);
+            this.addEventListener("mouseleave", () => tooltip.remove(), {
+              once: true,
+            });
+          });
+        });
+      }
 
-  function animateCounter(id, target) {
-    const el = document.getElementById(id);
-    const start = parseInt(el.textContent) || 0;
-    const duration = 1500;
-    const startTime = performance.now();
-    function step(currentTime) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(start + (target - start) * ease);
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
+      function animateCounter(id, target) {
+        const el = document.getElementById(id);
+        const start = parseInt(el.textContent) || 0;
+        const duration = 1500;
+        const startTime = performance.now();
+        function step(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(start + (target - start) * ease);
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
 
-  function showAlert(id, msg, type = "info") {
-    const el = document.getElementById(id);
-    if (el) {
-      el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-      setTimeout(() => { if (el.innerHTML.includes(msg)) el.innerHTML = ""; }, 5000);
-    }
-  }
+      function showAlert(id, msg, type = "info") {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+          setTimeout(() => {
+            if (el.innerHTML.includes(msg)) el.innerHTML = "";
+          }, 5000);
+        }
+      }
 
-  function showErrorState(tableId, message) {
-    const tbody = document.querySelector(`#${tableId} tbody`);
-    tbody.innerHTML = `
+      function showErrorState(tableId, message) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        tbody.innerHTML = `
       <tr><td colspan="6" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>
     `;
-  }
+      }
 
-  // === Gestion des vidéos (ouverture)
-  function viewVideo(videoId) {
-    const video = findVideoById(videoId);
-    if (video?.details?.video) {
-      window.open(`${API_BASE}${video.details.video}`, '_blank');
-    } else {
-      alert("Vidéo non disponible");
-    }
-  }
+      // === Gestion des vidéos (ouverture)
+      function viewVideo(videoId) {
+        const video = findVideoById(videoId);
+        if (video?.details?.video) {
+          window.open(`${API_BASE}${video.details.video}`, "_blank");
+        } else {
+          alert("Vidéo non disponible");
+        }
+      }
 
-  function findVideoById(id) {
-    for (const cat of videosData) {
-      const video = cat.videos.find(v => v.id === id);
-      if (video) return { ...video, categoryName: cat.name };
-    }
-    return null;
-  }
+      function findVideoById(id) {
+        for (const cat of videosData) {
+          const video = cat.videos.find((v) => v.id === id);
+          if (video) return { ...video, categoryName: cat.name };
+        }
+        return null;
+      }
 
-  console.log("✅ KaboreTech Admin - Toutes les fonctionnalités sont activées.");
-</script>
+      console.log(
+        "✅ KaboreTech Admin - Toutes les fonctionnalités sont activées."
+      );
+    </script>
   </body>
 </html>
