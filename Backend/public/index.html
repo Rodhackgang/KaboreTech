@@ -779,16 +779,7 @@
               <span>Tableau de Bord</span></a
             >
           </li>
-          <li>
-            <a href="#" class="menu-item" data-section="videos"
-              ><i class="fas fa-video"></i> <span>Vidéos</span></a
-            >
-          </li>
-          <li>
-            <a href="#" class="menu-item" data-section="users"
-              ><i class="fas fa-users"></i> <span>Utilisateurs</span></a
-            >
-          </li>
+         
           <li>
             <a href="#" class="menu-item" data-section="settings"
               ><i class="fas fa-cog"></i> <span>Paramètres</span></a
@@ -865,38 +856,11 @@
 
       <!-- Videos -->
       <section id="videos-section" class="section">
-        <div class="tabs">
-          <div class="tab active" data-tab="videos-list">
-            <i class="fas fa-list"></i>
-            Liste des Vidéos
-          </div>
+
           <div class="tab" data-tab="add-video">
             <i class="fas fa-plus"></i>
             Ajouter une Vidéo
           </div>
-        </div>
-
-        <div class="tab-content active" id="videos-list-tab">
-          <div class="table-container">
-            <table id="videos-table">
-              <thead>
-                <tr>
-                  <th>Titre</th>
-                  <th>Catégorie</th>
-                  <th>Partie</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="6" class="loading">Chargement des vidéos...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
 
         <div class="tab-content" id="add-video-tab">
           <div class="form-container">
@@ -1022,37 +986,9 @@
 
       <!-- Users -->
       <section id="users-section" class="section">
-        <div class="tabs">
-          <div class="tab active" data-tab="users-list">
-            <i class="fas fa-users"></i>
-            Liste des Utilisateurs
-          </div>
           <div class="tab" data-tab="add-user">
             <i class="fas fa-user-plus"></i>
             Ajouter un Utilisateur
-          </div>
-        </div>
-
-        <div class="tab-content active" id="users-list-tab">
-          <div class="table-container">
-            <table id="users-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Téléphone</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="4" class="loading">
-                    Chargement des utilisateurs...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
 
         <div class="tab-content" id="add-user-tab">
@@ -1273,35 +1209,23 @@
       document.documentElement.style.scrollBehavior = "smooth";
     }
 
-    function initMenu() {
-      menuItems.forEach((item) => {
-        item.addEventListener("click", (e) => {
-          e.preventDefault();
-          const section = item.getAttribute("data-section");
-          setActiveSection(section);
-
-          // Load section-specific data
-          switch (section) {
-            case "dashboard":
-              loadDashboardData();
-              break;
-            case "videos":
-              loadVideos();
-              break;
-            case "users":
-              loadUsers();
-              break;
-            case "settings":
-              loadScreenCaptureSetting();
-              break;
-          }
-
-          // Close mobile menu
-          sidebar.classList.remove("mobile-open");
-        });
-      });
-    }
-
+   function initMenu() {
+  menuItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const section = item.getAttribute("data-section");
+      setActiveSection(section);
+      // Charger les données selon la section
+      if (section === "dashboard") {
+        loadDashboardData();
+      } else if (section === "settings") {
+        loadScreenCaptureSetting();
+      }
+      // Fermer le menu mobile
+      sidebar.classList.remove("mobile-open");
+    });
+  });
+}
     function initMobileMenu() {
       // Show mobile menu toggle on small screens
       function checkScreenSize() {
