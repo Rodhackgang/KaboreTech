@@ -1179,6 +1179,57 @@
         switchSection(section);
       });
     });
+    async function handleUserSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
+      submitBtn.disabled = true;
+
+      try {
+        const data = {
+          name: form["user-name"].value,
+          phone: form["user-phone"].value,
+          password: form["user-password"].value,
+        };
+
+        const res = await fetch(`${BASE_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+          showAlert(
+            "user-alert",
+            '<i class="fas fa-check-circle"></i> Utilisateur ajouté avec succès',
+            "success"
+          );
+          form.reset();
+          loadUsers();
+          setTimeout(
+            () => document.querySelector('.tab[data-tab="users-list"]').click(),
+            2000
+          );
+        } else {
+          const error = await res.text();
+          throw new Error(error || "Erreur serveur");
+        }
+      } catch (e) {
+        console.error("Erreur lors de l'ajout:", e);
+        showAlert(
+          "user-alert",
+          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
+          "danger"
+        );
+      } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    }
 
     // Formulaires
     document.getElementById("isPaid")?.addEventListener("change", toggleCategoryGroup);
