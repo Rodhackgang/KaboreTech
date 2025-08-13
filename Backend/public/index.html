@@ -2071,21 +2071,12 @@
 
     function showLoading(tableId) {
       const table = document.getElementById(tableId);
-      if (!table) {
-        console.error(`Table ${tableId} introuvable`);
-        return;
-      }
-      const thead = table.querySelector("thead tr");
-      const colCount = thead ? thead.children.length : 6;
       const tbody = table.querySelector("tbody");
-      if (!tbody) {
-        console.error(`tbody introuvable dans #${tableId}`);
-        return;
-      }
+      const colCount = table.querySelector("thead tr").children.length;
       tbody.innerHTML = `
     <tr>
       <td colspan="${colCount}" class="loading">
-        <i class="fas fa-spinner fa-spin"></i> Chargement...
+        <i class="fas fa-spinner fa-spin"></i> Chargement des vidéos...
       </td>
     </tr>
   `;
