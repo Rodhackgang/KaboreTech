@@ -774,16 +774,16 @@
       <div class="sidebar-menu">
         <ul>
           <li>
-            <a href="#" class="active menu-item" data-section="dashboard">
-              <i class="fas fa-tachometer-alt"></i>
-              <span>Tableau de Bord</span>
-            </a>
+            <a href="#" class="active menu-item" data-section="dashboard"
+              ><i class="fas fa-tachometer-alt"></i>
+              <span>Tableau de Bord</span></a
+            >
           </li>
+         
           <li>
-            <a href="#" class="menu-item" data-section="videos">
-              <i class="fas fa-video"></i>
-              <span>Vidéos</span>
-            </a>
+            <a href="#" class="menu-item" data-section="settings"
+              ><i class="fas fa-cog"></i> <span>Paramètres</span></a
+            >
           </li>
         </ul>
       </div>
@@ -804,10 +804,10 @@
         </div>
       </div>
 
-      <!-- Dashboard Section -->
-      <section id="dashboard-section" class="section active">
+      <!-- Dashboard -->
+      <section id="dashboard-section" class="section active slide-in">
         <div class="cards">
-          <div class="card total">
+          <div class="card total bounce">
             <h3>Total Vidéos</h3>
             <p id="total-videos">0</p>
             <div class="trend">
@@ -815,7 +815,7 @@
               <span>+12% ce mois</span>
             </div>
           </div>
-          <div class="card paid">
+          <div class="card paid bounce" style="animation-delay: 0.1s">
             <h3>Vidéos Payantes</h3>
             <p id="paid-videos">0</p>
             <div class="trend">
@@ -823,7 +823,7 @@
               <span>+8% ce mois</span>
             </div>
           </div>
-          <div class="card free">
+          <div class="card free bounce" style="animation-delay: 0.2s">
             <h3>Vidéos Gratuites</h3>
             <p id="free-videos">0</p>
             <div class="trend">
@@ -834,69 +834,28 @@
         </div>
 
         <div class="table-container">
-          <h3>
-            <i class="fas fa-clock"></i>
-            Vidéos Récentes
-          </h3>
-          <div class="table-wrapper">
-            <table id="recent-videos-table">
-              <thead>
-                <tr>
-                  <th>Miniature</th>
-                  <th>Titre</th>
-                  <th>Catégorie</th>
-                  <th>Partie</th>
-                  <th>Type</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="6" class="loading">
-                    <i class="fas fa-spinner"></i>
-                    Chargement des données...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <h3><i class="fas fa-clock"></i> Vidéos Récentes</h3>
+          <table id="recent-videos-table">
+            <thead>
+              <tr>
+                <th>Titre</th>
+                <th>Catégorie</th>
+                <th>Partie</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="loading">Chargement des données...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <!-- Videos Section -->
-      <section id="videos-section" class="section" style="display: none;">
-        <div class="table-container">
-          <h3>
-            <i class="fas fa-video"></i>
-            Liste Complète des Vidéos
-          </h3>
-          <div class="table-wrapper">
-            <table id="all-videos-table">
-              <thead>
-                <tr>
-                  <th>Miniature</th>
-                  <th>Titre</th>
-                  <th>Catégorie</th>
-                  <th>Partie</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="7" class="loading">
-                    <i class="fas fa-spinner"></i>
-                    Chargement des vidéos...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </div>
-   <section id="videos-section" class="section">
+      <!-- Videos -->
+      <section id="videos-section" class="section">
 
           <div class="tab" data-tab="add-video">
             <i class="fas fa-plus"></i>
@@ -1153,7 +1112,8 @@
       </div>
     </div>
 
-   <button
+    <!-- Mobile Menu Toggle -->
+    <button
       id="mobile-menu-toggle"
       style="
         display: none;
@@ -1171,7 +1131,6 @@
     >
       <i class="fas fa-bars"></i>
     </button>
-
     <script>
       const API_BASE = "https://kaboretech.cursusbf.com";
       let videosData = [];
@@ -1798,170 +1757,6 @@
         };
         document.addEventListener('keydown', escHandler);
       }
-
-      // Fonction pour ajouter une vidéo
-async function handleVideoSubmit(e) {
-    e.preventDefault();
-
-    const submitBtn = document.getElementById("video-submit-btn");
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
-    submitBtn.disabled = true;
-
-    const videoData = {
-        title: document.getElementById("title").value,
-        isPaid: document.getElementById("isPaid").value === "true",
-        category: document.getElementById("category").value,
-        part: document.getElementById("part").value,
-        description: document.getElementById("description").value,
-        videoFile: document.getElementById("videoFile").files[0],
-        imageFile: document.getElementById("imageFile").files[0],
-    };
-
-    // Envoi des données via fetch API
-    try {
-        const formData = new FormData();
-        formData.append('title', videoData.title);
-        formData.append('isPaid', videoData.isPaid);
-        formData.append('category', videoData.category);
-        formData.append('part', videoData.part);
-        formData.append('description', videoData.description);
-        if (videoData.videoFile) formData.append('videoFile', videoData.videoFile);
-        if (videoData.imageFile) formData.append('imageFile', videoData.imageFile);
-
-        const res = await fetch(`${API_BASE}/api/videos`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!res.ok) throw new Error("Échec de l'ajout de la vidéo");
-
-        // Actualiser l'affichage
-        loadVideosData();
-        switchSection("videos");
-        showAlert("video-alert", "Vidéo ajoutée avec succès", "success");
-    } catch (error) {
-        showAlert("video-alert", `Erreur: ${error.message}`, "danger");
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
-
-// Fonction pour ajouter un utilisateur
-async function handleUserSubmit(e) {
-    e.preventDefault();
-
-    const submitBtn = document.querySelector("#user-form button[type='submit']");
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
-    submitBtn.disabled = true;
-
-    const userData = {
-        name: document.getElementById("user-name").value,
-        phone: document.getElementById("user-phone").value,
-        password: document.getElementById("user-password").value,
-    };
-
-    try {
-        const res = await fetch(`${API_BASE}/api/users`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        if (!res.ok) throw new Error("Échec de l'ajout de l'utilisateur");
-
-        // Rafraîchir la liste des utilisateurs
-        loadUsers();
-        showAlert("user-alert", "Utilisateur ajouté avec succès", "success");
-        document.getElementById("user-form").reset();
-    } catch (error) {
-        showAlert("user-alert", `Erreur: ${error.message}`, "danger");
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
-
-// Fonction pour activer ou désactiver la capture d'écran
-async function toggleScreenCapture(e) {
-    const isChecked = e.target.checked;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/screen-capture`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ allowScreenCapture: isChecked })
-        });
-
-        if (!res.ok) throw new Error("Échec de la mise à jour des paramètres");
-
-        showAlert("settings-alert", `Capture d'écran ${isChecked ? "activée" : "désactivée"}`, "success");
-    } catch (error) {
-        console.error("Erreur lors de la mise à jour des paramètres:", error);
-        showAlert("settings-alert", `Erreur: ${error.message}`, "danger");
-    }
-}
-
-// Fonction pour charger et afficher la liste des utilisateurs
-async function loadUsers() {
-    try {
-        const res = await fetch(`${API_BASE}/api/users`);
-        const usersData = await res.json();
-
-        const tbody = document.querySelector("#users-table tbody");
-        tbody.innerHTML = "";
-
-        usersData.forEach(user => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${user.name}</td>
-                <td>${user.phone}</td>
-                <td>
-                    <button class="action-btn reset-btn" data-phone="${user.phone}" title="Réinitialiser le mot de passe">
-                        <i class="fas fa-key"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // Ajouter les événements de réinitialisation de mot de passe
-        document.querySelectorAll(".reset-btn").forEach(btn => {
-            btn.addEventListener("click", () => openPasswordModal(btn.dataset.phone));
-        });
-    } catch (error) {
-        console.error("Erreur lors du chargement des utilisateurs:", error);
-        showAlert("users-alert", "Erreur: Impossible de charger les utilisateurs", "danger");
-    }
-}
-
-// Fonction pour afficher l'alerte avec un message spécifique
-function showAlert(elementId, message, type) {
-    const alertContainer = document.getElementById(elementId);
-    alertContainer.innerHTML = `
-        <div class="alert alert-${type}">
-            <i class="fas fa-bell"></i> ${message}
-        </div>
-    `;
-    setTimeout(() => {
-        alertContainer.innerHTML = "";
-    }, 5000);
-}
-
-// Fonction pour ouvrir le modal de réinitialisation de mot de passe
-function openPasswordModal(phone) {
-    document.getElementById("reset-phone").value = phone;
-    document.getElementById("password-modal").style.display = "flex";
-}
-
-// Fonction pour fermer le modal
-document.querySelector(".close").addEventListener("click", () => {
-    document.getElementById("password-modal").style.display = "none";
-});
 
       console.log('KaboreTech Admin Interface chargée avec succès');
     </script>
