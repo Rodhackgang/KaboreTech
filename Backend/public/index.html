@@ -1131,634 +1131,648 @@
     >
       <i class="fas fa-bars"></i>
     </button>
-    <script>
-      const API_BASE = "https://kaboretech.cursusbf.com";
-      let videosData = [];
+  <script>
+  const API_BASE = "https://kaboretech.cursusbf.com";
+  let videosData = [];
+  let currentVideoId = null;
 
-      // Initialize the application
-      document.addEventListener("DOMContentLoaded", function() {
-        initializeApp();
+  // Mapping Catégorie → Parties
+  const partOptions = {
+    Informatique: ["Hardware", "Software"],
+    Marketing: ["Social", "Content"],
+    Bureautique: ["Partie1", "Partie2"],
+    GSM: ["Hardware", "Software"],
+  };
+
+  // Catégories gratuites aléatoires
+  const freeCategories = Object.keys(partOptions);
+  const getRandomCategory = () =>
+    freeCategories[Math.floor(Math.random() * freeCategories.length)];
+  const getRandomPart = (cat) =>
+    partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
+
+  // Initialisation au chargement
+  document.addEventListener("DOMContentLoaded", async () => {
+    initializeApp();
+    await loadVideosData();
+    loadUsers();
+    loadScreenCaptureSetting();
+    setupTabs();
+  });
+
+  async function initializeApp() {
+    setupEventListeners();
+    setupMobileMenu();
+    setupThemeToggle();
+    setupTooltips();
+
+    // Animation d'apparition
+    setTimeout(() => document.body.classList.add("loaded"), 100);
+  }
+
+  function setupEventListeners() {
+    // Navigation menu
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = item.dataset.section;
+        switchSection(section);
       });
+    });
 
-      async function initializeApp() {
-        setupEventListeners();
+    // Formulaires
+    document.getElementById("isPaid")?.addEventListener("change", toggleCategoryGroup);
+    document.getElementById("category")?.addEventListener("change", updatePartOptions);
+    document.getElementById("video-form")?.addEventListener("submit", handleVideoSubmit);
+    document.getElementById("user-form")?.addEventListener("submit", handleUserSubmit);
+    document.getElementById("password-form")?.addEventListener("submit", handlePasswordReset);
+    document.getElementById("send-otp-btn")?.addEventListener("click", sendOTP);
+    document.getElementById("screen-capture-toggle")?.addEventListener("change", toggleScreenCapture);
+    document.getElementById("cancel-edit-btn")?.addEventListener("click", cancelEdit);
+    document.querySelector(".close")?.addEventListener("click", closeModal);
+  }
+
+  function setupMobileMenu() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    toggle?.addEventListener('click', () => {
+      sidebar.classList.toggle('mobile-open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggle?.contains(e.target)) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+  }
+
+  function switchSection(sectionName) {
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    document.querySelector(`[data-section="${sectionName}"]`)?.classList.add('active');
+
+    const titles = {
+      dashboard: 'Tableau de Bord',
+      videos: 'Gestion des Vidéos',
+      users: 'Gestion des Utilisateurs',
+      settings: 'Paramètres du Système'
+    };
+    document.getElementById('page-title').textContent = titles[sectionName];
+
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(`${sectionName}-section`).style.display = 'block';
+
+    if (sectionName === 'videos') {
+      if (!document.getElementById('videos-section').dataset.loaded) {
+        loadAllVideos();
+        document.getElementById('videos-section').dataset.loaded = 'true';
+      }
+    }
+
+    if (sectionName === 'users') loadUsers();
+    if (sectionName === 'settings') loadScreenCaptureSetting();
+
+    sidebar.classList.remove('mobile-open');
+  }
+
+  async function loadVideosData() {
+    try {
+      const res = await fetch(`${API_BASE}/api/videos`);
+      if (!res.ok) throw new Error(`Échec du chargement: ${res.status}`);
+      videosData = await res.json();
+      updateDashboard();
+    } catch (error) {
+      console.error('Erreur:', error);
+      showErrorState('recent-videos-table', error.message);
+    }
+  }
+
+  function updateDashboard() {
+    if (!videosData || videosData.length === 0) return;
+
+    let total = 0, paid = 0, free = 0;
+    const allVideos = [];
+
+    videosData.forEach(cat => {
+      if (cat.videos && Array.isArray(cat.videos)) {
+        cat.videos.forEach(v => {
+          allVideos.push({ ...v, categoryName: cat.name });
+          total++;
+          v.isPaid ? paid++ : free++;
+        });
+      }
+    });
+
+    animateCounter('total-videos', total);
+    animateCounter('paid-videos', paid);
+    animateCounter('free-videos', free);
+
+    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
+    populateRecentVideosTable(allVideos.slice(0, 10));
+  }
+
+  function populateRecentVideosTable(videos) {
+    const tbody = document.querySelector('#recent-videos-table tbody');
+    tbody.innerHTML = '';
+
+    if (videos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+      return;
+    }
+
+    videos.forEach(video => {
+      const row = createVideoTableRow(video, false);
+      tbody.appendChild(row);
+    });
+  }
+
+  function createVideoTableRow(video, showDescription) {
+    const tr = document.createElement('tr');
+    tr.style.opacity = '0';
+    tr.style.transform = 'translateY(20px)';
+
+    const desc = video.details?.description || 'Pas de description';
+    const truncated = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
+
+    tr.innerHTML = `
+      <td><div class="video-thumbnail" title="Lire"><i class="fas fa-play"></i></div></td>
+      <td style="font-weight:600" title="${video.title}">${video.title}</td>
+      <td><span class="category-tag">${video.categoryName}</span></td>
+      <td><span class="category-tag">${video.part}</span></td>
+      <td><span class="status ${video.isPaid ? 'paid' : 'free'}">${video.isPaid ? 'Payante' : 'Gratuite'}</span></td>
+      ${showDescription ? `<td style="max-width:250px" title="${desc}">${truncated}</td>` : ''}
+      <td>
+        <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir"><i class="fas fa-eye"></i></button>
+        <button class="action-btn edit-btn" data-id="${video.id}" title="Modifier"><i class="fas fa-edit"></i></button>
+        <button class="action-btn delete-btn" data-id="${video.id}" title="Supprimer"><i class="fas fa-trash"></i></button>
+      </td>
+    `;
+
+    setTimeout(() => {
+      tr.style.transition = 'all 0.5s ease';
+      tr.style.opacity = '1';
+      tr.style.transform = 'translateY(0)';
+    }, Math.random() * 300);
+
+    return tr;
+  }
+
+  function loadAllVideos() {
+    const tbody = document.querySelector('#all-videos-table tbody');
+    tbody.innerHTML = '';
+
+    if (!videosData || videosData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+      return;
+    }
+
+    const allVideos = [];
+    videosData.forEach(cat => {
+      if (cat.videos && Array.isArray(cat.videos)) {
+        cat.videos.forEach(v => allVideos.push({ ...v, categoryName: cat.name }));
+      }
+    });
+
+    allVideos.sort((a, b) => parseInt(b.id.substring(0, 8), 16) - parseInt(a.id.substring(0, 8), 16));
+
+    allVideos.forEach(video => {
+      const row = createVideoTableRow(video, true);
+      tbody.appendChild(row);
+    });
+
+    addVideoActionHandlers();
+  }
+
+  function addVideoActionHandlers() {
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => editVideo(e.target.closest("button").dataset.id));
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        if (confirm("Supprimer cette vidéo ? Cette action est irréversible.")) {
+          deleteVideo(e.target.closest("button").dataset.id);
+        }
+      });
+    });
+  }
+
+  async function deleteVideo(id) {
+    const btn = document.querySelector(`button[data-id="${id}"].delete-btn`);
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/videos/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showAlert("video-alert", "✅ Vidéo supprimée", "success");
         await loadVideosData();
-        updateDashboard();
-        setupMobileMenu();
-        
-        // Add loaded class for smooth appearance
-        setTimeout(() => {
-          document.body.classList.add("loaded");
-        }, 100);
+        loadAllVideos();
+      } else {
+        throw new Error("Échec de suppression");
+      }
+    } catch (e) {
+      showAlert("video-alert", "❌ " + e.message, "danger");
+    } finally {
+      btn.innerHTML = '<i class="fas fa-trash"></i>';
+      btn.disabled = false;
+    }
+  }
+
+  async function editVideo(id) {
+    let video = null;
+    for (const cat of videosData) {
+      video = cat.videos.find(v => v.id === id);
+      if (video) break;
+    }
+    if (!video) return;
+
+    currentVideoId = id;
+    document.getElementById("title").value = video.title;
+    document.getElementById("isPaid").value = video.isPaid.toString();
+    document.getElementById("category").value = video.categoryId || "";
+    updatePartOptions();
+    document.getElementById("part").value = video.part || "";
+    document.getElementById("description").value = video.details?.description || "";
+
+    document.getElementById("video-form-title").innerHTML = '<i class="fas fa-edit"></i> Modifier la Vidéo';
+    document.getElementById("video-submit-btn").innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
+    document.getElementById("cancel-edit-btn").style.display = "inline-flex";
+    document.getElementById("category-group").style.display = "block";
+
+    switchSection("videos");
+    document.querySelector('.tab[data-tab="add-video"]')?.click();
+    showAlert("video-alert", "Mode édition activé", "success");
+  }
+
+  async function handleVideoSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById("video-submit-btn");
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+    btn.disabled = true;
+
+    try {
+      const formData = new FormData();
+      formData.append("title", document.getElementById("title").value);
+      formData.append("isPaid", document.getElementById("isPaid").value);
+      formData.append("description", document.getElementById("description").value);
+
+      const isPaid = document.getElementById("isPaid").value === "true";
+      if (isPaid) {
+        formData.append("categoryId", document.getElementById("category").value);
+        formData.append("part", document.getElementById("part").value);
+      } else {
+        const cat = getRandomCategory();
+        formData.append("categoryId", cat);
+        formData.append("part", getRandomPart(cat));
       }
 
-      function setupEventListeners() {
-        // Menu navigation
-        document.querySelectorAll('.menu-item').forEach(item => {
-          item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const section = this.dataset.section;
-            switchSection(section);
-          });
-        });
-      }
+      const videoFile = document.getElementById("videoFile").files[0];
+      const imageFile = document.getElementById("imageFile").files[0];
+      if (videoFile) formData.append("videoFile", videoFile);
+      if (imageFile) formData.append("imageFile", imageFile);
 
-      function setupMobileMenu() {
-        const toggle = document.getElementById('mobile-menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
+      const url = currentVideoId
+        ? `${API_BASE}/api/update-video/${currentVideoId}`
+        : `${API_BASE}/api/add-video`;
+      const method = currentVideoId ? "PUT" : "POST";
 
-        toggle.addEventListener('click', () => {
-          sidebar.classList.toggle('mobile-open');
-        });
-
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-          if (window.innerWidth <= 768 && 
-              !sidebar.contains(e.target) && 
-              !toggle.contains(e.target)) {
-            sidebar.classList.remove('mobile-open');
-          }
-        });
-      }
-
-      function switchSection(sectionName) {
-        // Update active menu item
-        document.querySelectorAll('.menu-item').forEach(item => {
-          item.classList.remove('active');
-        });
-        document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
-
-        // Update page title
-        const titles = {
-          dashboard: 'Tableau de Bord',
-          videos: 'Gestion des Vidéos'
-        };
-        document.getElementById('page-title').textContent = titles[sectionName];
-
-        // Show/hide sections
-        document.querySelectorAll('.section').forEach(section => {
-          section.style.display = 'none';
-        });
-        
-        const targetSection = document.getElementById(`${sectionName}-section`);
-        targetSection.style.display = 'block';
-
-        // Load section-specific data
-        if (sectionName === 'videos' && !targetSection.dataset.loaded) {
-          loadAllVideos();
-          targetSection.dataset.loaded = 'true';
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          document.getElementById("progress-fill").style.width = percent + "%";
+          document.getElementById("progress-text").textContent = percent + "%";
         }
-
-        // Close mobile menu
-        document.querySelector('.sidebar').classList.remove('mobile-open');
-      }
-
-      async function loadVideosData() {
-        try {
-          const response = await fetch(`${API_BASE}/api/videos`);
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          
-          videosData = await response.json();
-          console.log('Données vidéos chargées:', videosData);
-        } catch (error) {
-          console.error('Erreur lors du chargement des vidéos:', error);
-          showErrorState('recent-videos-table', error.message);
-        }
-      }
-
-      function updateDashboard() {
-        if (!videosData || videosData.length === 0) return;
-
-        // Calculate stats
-        let totalVideos = 0;
-        let paidVideos = 0;
-        let freeVideos = 0;
-        let allVideos = [];
-
-        videosData.forEach(category => {
-          if (category.videos && Array.isArray(category.videos)) {
-            category.videos.forEach(video => {
-              allVideos.push({
-                ...video,
-                categoryName: category.name
-              });
-              totalVideos++;
-              if (video.isPaid) {
-                paidVideos++;
-              } else {
-                freeVideos++;
-              }
-            });
-          }
-        });
-
-        // Animate counters
-        animateCounter('total-videos', totalVideos);
-        animateCounter('paid-videos', paidVideos);
-        animateCounter('free-videos', freeVideos);
-
-        // Sort videos by ID (newest first - assuming ObjectId format)
-        allVideos.sort((a, b) => {
-          // Extract timestamp from ObjectId (first 8 characters)
-          const timestampA = parseInt(a.id.substring(0, 8), 16);
-          const timestampB = parseInt(b.id.substring(0, 8), 16);
-          return timestampB - timestampA;
-        });
-
-        // Show recent videos (last 10)
-        const recentVideos = allVideos.slice(0, 10);
-        populateRecentVideosTable(recentVideos);
-      }
-
-      function populateRecentVideosTable(videos) {
-        const tbody = document.querySelector('#recent-videos-table tbody');
-        tbody.innerHTML = '';
-
-        if (videos.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="loading">
-                <i class="fas fa-info-circle"></i>
-                Aucune vidéo trouvée
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        videos.forEach(video => {
-          const row = createVideoTableRow(video, false);
-          tbody.appendChild(row);
-        });
-      }
-
-      function loadAllVideos() {
-        const tbody = document.querySelector('#all-videos-table tbody');
-        tbody.innerHTML = '';
-
-        if (!videosData || videosData.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="7" class="loading">
-                <i class="fas fa-info-circle"></i>
-                Aucune vidéo trouvée
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        let allVideos = [];
-        videosData.forEach(category => {
-          if (category.videos && Array.isArray(category.videos)) {
-            category.videos.forEach(video => {
-              allVideos.push({
-                ...video,
-                categoryName: category.name
-              });
-            });
-          }
-        });
-
-        // Sort by date (newest first)
-        allVideos.sort((a, b) => {
-          const timestampA = parseInt(a.id.substring(0, 8), 16);
-          const timestampB = parseInt(b.id.substring(0, 8), 16);
-          return timestampB - timestampA;
-        });
-
-        allVideos.forEach(video => {
-          const row = createVideoTableRow(video, true);
-          tbody.appendChild(row);
-        });
-      }
-
-      function createVideoTableRow(video, showDescription) {
-        const tr = document.createElement('tr');
-        tr.style.opacity = '0';
-        tr.style.transform = 'translateY(20px)';
-        
-        const description = video.details?.description || 'Pas de description';
-        const truncatedDesc = description.length > 80 ? 
-          description.substring(0, 80) + '...' : description;
-
-        tr.innerHTML = `
-          <td>
-            <div class="video-thumbnail" title="Voir la vidéo">
-              <i class="fas fa-play"></i>
-            </div>
-          </td>
-          <td style="font-weight: 600; max-width: 200px;">
-            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
-                 title="${video.title}">
-              ${video.title}
-            </div>
-          </td>
-          <td>
-            <span class="category-tag">${video.categoryName}</span>
-          </td>
-          <td>
-            <span class="category-tag">${video.part}</span>
-          </td>
-          <td>
-            <span class="status ${video.isPaid ? 'paid' : 'free'}">
-              ${video.isPaid ? 'Payante' : 'Gratuite'}
-            </span>
-          </td>
-          ${showDescription ? `
-            <td style="max-width: 250px;">
-              <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
-                   title="${description}">
-                ${truncatedDesc}
-              </div>
-            </td>
-          ` : ''}
-          <td>
-            <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir la vidéo">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="action-btn edit-btn" onclick="editVideo('${video.id}')" title="Modifier">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="action-btn delete-btn" onclick="deleteVideo('${video.id}')" title="Supprimer">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        `;
-
-        // Animate row appearance
-        setTimeout(() => {
-          tr.style.transition = 'all 0.5s ease';
-          tr.style.opacity = '1';
-          tr.style.transform = 'translateY(0)';
-        }, Math.random() * 300);
-
-        return tr;
-      }
-
-      function animateCounter(elementId, targetValue) {
-        const element = document.getElementById(elementId);
-        const startValue = parseInt(element.textContent) || 0;
-        const duration = 2000;
-        const startTime = performance.now();
-
-        function updateCounter(currentTime) {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-
-          // Easing function for smooth animation
-          const easeOutCubic = 1 - Math.pow(1 - progress, 3);
-          const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutCubic);
-
-          element.textContent = currentValue;
-
-          if (progress < 1) {
-            requestAnimationFrame(updateCounter);
-          }
-        }
-
-        requestAnimationFrame(updateCounter);
-      }
-
-      function showErrorState(tableId, message) {
-        const table = document.getElementById(tableId);
-        const tbody = table.querySelector('tbody');
-        const colCount = table.querySelector('thead tr').children.length;
-
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="${colCount}" class="error-state">
-              <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
-              <div>
-                <strong>Erreur de chargement</strong>
-                <div style="margin-top: 5px; font-size: 0.9rem; color: var(--gray);">
-                  ${message}
-                </div>
-              </div>
-              <button class="retry-btn" onclick="retryLoad('${tableId}')">
-                <i class="fas fa-redo"></i>
-                Réessayer
-              </button>
-            </td>
-          </tr>
-        `;
-      }
-
-      async function retryLoad(tableId) {
-        if (tableId === 'recent-videos-table') {
-          // Show loading state
-          const tbody = document.querySelector(`#${tableId} tbody`);
-          const colCount = document.querySelector(`#${tableId} thead tr`).children.length;
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="${colCount}" class="loading">
-                <i class="fas fa-spinner"></i>
-                Rechargement des données...
-              </td>
-            </tr>
-          `;
-          
-          await loadVideosData();
-          updateDashboard();
-        }
-      }
-
-      // Video action functions
-      function viewVideo(videoId) {
-        const video = findVideoById(videoId);
-        if (video && video.details && video.details.video) {
-          const videoUrl = `${API_BASE}${video.details.video}`;
-          window.open(videoUrl, '_blank');
-        } else {
-          alert('URL de la vidéo non disponible');
-        }
-      }
-
-      function editVideo(videoId) {
-        const video = findVideoById(videoId);
-        if (video) {
-          alert(`Fonction d'édition pour la vidéo: "${video.title}"\nID: ${videoId}\n\nCette fonctionnalité sera implémentée prochainement.`);
-        }
-      }
-
-      function deleteVideo(videoId) {
-        const video = findVideoById(videoId);
-        if (video && confirm(`Êtes-vous sûr de vouloir supprimer la vidéo "${video.title}" ?\n\nCette action est irréversible.`)) {
-          // Show confirmation
-          const button = event.target.closest('button');
-          const originalContent = button.innerHTML;
-          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-          button.disabled = true;
-
-          // Simulate deletion (replace with actual API call)
-          setTimeout(() => {
-            alert(`Vidéo "${video.title}" supprimée avec succès.\n\n(Simulation - implémentez l'API de suppression)`);
-            button.innerHTML = originalContent;
-            button.disabled = false;
-            
-            // Optionally reload data
-            loadVideosData().then(() => {
-              updateDashboard();
-              if (document.getElementById('videos-section').dataset.loaded) {
-                loadAllVideos();
-              }
-            });
-          }, 1500);
-        }
-      }
-
-      function findVideoById(videoId) {
-        for (const category of videosData) {
-          if (category.videos) {
-            const video = category.videos.find(v => v.id === videoId);
-            if (video) {
-              return { ...video, categoryName: category.name };
-            }
-          }
-        }
-        return null;
-      }
-
-      // Utility functions for responsive behavior
-      function handleResize() {
-        const sidebar = document.querySelector('.sidebar');
-        const mobileToggle = document.getElementById('mobile-menu-toggle');
-        
-        if (window.innerWidth > 768) {
-          sidebar.classList.remove('mobile-open');
-        }
-      }
-
-      window.addEventListener('resize', handleResize);
-
-      // Add smooth scrolling
-      document.documentElement.style.scrollBehavior = 'smooth';
-
-      // Add intersection observer for animation triggers
-      const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
       };
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.animationPlayState = 'running';
-          }
-        });
-      }, observerOptions);
+      xhr.onload = async () => {
+        if (xhr.status === 200 || xhr.status === 201) {
+          showAlert("video-alert", "✅ Vidéo ajoutée/mise à jour", "success");
+          resetVideoForm();
+          await loadVideosData();
+          loadAllVideos();
+          setTimeout(() => document.querySelector('.tab[data-tab="videos-list"]')?.click(), 1000);
+        } else {
+          throw new Error("Erreur serveur");
+        }
+      };
 
-      // Observe all animated elements
-      document.querySelectorAll('.card, .table-container').forEach(el => {
-        observer.observe(el);
+      xhr.onerror = () => showAlert("video-alert", "❌ Erreur réseau", "danger");
+      xhr.send(formData);
+    } catch (e) {
+      showAlert("video-alert", "❌ " + e.message, "danger");
+    } finally {
+      btn.innerHTML = original;
+      btn.disabled = false;
+      document.querySelector(".upload-progress").style.display = "none";
+    }
+  }
+
+  function resetVideoForm() {
+    document.getElementById("video-form").reset();
+    document.getElementById("video-form-title").innerHTML = '<i class="fas fa-video"></i> Ajouter une Vidéo';
+    document.getElementById("video-submit-btn").innerHTML = '<i class="fas fa-save"></i> Ajouter';
+    document.getElementById("cancel-edit-btn").style.display = "none";
+    currentVideoId = null;
+    document.getElementById("progress-fill").style.width = "0%";
+    document.getElementById("progress-text").textContent = "0%";
+  }
+
+  function cancelEdit() {
+    resetVideoForm();
+    document.querySelector('.tab[data-tab="videos-list"]')?.click();
+  }
+
+  function toggleCategoryGroup() {
+    const isPaid = document.getElementById("isPaid").value === "true";
+    const group = document.getElementById("category-group");
+    group.style.display = isPaid ? "block" : "none";
+    if (!isPaid) {
+      const cat = getRandomCategory();
+      document.getElementById("category").value = cat;
+      updatePartOptions();
+      document.getElementById("part").value = getRandomPart(cat);
+    }
+  }
+
+  function updatePartOptions() {
+    const cat = document.getElementById("category").value;
+    const select = document.getElementById("part");
+    select.innerHTML = '<option value="">Sélectionner</option>';
+    if (partOptions[cat]) {
+      partOptions[cat].forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        select.appendChild(opt);
       });
+    }
+  }
 
-      // Add keyboard shortcuts
-      document.addEventListener('keydown', function(e) {
-        // Alt + D for Dashboard
-        if (e.altKey && e.key === 'd') {
-          e.preventDefault();
-          switchSection('dashboard');
-        }
-        // Alt + V for Videos
-        if (e.altKey && e.key === 'v') {
-          e.preventDefault();
-          switchSection('videos');
-        }
-        // Escape to close mobile menu
-        if (e.key === 'Escape') {
-          document.querySelector('.sidebar').classList.remove('mobile-open');
-        }
-      });
+  // === GESTION DES UTILISATEURS ===
+  async function loadUsers() {
+    try {
+      const res = await fetch(`${API_BASE}/api/users`);
+      if (!res.ok) throw new Error("Échec du chargement");
+      const data = await res.json();
 
-      // Add tooltips for better UX
-      function addTooltips() {
-        const tooltipElements = document.querySelectorAll('[title]');
-        tooltipElements.forEach(element => {
-          element.addEventListener('mouseenter', function(e) {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = this.getAttribute('title');
-            tooltip.style.cssText = `
-              position: absolute;
-              background: var(--dark);
-              color: white;
-              padding: 8px 12px;
-              border-radius: 6px;
-              font-size: 0.8rem;
-              white-space: nowrap;
-              z-index: 10000;
-              pointer-events: none;
-              opacity: 0;
-              transition: opacity 0.3s ease;
-              box-shadow: var(--shadow);
-            `;
-            
-            document.body.appendChild(tooltip);
-            
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
-            tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
-            
-            setTimeout(() => tooltip.style.opacity = '1', 10);
-            
-            this.addEventListener('mouseleave', function() {
-              tooltip.remove();
-            }, { once: true });
-          });
-        });
+      const tbody = document.querySelector("#users-table tbody");
+      tbody.innerHTML = '';
+
+      if (!data.users || data.users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="loading">Aucun utilisateur</td></tr>`;
+        return;
       }
 
-      // Initialize tooltips after content loads
-      setTimeout(addTooltips, 1000);
-
-      // Add CSS for tooltips
-      const tooltipCSS = document.createElement('style');
-      tooltipCSS.textContent = `
-        .tooltip {
-          font-family: inherit !important;
-        }
-        
-        .tooltip::after {
-          content: '';
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          border: 4px solid transparent;
-          border-top-color: var(--dark);
-        }
-      `;
-      document.head.appendChild(tooltipCSS);
-
-      // Performance optimization: lazy load images
-      const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            if (img.dataset.src) {
-              img.src = img.dataset.src;
-              img.removeAttribute('data-src');
-              imageObserver.unobserve(img);
-            }
-          }
-        });
+      data.users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="font-weight:600">
+            <div style="display:flex;align-items:center">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient-primary);color:white;display:flex;align-items:center;justify-content:center;margin-right:12px">
+                ${u.name.charAt(0).toUpperCase()}
+              </div>
+              ${u.name}
+            </div>
+          </td>
+          <td style="font-family:monospace">${u.phone}</td>
+          <td><span style="color:var(--gray)">${getUserStatus(u)}</span></td>
+          <td>
+            <button class="action-btn reset-btn" data-phone="${u.phone}" title="Réinitialiser">
+              <i class="fas fa-key"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
       });
 
-      // Apply lazy loading to video thumbnails when they become clickable
-      document.addEventListener('click', function(e) {
-        if (e.target.closest('.video-thumbnail')) {
-          const videoId = e.target.closest('tr').querySelector('.view-btn').onclick.toString().match(/'([^']+)'/)[1];
-          const video = findVideoById(videoId);
-          
-          if (video && video.image) {
-            const imageUrl = `${API_BASE}${video.image}`;
-            // Create a modal or preview window here
-            showVideoPreview(video, imageUrl);
-          }
-        }
+      document.querySelectorAll(".reset-btn").forEach(btn => {
+        btn.addEventListener("click", () => openPasswordModal(btn.dataset.phone));
+      });
+    } catch (e) {
+      console.error("Erreur users:", e);
+    }
+  }
+
+  function getUserStatus(user) {
+    const map = {
+      informatiqueHardware: "Info Hardware",
+      informatiqueSoftware: "Info Software",
+      bureautiqueHardware: "Bureau Hardware",
+      bureautiqueSoftware: "Bureau Software",
+      marketingSocial: "Marketing Social",
+      marketingContent: "Marketing Content",
+      gsmHardware: "GSM Hardware",
+      gsmSoftware: "GSM Software"
+    };
+    const status = Object.keys(map).filter(k => user.status?.[k]).map(k => map[k]);
+    return status.length ? status.join(", ") : "Aucun accès";
+  }
+
+  function openPasswordModal(phone) {
+    document.getElementById("reset-phone").value = phone;
+    const modal = document.getElementById("password-modal");
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("show"), 10);
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("password-modal");
+    modal.classList.remove("show");
+    setTimeout(() => {
+      modal.style.display = "none";
+      document.getElementById("password-form").reset();
+      document.getElementById("password-alert").innerHTML = "";
+    }, 300);
+  }
+
+  async function sendOTP() {
+    const phone = document.getElementById("reset-phone").value;
+    const btn = document.getElementById("send-otp-btn");
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
       });
 
-      function showVideoPreview(video, imageUrl) {
-        // Create a simple preview modal
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10000;
-          backdrop-filter: blur(5px);
-        `;
-
-        modal.innerHTML = `
-          <div style="
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: var(--shadow-lg);
-            text-align: center;
-          ">
-            <img src="${imageUrl}" alt="${video.title}" style="
-              width: 100%;
-              max-width: 300px;
-              height: auto;
-              border-radius: 12px;
-              margin-bottom: 20px;
-              box-shadow: var(--shadow);
-            " onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div style="
-              display: none;
-              width: 100%;
-              height: 200px;
-              background: var(--gray-light);
-              border-radius: 12px;
-              align-items: center;
-              justify-content: center;
-              color: var(--gray);
-              font-size: 3rem;
-              margin-bottom: 20px;
-            ">
-              <i class="fas fa-image"></i>
-            </div>
-            <h3 style="margin-bottom: 15px; color: var(--dark);">${video.title}</h3>
-            <p style="color: var(--gray); margin-bottom: 20px;">${video.details?.description || 'Pas de description'}</p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-              <button onclick="viewVideo('${video.id}')" style="
-                background: var(--gradient-primary);
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-              ">
-                <i class="fas fa-play"></i> Voir la vidéo
-              </button>
-              <button onclick="this.closest('div[style*=fixed]').remove()" style="
-                background: var(--gray);
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-              ">
-                <i class="fas fa-times"></i> Fermer
-              </button>
-            </div>
-          </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // Close on outside click
-        modal.addEventListener('click', function(e) {
-          if (e.target === modal) {
-            modal.remove();
-          }
-        });
-
-        // Close on escape key
-        const escHandler = function(e) {
-          if (e.key === 'Escape') {
-            modal.remove();
-            document.removeEventListener('keydown', escHandler);
-          }
-        };
-        document.addEventListener('keydown', escHandler);
+      if (res.ok) {
+        showAlert("password-alert", "✅ Code envoyé", "success");
+      } else {
+        throw new Error("Échec de l'envoi");
       }
+    } catch (e) {
+      showAlert("password-alert", "❌ " + e.message, "danger");
+    } finally {
+      btn.innerHTML = original;
+      btn.disabled = false;
+    }
+  }
 
-      console.log('KaboreTech Admin Interface chargée avec succès');
-    </script>
+  async function handlePasswordReset(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector("button[type='submit']");
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
+    btn.disabled = true;
+
+    try {
+      const data = {
+        phone: form["reset-phone"].value,
+        otp: form["reset-otp"].value,
+        newPassword: form["reset-new-password"].value
+      };
+
+      const res = await fetch(`${API_BASE}/api/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        showAlert("password-alert", "✅ Mot de passe réinitialisé", "success");
+        setTimeout(closeModal, 2000);
+      } else {
+        throw new Error("Code invalide");
+      }
+    } catch (e) {
+      showAlert("password-alert", "❌ " + e.message, "danger");
+    } finally {
+      btn.innerHTML = original;
+      btn.disabled = false;
+    }
+  }
+
+  // === PARAMÈTRES ===
+  async function loadScreenCaptureSetting() {
+    try {
+      const res = await fetch(`${API_BASE}/api/screen-capture`);
+      const data = await res.json();
+      document.getElementById("screen-capture-toggle").checked = data.allowScreenCapture;
+    } catch (e) {
+      console.error("Erreur paramètres:", e);
+    }
+  }
+
+  async function toggleScreenCapture() {
+    const enabled = this.checked;
+    try {
+      const res = await fetch(`${API_BASE}/api/screen-capture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ allowScreenCapture: enabled })
+      });
+
+      if (!res.ok) throw new Error("Échec");
+      showAlert("settings-alert", `Capture ${enabled ? "activée" : "désactivée"}`, "success");
+    } catch (e) {
+      this.checked = !enabled;
+      showAlert("settings-alert", "❌ Erreur", "danger");
+    }
+  }
+
+  // === FONCTIONS UTILITAIRES ===
+  function setupTabs() {
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const tabId = tab.dataset.tab;
+        const parent = tab.closest(".section");
+        parent.querySelectorAll(".tab, .tab-content").forEach(el => el.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(`${tabId}-tab`).classList.add("active");
+      });
+    });
+  }
+
+  function setupThemeToggle() {
+    const btn = document.createElement("button");
+    btn.innerHTML = '<i class="fas fa-moon"></i>';
+    btn.style.cssText = "position:fixed;bottom:20px;right:20px;padding:12px;border:none;border-radius:50%;background:var(--primary);color:white;cursor:pointer;z-index:1000;";
+    btn.onclick = () => {
+      document.body.classList.toggle("dark-theme");
+      btn.innerHTML = document.body.classList.contains("dark-theme") ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    };
+    document.body.appendChild(btn);
+  }
+
+  function setupTooltips() {
+    document.querySelectorAll("[title]").forEach(el => {
+      el.addEventListener("mouseenter", function () {
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip";
+        tooltip.textContent = this.title;
+        tooltip.style.cssText = `
+          position:absolute;background:#333;color:white;padding:6px 10px;border-radius:6px;
+          font-size:0.8rem;z-index:10000;opacity:0;transition:opacity 0.3s;left:50%;top:-40px;
+          transform:translateX(-50%);white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,0.2);
+        `;
+        document.body.appendChild(tooltip);
+        const rect = this.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+        tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+        setTimeout(() => tooltip.style.opacity = "1", 10);
+        this.addEventListener("mouseleave", () => tooltip.remove(), { once: true });
+      });
+    });
+  }
+
+  function animateCounter(id, target) {
+    const el = document.getElementById(id);
+    const start = parseInt(el.textContent) || 0;
+    const duration = 1500;
+    const startTime = performance.now();
+    function step(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(start + (target - start) * ease);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function showAlert(id, msg, type = "info") {
+    const el = document.getElementById(id);
+    if (el) {
+      el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+      setTimeout(() => { if (el.innerHTML.includes(msg)) el.innerHTML = ""; }, 5000);
+    }
+  }
+
+  function showErrorState(tableId, message) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    tbody.innerHTML = `
+      <tr><td colspan="6" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>
+    `;
+  }
+
+  // === Gestion des vidéos (ouverture)
+  function viewVideo(videoId) {
+    const video = findVideoById(videoId);
+    if (video?.details?.video) {
+      window.open(`${API_BASE}${video.details.video}`, '_blank');
+    } else {
+      alert("Vidéo non disponible");
+    }
+  }
+
+  function findVideoById(id) {
+    for (const cat of videosData) {
+      const video = cat.videos.find(v => v.id === id);
+      if (video) return { ...video, categoryName: cat.name };
+    }
+    return null;
+  }
+
+  console.log("✅ KaboreTech Admin - Toutes les fonctionnalités sont activées.");
+</script>
   </body>
 </html>
