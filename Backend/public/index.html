@@ -49,6 +49,12 @@
         line-height: 1.6;
         min-height: 100vh;
         display: flex;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      body.loaded {
+        opacity: 1;
       }
 
       /* Sidebar */
@@ -228,6 +234,20 @@
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.8s ease forwards;
+      }
+
+      .card:nth-child(1) { animation-delay: 0.1s; }
+      .card:nth-child(2) { animation-delay: 0.2s; }
+      .card:nth-child(3) { animation-delay: 0.3s; }
+
+      @keyframes slideInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .card::before {
@@ -269,6 +289,7 @@
         font-weight: 800;
         color: var(--dark);
         margin-bottom: 8px;
+        font-variant-numeric: tabular-nums;
       }
 
       .card .trend {
@@ -286,6 +307,9 @@
         padding: 30px;
         margin-bottom: 30px;
         border: 1px solid var(--border);
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.8s ease 0.4s forwards;
       }
 
       .table-container h3 {
@@ -293,11 +317,19 @@
         color: var(--dark);
         font-weight: 700;
         font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 800px;
       }
 
       th {
@@ -310,6 +342,7 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border: none;
+        white-space: nowrap;
       }
 
       th:first-child {
@@ -323,6 +356,10 @@
         padding: 18px 20px;
         border-bottom: 1px solid var(--border);
         font-weight: 500;
+      }
+
+      tr {
+        transition: background-color 0.2s ease;
       }
 
       tr:hover {
@@ -340,18 +377,20 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border: 2px solid;
+        display: inline-block;
       }
 
       .status.paid {
         background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
         color: var(--success);
-        border: 2px solid var(--success);
+        border-color: var(--success);
       }
 
       .status.free {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         color: var(--warning);
-        border: 2px solid var(--warning);
+        border-color: var(--warning);
       }
 
       .action-btn {
@@ -363,6 +402,8 @@
         font-size: 0.9rem;
         transition: all 0.3s ease;
         font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
       }
 
       .action-btn:hover {
@@ -380,275 +421,85 @@
         color: white;
       }
 
-      .reset-btn {
+      .view-btn {
         background: var(--gradient-primary);
         color: white;
       }
 
-      /* Form */
-      .form-container {
-        background: white;
+      .category-tag {
+        background: var(--gray-light);
+        padding: 4px 12px;
         border-radius: 20px;
-        box-shadow: var(--shadow);
-        padding: 35px;
+        font-size: 0.85rem;
+        color: var(--gray);
         border: 1px solid var(--border);
       }
 
-      .form-container h3 {
-        margin-bottom: 30px;
-        color: var(--dark);
-        font-weight: 700;
-        font-size: 1.5rem;
-      }
-
-      .form-group {
-        margin-bottom: 25px;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 10px;
-        font-weight: 600;
-        color: var(--dark);
-        font-size: 0.95rem;
-      }
-
-      .form-control {
-        width: 100%;
-        padding: 15px 18px;
-        border: 2px solid var(--border);
-        border-radius: 12px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: white;
-      }
-
-      .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      }
-
-      /* Tabs */
-      .tabs {
-        display: flex;
-        margin-bottom: 30px;
-        background: var(--gray-light);
-        border-radius: 15px;
-        padding: 8px;
-        box-shadow: inset var(--shadow);
-      }
-
-      .tab {
-        padding: 15px 25px;
-        cursor: pointer;
-        background: transparent;
-        border: none;
-        border-radius: 10px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        color: var(--gray);
-        flex: 1;
-        text-align: center;
-      }
-
-      .tab.active {
-        background: white;
-        color: var(--primary);
-        box-shadow: var(--shadow);
-        transform: translateY(-2px);
-      }
-
-      .tab-content {
-        display: none;
-      }
-
-      .tab-content.active {
-        display: block;
-        animation: fadeIn 0.5s ease;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Upload Progress */
-      .upload-progress {
-        margin-top: 20px;
-        display: none;
-      }
-
-      .progress-bar {
-        height: 10px;
-        background: var(--gray-light);
-        border-radius: 50px;
-        overflow: hidden;
-        box-shadow: inset var(--shadow);
-      }
-
-      .progress-fill {
-        height: 100%;
-        width: 0%;
-        background: var(--gradient-primary);
-        transition: width 0.3s ease;
-        border-radius: 50px;
-        position: relative;
-      }
-
-      .progress-fill::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-          45deg,
-          transparent 30%,
-          rgba(255, 255, 255, 0.3) 50%,
-          transparent 70%
-        );
-        animation: shimmer 2s infinite;
-      }
-
-      @keyframes shimmer {
-        0% {
-          transform: translateX(-100%);
-        }
-        100% {
-          transform: translateX(100%);
-        }
-      }
-
-      .progress-text {
-        font-size: 0.9rem;
-        margin-top: 8px;
-        color: var(--gray);
-        text-align: center;
-        font-weight: 600;
-      }
-
-      /* Alert */
-      .alert {
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border-radius: 12px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border: 2px solid;
-        display: flex;
-        align-items: center;
-      }
-
-      .alert i {
-        margin-right: 10px;
-        font-size: 1.1rem;
-      }
-
-      .alert-success {
-        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-        color: var(--success);
-        border-color: var(--success);
-      }
-
-      .alert-danger {
-        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-        color: var(--danger);
-        border-color: var(--danger);
-      }
-
-      /* Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 2000;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(8px);
-      }
-
-      .modal-content {
-        background: white;
-        padding: 35px;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--border);
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
-      }
-
-      .modal.show .modal-content {
-        transform: scale(1);
-      }
-
-      .close {
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        color: var(--gray);
-        transition: color 0.3s ease;
-      }
-
-      .close:hover {
-        color: var(--danger);
-      }
-
-      /* Buttons */
-      .btn {
-        padding: 15px 30px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .btn:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-      }
-
-      .btn-primary {
-        background: var(--gradient-primary);
-        color: white;
-      }
-
-      .btn-secondary {
-        background: linear-gradient(135deg, var(--gray) 0%, #4b5563 100%);
-        color: white;
-      }
-
-      .btn i {
-        font-size: 1.1rem;
-      }
-
-      /* Loading */
+      /* Loading States */
       .loading {
         text-align: center;
         color: var(--gray);
         font-style: italic;
-        padding: 30px;
+        padding: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .loading i {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .error-state {
+        text-align: center;
+        color: var(--danger);
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .retry-btn {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .retry-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      /* Video Thumbnail */
+      .video-thumbnail {
+        width: 80px;
+        height: 45px;
+        background: var(--gray-light);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray);
+        font-size: 1.5rem;
+        border: 2px solid var(--border);
+        transition: all 0.3s ease;
+      }
+
+      .video-thumbnail:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow);
       }
 
       /* Responsive */
@@ -704,14 +555,32 @@
           gap: 15px;
         }
 
-        .table-container {
-          overflow-x: auto;
+        .mobile-menu-toggle {
+          display: block !important;
         }
+      }
+
+      /* Mobile Menu Toggle */
+      .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: var(--gradient-primary);
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: var(--shadow);
       }
 
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
+        height: 8px;
       }
 
       ::-webkit-scrollbar-track {
@@ -727,42 +596,6 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--primary-dark);
       }
-
-      /* Animations */
-      .slide-in {
-        animation: slideIn 0.5s ease;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      .bounce {
-        animation: bounce 0.6s ease;
-      }
-
-      @keyframes bounce {
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-10px);
-        }
-        60% {
-          transform: translateY(-5px);
-        }
-      }
     </style>
   </head>
   <body>
@@ -774,16 +607,16 @@
       <div class="sidebar-menu">
         <ul>
           <li>
-            <a href="#" class="active menu-item" data-section="dashboard"
-              ><i class="fas fa-tachometer-alt"></i>
-              <span>Tableau de Bord</span></a
-            >
+            <a href="#" class="active menu-item" data-section="dashboard">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Tableau de Bord</span>
+            </a>
           </li>
-         
           <li>
-            <a href="#" class="menu-item" data-section="settings"
-              ><i class="fas fa-cog"></i> <span>Paramètres</span></a
-            >
+            <a href="#" class="menu-item" data-section="videos">
+              <i class="fas fa-video"></i>
+              <span>Vidéos</span>
+            </a>
           </li>
         </ul>
       </div>
@@ -804,10 +637,10 @@
         </div>
       </div>
 
-      <!-- Dashboard -->
-      <section id="dashboard-section" class="section active slide-in">
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="section active">
         <div class="cards">
-          <div class="card total bounce">
+          <div class="card total">
             <h3>Total Vidéos</h3>
             <p id="total-videos">0</p>
             <div class="trend">
@@ -815,7 +648,7 @@
               <span>+12% ce mois</span>
             </div>
           </div>
-          <div class="card paid bounce" style="animation-delay: 0.1s">
+          <div class="card paid">
             <h3>Vidéos Payantes</h3>
             <p id="paid-videos">0</p>
             <div class="trend">
@@ -823,7 +656,7 @@
               <span>+8% ce mois</span>
             </div>
           </div>
-          <div class="card free bounce" style="animation-delay: 0.2s">
+          <div class="card free">
             <h3>Vidéos Gratuites</h3>
             <p id="free-videos">0</p>
             <div class="trend">
@@ -834,1326 +667,702 @@
         </div>
 
         <div class="table-container">
-          <h3><i class="fas fa-clock"></i> Vidéos Récentes</h3>
-          <table id="recent-videos-table">
-            <thead>
-              <tr>
-                <th>Titre</th>
-                <th>Catégorie</th>
-                <th>Partie</th>
-                <th>Type</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" class="loading">Chargement des données...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Videos -->
-      <section id="videos-section" class="section">
-
-          <div class="tab" data-tab="add-video">
-            <i class="fas fa-plus"></i>
-            Ajouter une Vidéo
-          </div>
-
-        <div class="tab-content" id="add-video-tab">
-          <div class="form-container">
-            <h3 id="video-form-title">
-              <i class="fas fa-video"></i> Ajouter une Vidéo
-            </h3>
-            <div id="video-alert"></div>
-            <form id="video-form">
-              <div class="form-group">
-                <label for="title"><i class="fas fa-heading"></i> Titre</label>
-                <input
-                  type="text"
-                  id="title"
-                  class="form-control"
-                  required
-                  placeholder="Entrez le titre de la vidéo"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="isPaid"><i class="fas fa-tag"></i> Type</label>
-                <select id="isPaid" class="form-control" required>
-                  <option value="false">Gratuite</option>
-                  <option value="true">Payante</option>
-                </select>
-              </div>
-
-              <div id="category-group">
-                <div class="form-group">
-                  <label for="category"
-                    ><i class="fas fa-folder"></i> Catégorie</label
-                  >
-                  <select id="category" class="form-control" required>
-                    <option value="">Sélectionner une catégorie</option>
-                    <option value="Informatique">
-                      Maintenance Informatique
-                    </option>
-                    <option value="Marketing">Marketing Digital</option>
-                    <option value="Bureautique">
-                      Sécretariat Informatique
-                    </option>
-                    <option value="GSM">Réparation Téléphone</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label for="part"
-                    ><i class="fas fa-puzzle-piece"></i> Partie</label
-                  >
-                  <select id="part" class="form-control" required>
-                    <option value="">Sélectionner une partie</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="description"
-                  ><i class="fas fa-align-left"></i> Description</label
-                >
-                <textarea
-                  id="description"
-                  class="form-control"
-                  rows="4"
-                  required
-                  placeholder="Décrivez votre vidéo..."
-                ></textarea>
-              </div>
-
-              <div class="form-group">
-                <label for="videoFile"
-                  ><i class="fas fa-film"></i> Fichier Vidéo</label
-                >
-                <input
-                  type="file"
-                  id="videoFile"
-                  class="form-control"
-                  accept="video/*"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="imageFile"
-                  ><i class="fas fa-image"></i> Image de Couverture</label
-                >
-                <input
-                  type="file"
-                  id="imageFile"
-                  class="form-control"
-                  accept="image/*"
-                />
-              </div>
-
-              <div class="upload-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="progress-text" id="progress-text">0%</div>
-              </div>
-
-              <div style="display: flex; gap: 15px; margin-top: 30px">
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  id="video-submit-btn"
-                >
-                  <i class="fas fa-save"></i>
-                  Ajouter
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  id="cancel-edit-btn"
-                  style="display: none"
-                >
-                  <i class="fas fa-times"></i>
-                  Annuler
-                </button>
-              </div>
-            </form>
+          <h3>
+            <i class="fas fa-clock"></i>
+            Vidéos Récentes
+          </h3>
+          <div class="table-wrapper">
+            <table id="recent-videos-table">
+              <thead>
+                <tr>
+                  <th>Miniature</th>
+                  <th>Titre</th>
+                  <th>Catégorie</th>
+                  <th>Partie</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="loading">
+                    <i class="fas fa-spinner"></i>
+                    Chargement des données...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      <!-- Users -->
-      <section id="users-section" class="section">
-          <div class="tab" data-tab="add-user">
-            <i class="fas fa-user-plus"></i>
-            Ajouter un Utilisateur
-        </div>
-
-        <div class="tab-content" id="add-user-tab">
-          <div class="form-container">
-            <h3><i class="fas fa-user-plus"></i> Ajouter un Utilisateur</h3>
-            <div id="user-alert"></div>
-            <form id="user-form">
-              <div class="form-group">
-                <label><i class="fas fa-user"></i> Nom Complet</label>
-                <input
-                  type="text"
-                  id="user-name"
-                  class="form-control"
-                  required
-                  placeholder="Nom et prénom"
-                />
-              </div>
-              <div class="form-group">
-                <label><i class="fas fa-phone"></i> Téléphone</label>
-                <input
-                  type="text"
-                  id="user-phone"
-                  class="form-control"
-                  placeholder="+226 XX XX XX XX"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label><i class="fas fa-lock"></i> Mot de passe</label>
-                <input
-                  type="password"
-                  id="user-password"
-                  class="form-control"
-                  required
-                  placeholder="Mot de passe sécurisé"
-                />
-              </div>
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-user-plus"></i>
-                Ajouter Utilisateur
-              </button>
-            </form>
+      <!-- Videos Section -->
+      <section id="videos-section" class="section" style="display: none;">
+        <div class="table-container">
+          <h3>
+            <i class="fas fa-video"></i>
+            Liste Complète des Vidéos
+          </h3>
+          <div class="table-wrapper">
+            <table id="all-videos-table">
+              <thead>
+                <tr>
+                  <th>Miniature</th>
+                  <th>Titre</th>
+                  <th>Catégorie</th>
+                  <th>Partie</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="7" class="loading">
+                    <i class="fas fa-spinner"></i>
+                    Chargement des vidéos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
-
-      <!-- Settings -->
-      <section id="settings-section" class="section">
-        <div class="form-container">
-          <h3><i class="fas fa-cog"></i> Paramètres du Système</h3>
-          <div class="form-group">
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                cursor: pointer;
-              "
-            >
-              <input
-                type="checkbox"
-                id="screen-capture-toggle"
-                style="transform: scale(1.5)"
-              />
-              <span
-                ><i class="fas fa-camera"></i> Autoriser la capture
-                d'écran</span
-              >
-            </label>
-            <small style="color: var(--gray); margin-top: 10px; display: block">
-              Permet aux utilisateurs de faire des captures d'écran de
-              l'application
-            </small>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Reset Password Modal -->
-    <div id="password-modal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3><i class="fas fa-key"></i> Réinitialiser le mot de passe</h3>
-        <div id="password-alert"></div>
-        <form id="password-form">
-          <div class="form-group">
-            <label><i class="fas fa-phone"></i> Téléphone</label>
-            <input type="text" id="reset-phone" class="form-control" readonly />
-          </div>
-          <div class="form-group">
-            <label><i class="fas fa-shield-alt"></i> Code OTP</label>
-            <input
-              type="text"
-              id="reset-otp"
-              class="form-control"
-              required
-              placeholder="Entrez le code OTP"
-            />
-          </div>
-          <div class="form-group">
-            <label><i class="fas fa-lock"></i> Nouveau mot de passe</label>
-            <input
-              type="password"
-              id="reset-new-password"
-              class="form-control"
-              required
-              placeholder="Nouveau mot de passe"
-            />
-          </div>
-          <div style="display: flex; gap: 15px; margin-top: 25px">
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-check"></i>
-              Réinitialiser
-            </button>
-            <button type="button" class="btn btn-secondary" id="send-otp-btn">
-              <i class="fas fa-paper-plane"></i>
-              Envoyer OTP
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
 
     <!-- Mobile Menu Toggle -->
-    <button
-      id="mobile-menu-toggle"
-      style="
-        display: none;
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-        background: var(--gradient-primary);
-        border: none;
-        padding: 15px;
-        border-radius: 12px;
-        color: white;
-        font-size: 1.2rem;
-      "
-    >
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
       <i class="fas fa-bars"></i>
     </button>
-  </body>
-  <script>
-    const BASE_URL = "https://kaboretech.cursusbf.com";
-    let currentVideoId = null;
 
-    // DOM Elements
-    const sections = {
-      dashboard: document.getElementById("dashboard-section"),
-      videos: document.getElementById("videos-section"),
-      users: document.getElementById("users-section"),
-      settings: document.getElementById("settings-section"),
-    };
+    <script>
+      const API_BASE = "https://kaboretech.cursusbf.com";
+      let videosData = [];
 
-    const tabs = document.querySelectorAll(".tab");
-    const tabContents = document.querySelectorAll(".tab-content");
-    const menuItems = document.querySelectorAll(".menu-item");
-    const pageTitle = document.getElementById("page-title");
-    const sidebar = document.querySelector(".sidebar");
-    const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+      // Initialize the application
+      document.addEventListener("DOMContentLoaded", function() {
+        initializeApp();
+      });
 
-    // Category → Parts Mapping
-    const partOptions = {
-      Informatique: ["Hardware", "Software"],
-      Marketing: ["Social", "Content"],
-      Bureautique: ["Partie1", "Partie2"],
-      GSM: ["Hardware", "Software"],
-    };
-
-    // Free video categories (random)
-    const freeCategories = Object.keys(partOptions);
-    const getRandomCategory = () =>
-      freeCategories[Math.floor(Math.random() * freeCategories.length)];
-    const getRandomPart = (cat) =>
-      partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
-
-    // Init
-    init();
-
-    function init() {
-      initMenu();
-      initTabs();
-      initMobileMenu();
-      loadScreenCaptureSetting();
-
-      // Event Listeners
-      document
-        .getElementById("isPaid")
-        .addEventListener("change", toggleCategoryGroup);
-      document
-        .getElementById("category")
-        .addEventListener("change", updatePartOptions);
-      document
-        .getElementById("video-form")
-        .addEventListener("submit", handleVideoSubmit);
-      document
-        .getElementById("user-form")
-        .addEventListener("submit", handleUserSubmit);
-      document
-        .getElementById("password-form")
-        .addEventListener("submit", handlePasswordReset);
-      document
-        .getElementById("send-otp-btn")
-        .addEventListener("click", sendOTP);
-      document
-        .getElementById("screen-capture-toggle")
-        .addEventListener("change", toggleScreenCapture);
-      document
-        .getElementById("cancel-edit-btn")
-        .addEventListener("click", cancelEdit);
-      document.querySelector(".close").addEventListener("click", closeModal);
-
-      // Load initial data
-      loadDashboardData();
-
-      // Add smooth scrolling
-      document.documentElement.style.scrollBehavior = "smooth";
-    }
-
-   function initMenu() {
-  menuItems.forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-      const section = item.getAttribute("data-section");
-      setActiveSection(section);
-      // Charger les données selon la section
-      if (section === "dashboard") {
-        loadDashboardData();
-      } else if (section === "settings") {
-        loadScreenCaptureSetting();
-      }
-      // Fermer le menu mobile
-      sidebar.classList.remove("mobile-open");
-    });
-  });
-}
-    function initMobileMenu() {
-      // Show mobile menu toggle on small screens
-      function checkScreenSize() {
-        if (window.innerWidth <= 768) {
-          mobileMenuToggle.style.display = "block";
-        } else {
-          mobileMenuToggle.style.display = "none";
-          sidebar.classList.remove("mobile-open");
-        }
+      async function initializeApp() {
+        setupEventListeners();
+        await loadVideosData();
+        updateDashboard();
+        setupMobileMenu();
+        
+        // Add loaded class for smooth appearance
+        setTimeout(() => {
+          document.body.classList.add("loaded");
+        }, 100);
       }
 
-      checkScreenSize();
-      window.addEventListener("resize", checkScreenSize);
+      function setupEventListeners() {
+        // Menu navigation
+        document.querySelectorAll('.menu-item').forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const section = this.dataset.section;
+            switchSection(section);
+          });
+        });
+      }
 
-      mobileMenuToggle.addEventListener("click", () => {
-        sidebar.classList.toggle("mobile-open");
-      });
+      function setupMobileMenu() {
+        const toggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
 
-      // Close mobile menu when clicking outside
-      document.addEventListener("click", (e) => {
-        if (
-          window.innerWidth <= 768 &&
-          !sidebar.contains(e.target) &&
-          !mobileMenuToggle.contains(e.target)
-        ) {
-          sidebar.classList.remove("mobile-open");
-        }
-      });
-    }
+        toggle.addEventListener('click', () => {
+          sidebar.classList.toggle('mobile-open');
+        });
 
-    function setActiveSection(name) {
-      // Remove active class from all sections and menu items
-      Object.values(sections).forEach((s) => {
-        s.classList.remove("active");
-        s.classList.remove("slide-in");
-      });
-      menuItems.forEach((i) => i.classList.remove("active"));
-
-      // Add active class to selected section and menu item
-      sections[name].classList.add("active", "slide-in");
-      document
-        .querySelector(`[data-section="${name}"]`)
-        .classList.add("active");
-
-      // Update page title
-      const sectionNames = {
-        dashboard: "Tableau de Bord",
-        videos: "Gestion des Vidéos",
-        users: "Gestion des Utilisateurs",
-        settings: "Paramètres du Système",
-      };
-      pageTitle.textContent = sectionNames[name];
-    }
-
-    function initTabs() {
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const tabId = tab.getAttribute("data-tab");
-          const parentSection = tab.closest(".section");
-
-          // Remove active class from tabs in current section
-          parentSection
-            .querySelectorAll(".tab")
-            .forEach((t) => t.classList.remove("active"));
-          parentSection
-            .querySelectorAll(".tab-content")
-            .forEach((c) => c.classList.remove("active"));
-
-          // Add active class to selected tab and content
-          tab.classList.add("active");
-          document.getElementById(`${tabId}-tab`).classList.add("active");
-
-          // Special handling for add-video tab
-          if (tabId === "add-video") {
-            resetVideoForm();
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+          if (window.innerWidth <= 768 && 
+              !sidebar.contains(e.target) && 
+              !toggle.contains(e.target)) {
+            sidebar.classList.remove('mobile-open');
           }
         });
-      });
-    }
-
-    function toggleCategoryGroup() {
-      const isPaid = document.getElementById("isPaid").value === "true";
-      const categoryGroup = document.getElementById("category-group");
-
-      if (isPaid) {
-        categoryGroup.style.display = "block";
-        categoryGroup.style.opacity = "1";
-      } else {
-        categoryGroup.style.display = "none";
-        // Auto-assign random category for free videos
-        const randomCat = getRandomCategory();
-        document.getElementById("category").value = randomCat;
-        updatePartOptions();
-        document.getElementById("part").value = getRandomPart(randomCat);
       }
-    }
 
-    function updatePartOptions() {
-      const cat = document.getElementById("category").value;
-      const partSelect = document.getElementById("part");
-      partSelect.innerHTML =
-        '<option value="">Sélectionner une partie</option>';
-
-      if (partOptions[cat]) {
-        partOptions[cat].forEach((p) => {
-          const opt = document.createElement("option");
-          opt.value = p;
-          opt.textContent = p;
-          partSelect.appendChild(opt);
+      function switchSection(sectionName) {
+        // Update active menu item
+        document.querySelectorAll('.menu-item').forEach(item => {
+          item.classList.remove('active');
         });
+        document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+
+        // Update page title
+        const titles = {
+          dashboard: 'Tableau de Bord',
+          videos: 'Gestion des Vidéos'
+        };
+        document.getElementById('page-title').textContent = titles[sectionName];
+
+        // Show/hide sections
+        document.querySelectorAll('.section').forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        const targetSection = document.getElementById(`${sectionName}-section`);
+        targetSection.style.display = 'block';
+
+        // Load section-specific data
+        if (sectionName === 'videos' && !targetSection.dataset.loaded) {
+          loadAllVideos();
+          targetSection.dataset.loaded = 'true';
+        }
+
+        // Close mobile menu
+        document.querySelector('.sidebar').classList.remove('mobile-open');
       }
-    }
-    async function loadDashboardData() {
-      try {
-        showLoading("recent-videos-table");
-        const res = await fetch(`${BASE_URL}/api/videos`);
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-
-        // Calculer les stats
-        const total = data.reduce((acc, cat) => acc + cat.videos.length, 0);
-        const paid = data.reduce(
-          (acc, cat) => acc + cat.videos.filter((v) => v.isPaid).length,
-          0
-        );
-        const free = total - paid;
-
-        animateCounter("total-videos", total);
-        animateCounter("paid-videos", paid);
-        animateCounter("free-videos", free);
-
-        // Remplir les 5 dernières vidéos
-        const recentVideos = [];
-        for (const cat of data) {
-          for (const video of cat.videos) {
-            recentVideos.push({ ...video, categoryName: cat.name });
+      async function loadVideosData() {
+        try {
+          const response = await fetch(`${API_BASE}/api/videos`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
-        }
-
-        recentVideos.sort((a, b) => {
-          // Trier par ID (supposé être un timestamp)
-          return b.id.localeCompare(a.id);
-        });
-        const latest = recentVideos.slice(0, 5);
-
-        const tbody = document
-          .getElementById("recent-videos-table")
-          .querySelector("tbody");
-        tbody.innerHTML = "";
-
-        latest.forEach((video) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-        <td style="font-weight: 600;">${video.title}</td>
-        <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-          video.categoryName
-        }</span></td>
-        <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-          video.part
-        }</span></td>
-        <td><span class="status ${video.isPaid ? "paid" : "free"}">${
-            video.isPaid ? "Payante" : "Gratuite"
-          }</span></td>
-        <td>
-          <button class="action-btn edit-btn" data-id="${
-            video.id
-          }" title="Modifier"><i class="fas fa-edit"></i></button>
-          <button class="action-btn delete-btn" data-id="${
-            video.id
-          }" title="Supprimer"><i class="fas fa-trash"></i></button>
-        </td>
-      `;
-          tbody.appendChild(tr);
-        });
-
-        addVideoActionHandlers();
-      } catch (e) {
-        console.error("Erreur dashboard:", e);
-        showError("recent-videos-table", `Erreur: ${e.message}`);
-      }
-    }
-    function animateCounter(elementId, targetValue) {
-      const element = document.getElementById(elementId);
-      const duration = 1000; // 1 second
-      const start = parseInt(element.textContent) || 0;
-      const startTime = performance.now();
-
-      function updateCounter(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        // Easing function for smooth animation
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(start + (targetValue - start) * easeOut);
-
-        element.textContent = current;
-
-        if (progress < 1) {
-          requestAnimationFrame(updateCounter);
+          
+          videosData = await response.json();
+          console.log('Données vidéos chargées:', videosData);
+        } catch (error) {
+          console.error('Erreur lors du chargement des vidéos:', error);
+          showErrorState('recent-videos-table', error.message);
         }
       }
 
-      requestAnimationFrame(updateCounter);
-    }
+      function updateDashboard() {
+        if (!videosData || videosData.length === 0) return;
 
-    async function loadVideos() {
-      try {
-        showLoading("videos-table");
-        const res = await fetch(`${BASE_URL}/api/videos`);
-        console.log("Réponse serveur:", res.status, res.statusText);
-        if (!res.ok) throw new Error(`Erreur serveur: ${res.status}`);
+        // Calculate stats
+        let totalVideos = 0;
+        let paidVideos = 0;
+        let freeVideos = 0;
+        let allVideos = [];
 
-        const data = await res.json();
-        console.log("Données reçues:", data);
-        const tbody = document.querySelector("#videos-table tbody");
-        if (!tbody) {
-          console.error("Élément tbody introuvable!");
+        videosData.forEach(category => {
+          if (category.videos && Array.isArray(category.videos)) {
+            category.videos.forEach(video => {
+              allVideos.push({
+                ...video,
+                categoryName: category.name
+              });
+              totalVideos++;
+              if (video.isPaid) {
+                paidVideos++;
+              } else {
+                freeVideos++;
+              }
+            });
+          }
+        });
+
+        // Animate counters
+        animateCounter('total-videos', totalVideos);
+        animateCounter('paid-videos', paidVideos);
+        animateCounter('free-videos', freeVideos);
+
+        // Sort videos by ID (newest first - assuming ObjectId format)
+        allVideos.sort((a, b) => {
+          // Extract timestamp from ObjectId (first 8 characters)
+          const timestampA = parseInt(a.id.substring(0, 8), 16);
+          const timestampB = parseInt(b.id.substring(0, 8), 16);
+          return timestampB - timestampA;
+        });
+
+        // Show recent videos (last 10)
+        const recentVideos = allVideos.slice(0, 10);
+        populateRecentVideosTable(recentVideos);
+      }
+
+      function populateRecentVideosTable(videos) {
+        const tbody = document.querySelector('#recent-videos-table tbody');
+        tbody.innerHTML = '';
+
+        if (videos.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="loading">
+                <i class="fas fa-info-circle"></i>
+                Aucune vidéo trouvée
+              </td>
+            </tr>
+          `;
           return;
         }
-        tbody.innerHTML = "";
 
-        // Parcourir chaque catégorie
-        data.forEach((category) => {
-          // Parcourir chaque vidéo dans la catégorie
-          category.videos.forEach((video) => {
-            const tr = document.createElement("tr");
-            const desc = video.details?.description || "Pas de description";
-            tr.innerHTML = `
-          <td style="font-weight: 600;">${video.title}</td>
-          <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-            category.name
-          }</span></td>
-          <td><span style="background: var(--gray-light); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">${
-            video.part
-          }</span></td>
-          <td><span class="status ${video.isPaid ? "paid" : "free"}">${
-              video.isPaid ? "Payante" : "Gratuite"
-            }</span></td>
-          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${desc}">
-            ${desc.length > 50 ? desc.substring(0, 50) + "..." : desc}
+        videos.forEach(video => {
+          const row = createVideoTableRow(video, false);
+          tbody.appendChild(row);
+        });
+      }
+
+      function loadAllVideos() {
+        const tbody = document.querySelector('#all-videos-table tbody');
+        tbody.innerHTML = '';
+
+        if (!videosData || videosData.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="loading">
+                <i class="fas fa-info-circle"></i>
+                Aucune vidéo trouvée
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        let allVideos = [];
+        videosData.forEach(category => {
+          if (category.videos && Array.isArray(category.videos)) {
+            category.videos.forEach(video => {
+              allVideos.push({
+                ...video,
+                categoryName: category.name
+              });
+            });
+          }
+        });
+
+        // Sort by date (newest first)
+        allVideos.sort((a, b) => {
+          const timestampA = parseInt(a.id.substring(0, 8), 16);
+          const timestampB = parseInt(b.id.substring(0, 8), 16);
+          return timestampB - timestampA;
+        });
+
+        allVideos.forEach(video => {
+          const row = createVideoTableRow(video, true);
+          tbody.appendChild(row);
+        });
+      }
+
+      function createVideoTableRow(video, showDescription) {
+        const tr = document.createElement('tr');
+        tr.style.opacity = '0';
+        tr.style.transform = 'translateY(20px)';
+        
+        const description = video.details?.description || 'Pas de description';
+        const truncatedDesc = description.length > 80 ? 
+          description.substring(0, 80) + '...' : description;
+
+        tr.innerHTML = `
+          <td>
+            <div class="video-thumbnail" title="Voir la vidéo">
+              <i class="fas fa-play"></i>
+            </div>
+          </td>
+          <td style="font-weight: 600; max-width: 200px;">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                 title="${video.title}">
+              ${video.title}
+            </div>
           </td>
           <td>
-            <button class="action-btn edit-btn" data-id="${
-              video.id
-            }" title="Modifier"><i class="fas fa-edit"></i></button>
-            <button class="action-btn delete-btn" data-id="${
-              video.id
-            }" title="Supprimer"><i class="fas fa-trash"></i></button>
+            <span class="category-tag">${video.categoryName}</span>
+          </td>
+          <td>
+            <span class="category-tag">${video.part}</span>
+          </td>
+          <td>
+            <span class="status ${video.isPaid ? 'paid' : 'free'}">
+              ${video.isPaid ? 'Payante' : 'Gratuite'}
+            </span>
+          </td>
+          ${showDescription ? `
+            <td style="max-width: 250px;">
+              <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                   title="${description}">
+                ${truncatedDesc}
+              </div>
+            </td>
+          ` : ''}
+          <td>
+            <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir la vidéo">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="action-btn edit-btn" onclick="editVideo('${video.id}')" title="Modifier">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete-btn" onclick="deleteVideo('${video.id}')" title="Supprimer">
+              <i class="fas fa-trash"></i>
+            </button>
           </td>
         `;
-            tbody.appendChild(tr);
-          });
-        });
 
-        addVideoActionHandlers();
-      } catch (e) {
-        console.error("Erreur videos:", e);
-        showError("videos-table", `Échec du chargement: ${e.message}`);
+        // Animate row appearance
+        setTimeout(() => {
+          tr.style.transition = 'all 0.5s ease';
+          tr.style.opacity = '1';
+          tr.style.transform = 'translateY(0)';
+        }, Math.random() * 300);
+
+        return tr;
       }
-    }
-    function addVideoActionHandlers() {
-      // Événements pour modifier une vidéo
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) =>
-          editVideo(e.target.closest("button").dataset.id)
-        );
-      });
 
-      // Événements pour supprimer une vidéo
-      document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          if (
-            confirm(
-              "Êtes-vous sûr de vouloir supprimer cette vidéo ? Cette action est irréversible."
-            )
-          ) {
-            deleteVideo(e.target.closest("button").dataset.id);
+      function animateCounter(elementId, targetValue) {
+        const element = document.getElementById(elementId);
+        const startValue = parseInt(element.textContent) || 0;
+        const duration = 2000;
+        const startTime = performance.now();
+
+        function updateCounter(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // Easing function for smooth animation
+          const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+          const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutCubic);
+
+          element.textContent = currentValue;
+
+          if (progress < 1) {
+            requestAnimationFrame(updateCounter);
           }
-        });
-      });
-    }
+        }
 
-    async function deleteVideo(id) {
-      try {
-        const deleteBtn = document.querySelector(
-          `button[data-id="${id}"].delete-btn`
-        );
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        deleteBtn.disabled = true;
+        requestAnimationFrame(updateCounter);
+      }
 
-        const res = await fetch(`${BASE_URL}/api/videos/${id}`, {
-          method: "DELETE",
-        });
+      function showErrorState(tableId, message) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const colCount = table.querySelector('thead tr').children.length;
 
-        if (res.ok) {
-          showAlert("video-alert", "Vidéo supprimée avec succès", "success");
-          loadVideos(); // Recharger la liste des vidéos après suppression
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="${colCount}" class="error-state">
+              <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger);"></i>
+              <div>
+                <strong>Erreur de chargement</strong>
+                <div style="margin-top: 5px; font-size: 0.9rem; color: var(--gray);">
+                  ${message}
+                </div>
+              </div>
+              <button class="retry-btn" onclick="retryLoad('${tableId}')">
+                <i class="fas fa-redo"></i>
+                Réessayer
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+
+      async function retryLoad(tableId) {
+        if (tableId === 'recent-videos-table') {
+          // Show loading state
+          const tbody = document.querySelector(`#${tableId} tbody`);
+          const colCount = document.querySelector(`#${tableId} thead tr`).children.length;
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="${colCount}" class="loading">
+                <i class="fas fa-spinner"></i>
+                Rechargement des données...
+              </td>
+            </tr>
+          `;
+          
+          await loadVideosData();
+          updateDashboard();
+        }
+      }
+
+      // Video action functions
+      function viewVideo(videoId) {
+        const video = findVideoById(videoId);
+        if (video && video.details && video.details.video) {
+          const videoUrl = `${API_BASE}${video.details.video}`;
+          window.open(videoUrl, '_blank');
         } else {
-          throw new Error("Erreur serveur");
+          alert('URL de la vidéo non disponible');
         }
-      } catch (e) {
-        console.error("Erreur lors de la suppression:", e);
-        showAlert("video-alert", "Erreur lors de la suppression", "danger");
       }
-    }
 
-    async function editVideo(id) {
-      try {
-        const res = await fetch(`${BASE_URL}/api/videos`);
-        const data = await res.json();
-        let video = null;
-
-        // Find the video
-        for (const cat of data) {
-          video = cat.videos.find((v) => v.id === id);
-          if (video) break;
+      function editVideo(videoId) {
+        const video = findVideoById(videoId);
+        if (video) {
+          alert(`Fonction d'édition pour la vidéo: "${video.title}"\nID: ${videoId}\n\nCette fonctionnalité sera implémentée prochainement.`);
         }
-
-        if (!video) {
-          showAlert("video-alert", "Vidéo non trouvée", "danger");
-          return;
-        }
-
-        // Populate form
-        currentVideoId = id;
-        document.getElementById("title").value = video.title;
-        document.getElementById("isPaid").value = video.isPaid.toString();
-        document.getElementById("category").value = video.categoryId;
-        updatePartOptions();
-        document.getElementById("part").value = video.part;
-        document.getElementById("description").value =
-          video.details.description;
-
-        // Update form UI
-        document.getElementById("video-form-title").innerHTML =
-          '<i class="fas fa-edit"></i> Modifier la Vidéo';
-        document.getElementById("video-submit-btn").innerHTML =
-          '<i class="fas fa-save"></i> Mettre à jour';
-        document.getElementById("cancel-edit-btn").style.display =
-          "inline-flex";
-        document.getElementById("category-group").style.display = "block";
-
-        // Switch to add-video tab
-        document.querySelector('.tab[data-tab="add-video"]').click();
-
-        showAlert("video-alert", "Mode édition activé", "success");
-      } catch (e) {
-        console.error("Erreur lors du chargement de la vidéo:", e);
-        showAlert(
-          "video-alert",
-          "Erreur lors du chargement de la vidéo",
-          "danger"
-        );
       }
-    }
 
-    async function handleVideoSubmit(e) {
-      e.preventDefault();
+      function deleteVideo(videoId) {
+        const video = findVideoById(videoId);
+        if (video && confirm(`Êtes-vous sûr de vouloir supprimer la vidéo "${video.title}" ?\n\nCette action est irréversible.`)) {
+          // Show confirmation
+          const button = event.target.closest('button');
+          const originalContent = button.innerHTML;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          button.disabled = true;
 
-      const submitBtn = document.getElementById("video-submit-btn");
-      const originalText = submitBtn.innerHTML;
-      submitBtn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Traitement...';
-      submitBtn.disabled = true;
-
-      try {
-        const formData = new FormData();
-        formData.append("title", document.getElementById("title").value);
-        formData.append("isPaid", document.getElementById("isPaid").value);
-        formData.append(
-          "description",
-          document.getElementById("description").value
-        );
-
-        const isPaid = document.getElementById("isPaid").value === "true";
-        if (isPaid) {
-          formData.append(
-            "categoryId",
-            document.getElementById("category").value
-          );
-          formData.append("part", document.getElementById("part").value);
-        } else {
-          const cat = getRandomCategory();
-          formData.append("categoryId", cat);
-          formData.append("part", getRandomPart(cat));
+          // Simulate deletion (replace with actual API call)
+          setTimeout(() => {
+            alert(`Vidéo "${video.title}" supprimée avec succès.\n\n(Simulation - implémentez l'API de suppression)`);
+            button.innerHTML = originalContent;
+            button.disabled = false;
+            
+            // Optionally reload data
+            loadVideosData().then(() => {
+              updateDashboard();
+              if (document.getElementById('videos-section').dataset.loaded) {
+                loadAllVideos();
+              }
+            });
+          }, 1500);
         }
+      }
 
-        const videoFile = document.getElementById("videoFile").files[0];
-        const imageFile = document.getElementById("imageFile").files[0];
-        if (videoFile) formData.append("videoFile", videoFile);
-        if (imageFile) formData.append("imageFile", imageFile);
-
-        const url = currentVideoId
-          ? `${BASE_URL}/api/update-video/${currentVideoId}`
-          : `${BASE_URL}/api/add-video`;
-        const method = currentVideoId ? "PUT" : "POST";
-
-        // Show progress
-        const progress = document.querySelector(".upload-progress");
-        progress.style.display = "block";
-
-        const xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
-
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            document.getElementById("progress-fill").style.width =
-              percent + "%";
-            document.getElementById("progress-text").textContent =
-              percent + "%";
+      function findVideoById(videoId) {
+        for (const category of videosData) {
+          if (category.videos) {
+            const video = category.videos.find(v => v.id === videoId);
+            if (video) {
+              return { ...video, categoryName: category.name };
+            }
           }
-        });
-
-        xhr.onload = function () {
-          if (xhr.status === 200 || xhr.status === 201) {
-            const msg = currentVideoId ? "mise à jour" : "ajoutée";
-            showAlert(
-              "video-alert",
-              `<i class="fas fa-check-circle"></i> Vidéo ${msg} avec succès`,
-              "success"
-            );
-            resetVideoForm();
-            loadVideos();
-            loadDashboardData();
-            setTimeout(
-              () =>
-                document.querySelector('.tab[data-tab="videos-list"]').click(),
-              2000
-            );
-          } else {
-            throw new Error("Erreur serveur");
-          }
-        };
-
-        xhr.onerror = () => {
-          throw new Error("Erreur réseau");
-        };
-
-        xhr.send(formData);
-      } catch (e) {
-        console.error("Erreur lors de l'envoi:", e);
-        showAlert(
-          "video-alert",
-          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-          "danger"
-        );
-      } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-        document.querySelector(".upload-progress").style.display = "none";
-      }
-    }
-
-    function resetVideoForm() {
-      document.getElementById("video-form").reset();
-      document.getElementById("video-form-title").innerHTML =
-        '<i class="fas fa-video"></i> Ajouter une Vidéo';
-      document.getElementById("video-submit-btn").innerHTML =
-        '<i class="fas fa-save"></i> Ajouter';
-      document.getElementById("cancel-edit-btn").style.display = "none";
-      currentVideoId = null;
-      document.getElementById("category-group").style.display = "block";
-      document.getElementById("progress-fill").style.width = "0%";
-      document.getElementById("progress-text").textContent = "0%";
-      document.getElementById("video-alert").innerHTML = "";
-    }
-
-    function cancelEdit() {
-      resetVideoForm();
-      document.querySelector('.tab[data-tab="videos-list"]').click();
-    }
-
-    // Users Functions
-    async function loadUsers() {
-      try {
-        showLoading("users-table");
-        const res = await fetch(`${BASE_URL}/api/users`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-
-        // Vérifiez que la réponse est valide
-        if (!data || !Array.isArray(data.users)) {
-          throw new Error("Structure de données utilisateurs invalide");
         }
-
-        const tbody = document
-          .getElementById("users-table")
-          .querySelector("tbody");
-        if (!tbody) return;
-
-        tbody.innerHTML = "";
-
-        data.users.forEach((u) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-        <td style="font-weight: 600;">
-          <div style="display: flex; align-items: center;">
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">
-              ${u.name.trim().charAt(0).toUpperCase()}
-            </div>
-            ${u.name.trim()}
-          </div>
-        </td>
-        <td style="font-family: monospace; font-weight: 500;">${u.phone}</td>
-        <td><span style="font-size: 0.85rem; color: var(--gray);">${getUserStatus(
-          u
-        )}</span></td>
-        <td>
-          <button class="action-btn reset-btn" data-phone="${
-            u.phone
-          }" title="Réinitialiser le mot de passe">
-            <i class="fas fa-key"></i>
-          </button>
-        </td>
-      `;
-          tbody.appendChild(tr);
-        });
-
-        document.querySelectorAll(".reset-btn").forEach((btn) => {
-          btn.addEventListener("click", () =>
-            openPasswordModal(btn.dataset.phone)
-          );
-        });
-      } catch (e) {
-        console.error("Erreur loadUsers:", e);
-        showError("users-table", e.message || "Échec du chargement");
+        return null;
       }
-    }
 
-    function getUserStatus(user) {
-      const status = [];
-      const statusMap = {
-        informatiqueHardware: "Info Hardware",
-        informatiqueSoftware: "Info Software",
-        bureautiqueHardware: "Bureau Hardware",
-        bureautiqueSoftware: "Bureau Software",
-        marketingSocial: "Marketing Social",
-        marketingContent: "Marketing Content",
-        gsmHardware: "GSM Hardware",
-        gsmSoftware: "GSM Software",
+      // Utility functions for responsive behavior
+      function handleResize() {
+        const sidebar = document.querySelector('.sidebar');
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('mobile-open');
+        }
+      }
+
+      window.addEventListener('resize', handleResize);
+
+      // Add smooth scrolling
+      document.documentElement.style.scrollBehavior = 'smooth';
+
+      // Add intersection observer for animation triggers
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
       };
 
-      Object.keys(statusMap).forEach((key) => {
-        if (user.status && user.status[key]) {
-          status.push(statusMap[key]);
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, observerOptions);
+
+      // Observe all animated elements
+      document.querySelectorAll('.card, .table-container').forEach(el => {
+        observer.observe(el);
+      });
+
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        // Alt + D for Dashboard
+        if (e.altKey && e.key === 'd') {
+          e.preventDefault();
+          switchSection('dashboard');
+        }
+        // Alt + V for Videos
+        if (e.altKey && e.key === 'v') {
+          e.preventDefault();
+          switchSection('videos');
+        }
+        // Escape to close mobile menu
+        if (e.key === 'Escape') {
+          document.querySelector('.sidebar').classList.remove('mobile-open');
         }
       });
 
-      return status.length ? status.join(", ") : "Aucun accès";
-    }
-
-    async function handleUserSubmit(e) {
-      e.preventDefault();
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-
-      submitBtn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
-      submitBtn.disabled = true;
-
-      try {
-        const data = {
-          name: form["user-name"].value,
-          phone: form["user-phone"].value,
-          password: form["user-password"].value,
-        };
-
-        const res = await fetch(`${BASE_URL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+      // Add tooltips for better UX
+      function addTooltips() {
+        const tooltipElements = document.querySelectorAll('[title]');
+        tooltipElements.forEach(element => {
+          element.addEventListener('mouseenter', function(e) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = this.getAttribute('title');
+            tooltip.style.cssText = `
+              position: absolute;
+              background: var(--dark);
+              color: white;
+              padding: 8px 12px;
+              border-radius: 6px;
+              font-size: 0.8rem;
+              white-space: nowrap;
+              z-index: 10000;
+              pointer-events: none;
+              opacity: 0;
+              transition: opacity 0.3s ease;
+              box-shadow: var(--shadow);
+            `;
+            
+            document.body.appendChild(tooltip);
+            
+            const rect = this.getBoundingClientRect();
+            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+            tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+            
+            setTimeout(() => tooltip.style.opacity = '1', 10);
+            
+            this.addEventListener('mouseleave', function() {
+              tooltip.remove();
+            }, { once: true });
+          });
         });
+      }
 
-        if (res.ok) {
-          showAlert(
-            "user-alert",
-            '<i class="fas fa-check-circle"></i> Utilisateur ajouté avec succès',
-            "success"
-          );
-          form.reset();
-          loadUsers();
-          setTimeout(
-            () => document.querySelector('.tab[data-tab="users-list"]').click(),
-            2000
-          );
-        } else {
-          const error = await res.text();
-          throw new Error(error || "Erreur serveur");
+      // Initialize tooltips after content loads
+      setTimeout(addTooltips, 1000);
+
+      // Add CSS for tooltips
+      const tooltipCSS = document.createElement('style');
+      tooltipCSS.textContent = `
+        .tooltip {
+          font-family: inherit !important;
         }
-      } catch (e) {
-        console.error("Erreur lors de l'ajout:", e);
-        showAlert(
-          "user-alert",
-          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-          "danger"
-        );
-      } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-      }
-    }
-
-    // Password Reset Functions
-    function openPasswordModal(phone) {
-      document.getElementById("reset-phone").value = phone;
-      const modal = document.getElementById("password-modal");
-      modal.style.display = "flex";
-      setTimeout(() => modal.classList.add("show"), 10);
-    }
-
-    function closeModal() {
-      const modal = document.getElementById("password-modal");
-      modal.classList.remove("show");
-      setTimeout(() => {
-        modal.style.display = "none";
-        document.getElementById("password-form").reset();
-        document.getElementById("password-alert").innerHTML = "";
-      }, 300);
-    }
-
-    async function sendOTP() {
-      const phone = document.getElementById("reset-phone").value;
-      const btn = document.getElementById("send-otp-btn");
-      const originalText = btn.innerHTML;
-
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/forgot-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone }),
-        });
-
-        if (res.ok) {
-          showAlert(
-            "password-alert",
-            '<i class="fas fa-check-circle"></i> Code OTP envoyé avec succès',
-            "success"
-          );
-        } else {
-          throw new Error("Erreur lors de l'envoi du code OTP");
+        
+        .tooltip::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          border: 4px solid transparent;
+          border-top-color: var(--dark);
         }
-      } catch (e) {
-        console.error("Erreur OTP:", e);
-        showAlert(
-          "password-alert",
-          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-          "danger"
-        );
-      } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
-    }
-
-    async function handlePasswordReset(e) {
-      e.preventDefault();
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-
-      submitBtn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
-      submitBtn.disabled = true;
-
-      try {
-        const data = {
-          phone: form["reset-phone"].value,
-          otp: form["reset-otp"].value,
-          newPassword: form["reset-new-password"].value,
-        };
-
-        const res = await fetch(`${BASE_URL}/api/reset-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-
-        if (res.ok) {
-          showAlert(
-            "password-alert",
-            '<i class="fas fa-check-circle"></i> Mot de passe réinitialisé avec succès',
-            "success"
-          );
-          setTimeout(closeModal, 2000);
-        } else {
-          throw new Error("Code OTP invalide ou expiré");
-        }
-      } catch (e) {
-        console.error("Erreur réinitialisation:", e);
-        showAlert(
-          "password-alert",
-          `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-          "danger"
-        );
-      } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-      }
-    }
-
-    // Settings Functions
-    async function loadScreenCaptureSetting() {
-      try {
-        const res = await fetch(`${BASE_URL}/api/screen-capture`);
-        const data = await res.json();
-        document.getElementById("screen-capture-toggle").checked =
-          data.allowScreenCapture;
-      } catch (e) {
-        console.error("Erreur lors du chargement des paramètres:", e);
-      }
-    }
-
-    async function toggleScreenCapture() {
-      const checkbox = this;
-      const enabled = checkbox.checked;
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/screen-capture`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-        const data = await res.json();
-        document.getElementById("screen-capture-toggle").checked =
-          data.allowScreenCapture;
-      } catch (e) {
-        console.error("Erreur lors du chargement des paramètres:", e);
-        showAlert(
-          "settings-alert",
-          "Impossible de charger les paramètres",
-          "danger"
-        );
-      }
-    }
-
-    async function toggleScreenCapture() {
-      const checkbox = this;
-      const enabled = checkbox.checked;
-      try {
-        const res = await fetch(`${BASE_URL}/api/screen-capture`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ allowScreenCapture: enabled }),
-        });
-
-        if (!res.ok) throw new Error("Échec de la mise à jour");
-
-        showAlert(
-          "settings-alert",
-          `Capture d'écran ${enabled ? "activée" : "désactivée"} avec succès`,
-          "success"
-        );
-      } catch (e) {
-        console.error("Erreur lors de la mise à jour du paramètre:", e);
-        // Réinitialise le toggle en cas d'erreur
-        checkbox.checked = !enabled;
-        showAlert("settings-alert", `Erreur: ${e.message}`, "danger");
-      }
-    }
-
-    function showLoading(tableId) {
-      const table = document.getElementById(tableId);
-      const tbody = table.querySelector("tbody");
-      const colCount = table.querySelector("thead tr").children.length;
-      tbody.innerHTML = `
-    <tr>
-      <td colspan="${colCount}" class="loading">
-        <i class="fas fa-spinner fa-spin"></i> Chargement des vidéos...
-      </td>
-    </tr>
-  `;
-    }
-
-    function showError(tableId, message) {
-      const table = document.getElementById(tableId);
-      const tbody = table.querySelector("tbody");
-      tbody.innerHTML = `
-    <tr>
-      <td colspan="6" style="color: var(--danger); padding: 20px; text-align: center;">
-        <i class="fas fa-exclamation-triangle"></i> ${message}
-        <div style="margin-top: 10px; font-size: 0.8em; color: var(--gray);">
-          ${new Date().toLocaleTimeString()}
-        </div>
-      </td>
-    </tr>
-  `;
-    }
-
-    function showAlert(elementId, message, type) {
-      const container = document.getElementById(elementId);
-      container.innerHTML = `
-        <div class="alert alert-${type}">
-          <i class="fas fa-bell"></i>
-          ${message}
-        </div>
       `;
-      // Disparaît après 5 secondes
-      setTimeout(() => {
-        if (container.innerHTML.includes(message)) {
-          container.innerHTML = "";
-        }
-      }, 5000);
-    }
+      document.head.appendChild(tooltipCSS);
 
-    // === Initialisation des alertes dynamiques pour les sections ===
-    ["video-alert", "user-alert", "password-alert", "settings-alert"].forEach(
-      (id) => {
-        if (!document.getElementById(id)) {
-          const container = document.createElement("div");
-          container.id = id;
-          // Ajoute au bon endroit (ex: form-container parent)
-          const formContainer = document.querySelector(".form-container");
-          if (formContainer) {
-            formContainer.insertBefore(container, formContainer.firstChild);
+      // Performance optimization: lazy load images
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              img.removeAttribute('data-src');
+              imageObserver.unobserve(img);
+            }
+          }
+        });
+      });
+
+      // Apply lazy loading to video thumbnails when they become clickable
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.video-thumbnail')) {
+          const videoId = e.target.closest('tr').querySelector('.view-btn').onclick.toString().match(/'([^']+)'/)[1];
+          const video = findVideoById(videoId);
+          
+          if (video && video.image) {
+            const imageUrl = `${API_BASE}${video.image}`;
+            // Create a modal or preview window here
+            showVideoPreview(video, imageUrl);
           }
         }
-      }
-    );
-
-    // === Gestion du scroll doux et autres effets ===
-    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener("click", function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute("href"));
-        if (target) {
-          target.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
       });
-    });
 
-    // === Événements au chargement ===
-    window.addEventListener("load", () => {
-      // Animation d'apparition
-      document.body.style.opacity = "0";
-      document.body.style.transition = "opacity 0.5s ease";
-      setTimeout(() => {
-        document.body.style.opacity = "1";
-      }, 100);
+      function showVideoPreview(video, imageUrl) {
+        // Create a simple preview modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          backdrop-filter: blur(5px);
+        `;
 
-      // Charger les données initiales
-      loadDashboardData();
-    });
+        modal.innerHTML = `
+          <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+          ">
+            <img src="${imageUrl}" alt="${video.title}" style="
+              width: 100%;
+              max-width: 300px;
+              height: auto;
+              border-radius: 12px;
+              margin-bottom: 20px;
+              box-shadow: var(--shadow);
+            " onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="
+              display: none;
+              width: 100%;
+              height: 200px;
+              background: var(--gray-light);
+              border-radius: 12px;
+              align-items: center;
+              justify-content: center;
+              color: var(--gray);
+              font-size: 3rem;
+              margin-bottom: 20px;
+            ">
+              <i class="fas fa-image"></i>
+            </div>
+            <h3 style="margin-bottom: 15px; color: var(--dark);">${video.title}</h3>
+            <p style="color: var(--gray); margin-bottom: 20px;">${video.details?.description || 'Pas de description'}</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+              <button onclick="viewVideo('${video.id}')" style="
+                background: var(--gradient-primary);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+              ">
+                <i class="fas fa-play"></i> Voir la vidéo
+              </button>
+              <button onclick="this.closest('div[style*=fixed]').remove()" style="
+                background: var(--gray);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+              ">
+                <i class="fas fa-times"></i> Fermer
+              </button>
+            </div>
+          </div>
+        `;
 
-    // === Gestion du thème sombre (optionnel) ===
-    // Ajout d'un toggle thème sombre/clair
-    const themeToggle = document.createElement("button");
-    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    themeToggle.style.position = "fixed";
-    themeToggle.style.bottom = "20px";
-    themeToggle.style.right = "20px";
-    themeToggle.style.padding = "12px";
-    themeToggle.style.borderRadius = "50%";
-    themeToggle.style.border = "none";
-    themeToggle.style.background = "var(--primary)";
-    themeToggle.style.color = "white";
-    themeToggle.style.fontSize = "1.2rem";
-    themeToggle.style.cursor = "pointer";
-    themeToggle.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
-    themeToggle.style.zIndex = "1000";
+        document.body.appendChild(modal);
 
-    themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("dark-theme");
-      themeToggle.innerHTML = document.body.classList.contains("dark-theme")
-        ? '<i class="fas fa-sun"></i>'
-        : '<i class="fas fa-moon"></i>';
-    });
+        // Close on outside click
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            modal.remove();
+          }
+        });
 
-    // Injecter le bouton thème
-    document.body.appendChild(themeToggle);
+        // Close on escape key
+        const escHandler = function(e) {
+          if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
 
-    // Style pour le thème sombre
-    const darkThemeStyle = document.createElement("style");
-    darkThemeStyle.id = "dark-theme-style";
-    darkThemeStyle.textContent = `
-      .dark-theme {
-        background: #111827;
-        color: #e5e7eb;
-      }
-      .dark-theme .sidebar {
-        background: #1f2937;
-      }
-      .dark-theme .sidebar-header {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      }
-      .dark-theme .main-content,
-      .dark-theme .table-container,
-      .dark-theme .form-container,
-      .dark-theme .modal-content,
-      .dark-theme .tabs,
-      .dark-theme .card,
-      .dark-theme .form-control {
-        background: #1f2937;
-        color: #e5e7eb;
-        border-color: #374151;
-      }
-      .dark-theme th,
-      .dark-theme label,
-      .dark-theme .user-info span {
-        color: #d1d5db;
-      }
-      .dark-theme .user-info {
-        background: #374151;
-      }
-      .dark-theme .progress-bar {
-        background: #374151;
-      }
-      .dark-theme .loading,
-      .dark-theme .alert,
-      .dark-theme .status {
-        color: #e5e7eb;
-      }
-      .dark-theme ::-webkit-scrollbar-thumb {
-        background: #4f46e5;
-      }
-    `;
-    document.head.appendChild(darkThemeStyle);
-
-    // Masquer le thème sombre par défaut
-    document.body.classList.remove("dark-theme");
-  </script>
+      console.log('KaboreTech Admin Interface chargée avec succès');
+    </script>
+  </body>
 </html>
