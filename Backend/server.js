@@ -122,7 +122,7 @@ function cleanCache() {
   if (videoCache.size > CACHE_SIZE) {
     const entries = Array.from(videoCache.entries());
     const toDelete = entries.slice(0, entries.length - CACHE_SIZE);
-    toDelete.forEach([key] => videoCache.delete(key));
+    toDelete.forEach(([key]) => videoCache.delete(key));
   }
 }
 
