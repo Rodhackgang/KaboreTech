@@ -9,30 +9,50 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --primary: #667eea;
-        --primary-dark: #5a6fd8;
-        --primary-light: #7c88ee;
-        --secondary: #764ba2;
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+        --secondary: #8b5cf6;
+        --accent: #06b6d4;
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
-        --dark: #1f2937;
-        --light: #f9fafb;
-        --gray: #6b7280;
-        --gray-light: #f3f4f6;
-        --border: #e5e7eb;
-        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-          0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-          0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        --gradient-primary: linear-gradient(
-          135deg,
-          var(--primary) 0%,
-          var(--secondary) 100%
-        );
-        --gradient-card: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --dark: #0f172a;
+        --gray-900: #1e293b;
+        --gray-800: #334155;
+        --gray-700: #475569;
+        --gray-600: #64748b;
+        --gray-500: #94a3b8;
+        --gray-400: #cbd5e1;
+        --gray-300: #e2e8f0;
+        --gray-200: #f1f5f9;
+        --gray-100: #f8fafc;
+        --white: #ffffff;
+        
+        --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        
+        --border-radius: 12px;
+        --border-radius-lg: 16px;
+        --border-radius-xl: 20px;
+        
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       * {
@@ -42,16 +62,122 @@
       }
 
       body {
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
         color: var(--dark);
         line-height: 1.6;
         min-height: 100vh;
         display: flex;
+        font-weight: 400;
       }
 
-      /* Sidebar */
+      /* ==================== LOADER ==================== */
+      .app-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+      }
+
+      .app-loader.hide {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .loader-content {
+        text-align: center;
+        color: white;
+      }
+
+      .loader-logo {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        animation: pulse 2s infinite;
+      }
+
+      .loader-spinner {
+        width: 80px;
+        height: 80px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 2rem;
+      }
+
+      .loader-progress {
+        width: 300px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50px;
+        overflow: hidden;
+        margin: 2rem auto;
+      }
+
+      .loader-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ffffff, #e2e8f0);
+        border-radius: 50px;
+        width: 0%;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .loader-progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+        animation: shimmer 1.5s infinite;
+      }
+
+      .loader-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+      }
+
+      .loader-percentage {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .loader-status {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        font-weight: 500;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      /* ==================== SIDEBAR ==================== */
       .sidebar {
         width: 280px;
         background: var(--dark);
@@ -59,13 +185,14 @@
         height: 100vh;
         position: fixed;
         padding: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: var(--transition);
         z-index: 1000;
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-xl);
+        border-right: 1px solid var(--gray-800);
       }
 
       .sidebar-header {
-        padding: 30px 25px;
+        padding: 2rem 1.5rem;
         background: var(--gradient-primary);
         text-align: center;
         position: relative;
@@ -79,36 +206,21 @@
         right: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(
-          circle,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 70%
-        );
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
         animation: pulse 4s ease-in-out infinite;
       }
 
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1) rotate(0deg);
-          opacity: 0.3;
-        }
-        50% {
-          transform: scale(1.1) rotate(180deg);
-          opacity: 0.1;
-        }
-      }
-
       .sidebar-header h3 {
-        font-size: 1.8rem;
-        font-weight: 700;
+        font-size: 1.75rem;
+        font-weight: 800;
         letter-spacing: -0.5px;
         position: relative;
         z-index: 2;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
 
       .sidebar-menu {
-        padding: 20px 0;
+        padding: 1.5rem 0;
       }
 
       .sidebar-menu ul {
@@ -118,15 +230,15 @@
       .sidebar-menu a {
         display: flex;
         align-items: center;
-        padding: 16px 25px;
-        color: #d1d5db;
+        padding: 1rem 1.5rem;
+        color: var(--gray-400);
         text-decoration: none;
         font-size: 0.95rem;
         font-weight: 500;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         position: relative;
-        margin: 4px 15px;
-        border-radius: 12px;
+        margin: 0.25rem 1rem;
+        border-radius: var(--border-radius);
       }
 
       .sidebar-menu a::before {
@@ -137,7 +249,7 @@
         width: 0;
         height: 100%;
         background: var(--gradient-primary);
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         transition: width 0.3s ease;
         z-index: -1;
       }
@@ -150,84 +262,95 @@
       .sidebar-menu a:hover,
       .sidebar-menu a.active {
         color: white;
-        transform: translateX(8px);
+        transform: translateX(6px);
       }
 
       .sidebar-menu i {
-        margin-right: 15px;
+        margin-right: 1rem;
         width: 20px;
         text-align: center;
         font-size: 1.1rem;
       }
 
-      /* Main Content */
+      /* ==================== MAIN CONTENT ==================== */
       .main-content {
         flex: 1;
         margin-left: 280px;
-        padding: 30px;
-        transition: margin-left 0.3s ease;
+        padding: 2rem;
+        transition: var(--transition);
+        min-height: 100vh;
+        background: transparent;
       }
 
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 25px 0;
-        margin-bottom: 40px;
-        background: white;
-        border-radius: 20px;
-        padding: 25px 30px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.9);
       }
 
       .header h2 {
         color: var(--dark);
-        font-weight: 700;
-        font-size: 2rem;
+        font-weight: 800;
+        font-size: 2.25rem;
         background: var(--gradient-primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        letter-spacing: -1px;
       }
 
       .user-info {
         display: flex;
         align-items: center;
-        padding: 12px 20px;
-        background: var(--gray-light);
+        padding: 0.75rem 1.5rem;
+        background: var(--gray-100);
         border-radius: 50px;
         box-shadow: var(--shadow);
+        border: 1px solid var(--gray-200);
       }
 
-      .user-info img {
+      .user-avatar {
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        margin-right: 12px;
+        margin-right: 1rem;
         border: 3px solid var(--primary);
+        box-shadow: var(--shadow);
       }
 
       .user-info span {
         font-weight: 600;
         color: var(--dark);
+        font-size: 0.95rem;
       }
 
-      /* Cards */
+      /* ==================== CARDS ==================== */
       .cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-        margin-bottom: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
       }
 
       .card {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border);
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
         position: relative;
         overflow: hidden;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.9);
       }
 
       .card::before {
@@ -242,33 +365,59 @@
 
       .card:hover {
         transform: translateY(-8px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-xl);
       }
 
       .card.total::before {
         background: var(--gradient-primary);
       }
       .card.paid::before {
-        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        background: var(--gradient-success);
       }
       .card.free::before {
-        background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+        background: var(--gradient-warning);
+      }
+
+      .card-icon {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        opacity: 0.8;
+      }
+
+      .card.total .card-icon {
+        background: var(--gradient-primary);
+      }
+      .card.paid .card-icon {
+        background: var(--gradient-success);
+      }
+      .card.free .card-icon {
+        background: var(--gradient-warning);
       }
 
       .card h3 {
         font-size: 0.9rem;
-        color: var(--gray);
-        margin-bottom: 12px;
+        color: var(--gray-600);
+        margin-bottom: 1rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
 
       .card p {
-        font-size: 2.5rem;
-        font-weight: 800;
+        font-size: 3rem;
+        font-weight: 900;
         color: var(--dark);
-        margin-bottom: 8px;
+        margin-bottom: 1rem;
+        line-height: 1;
       }
 
       .card .trend {
@@ -276,107 +425,173 @@
         color: var(--success);
         display: flex;
         align-items: center;
+        font-weight: 600;
       }
 
-      /* Table & List */
+      .card .trend i {
+        margin-right: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      /* ==================== TABLE CONTAINER ==================== */
       .table-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: var(--shadow);
-        padding: 30px;
-        margin-bottom: 30px;
-        border: 1px solid var(--border);
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.95);
       }
 
       .table-container h3 {
-        margin-bottom: 25px;
+        margin-bottom: 2rem;
         color: var(--dark);
         font-weight: 700;
-        font-size: 1.3rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .table-container h3 i {
+        margin-right: 0.75rem;
+        color: var(--primary);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
       }
 
       th {
-        background: var(--gray-light);
-        padding: 18px 20px;
+        background: var(--gray-100);
+        padding: 1.25rem 1.5rem;
         text-align: left;
         font-weight: 700;
         color: var(--dark);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border: none;
       }
 
       th:first-child {
-        border-radius: 12px 0 0 12px;
+        border-radius: var(--border-radius) 0 0 0;
       }
       th:last-child {
-        border-radius: 0 12px 12px 0;
+        border-radius: 0 var(--border-radius) 0 0;
       }
 
       td {
-        padding: 18px 20px;
-        border-bottom: 1px solid var(--border);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
         font-weight: 500;
+        font-size: 0.9rem;
       }
 
       tr:hover {
-        background: var(--light);
+        background: var(--gray-50);
       }
 
       tr:last-child td {
         border-bottom: none;
       }
 
+      tr:last-child td:first-child {
+        border-radius: 0 0 0 var(--border-radius);
+      }
+      tr:last-child td:last-child {
+        border-radius: 0 0 var(--border-radius) 0;
+      }
+
       .status {
-        padding: 8px 16px;
+        padding: 0.5rem 1rem;
         border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 600;
+        font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border: 2px solid;
       }
 
       .status.paid {
         background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
         color: var(--success);
-        border: 2px solid var(--success);
+        border-color: var(--success);
       }
 
       .status.free {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         color: var(--warning);
-        border: 2px solid var(--warning);
+        border-color: var(--warning);
+      }
+
+      .category-tag {
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .video-thumbnail {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--border-radius);
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .video-thumbnail:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-lg);
       }
 
       .action-btn {
-        padding: 10px 12px;
+        padding: 0.75rem;
         border: none;
-        border-radius: 10px;
+        border-radius: var(--border-radius);
         cursor: pointer;
-        margin-right: 8px;
+        margin-right: 0.5rem;
         font-size: 0.9rem;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         font-weight: 600;
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .view-btn {
+        background: var(--gradient-secondary);
+        color: white;
       }
 
       .edit-btn {
-        background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+        background: var(--gradient-warning);
         color: white;
       }
 
       .delete-btn {
-        background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        background: var(--gradient-danger);
         color: white;
       }
 
@@ -385,75 +600,98 @@
         color: white;
       }
 
-      /* Form */
+      /* ==================== FORMS ==================== */
       .form-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: var(--shadow);
-        padding: 35px;
-        border: 1px solid var(--border);
+        background: var(--white);
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-md);
+        padding: 2.5rem;
+        border: 1px solid var(--gray-200);
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.95);
       }
 
       .form-container h3 {
-        margin-bottom: 30px;
+        margin-bottom: 2rem;
         color: var(--dark);
         font-weight: 700;
-        font-size: 1.5rem;
+        font-size: 1.75rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .form-container h3 i {
+        margin-right: 0.75rem;
+        color: var(--primary);
       }
 
       .form-group {
-        margin-bottom: 25px;
+        margin-bottom: 2rem;
       }
 
       label {
         display: block;
-        margin-bottom: 10px;
+        margin-bottom: 0.75rem;
         font-weight: 600;
         color: var(--dark);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+      }
+
+      label i {
+        margin-right: 0.5rem;
+        color: var(--primary);
+        width: 16px;
       }
 
       .form-control {
         width: 100%;
-        padding: 15px 18px;
-        border: 2px solid var(--border);
-        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        border: 2px solid var(--gray-300);
+        border-radius: var(--border-radius);
         font-size: 1rem;
-        transition: all 0.3s ease;
-        background: white;
+        transition: var(--transition);
+        background: var(--white);
+        font-weight: 500;
       }
 
       .form-control:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        transform: translateY(-2px);
       }
 
-      /* Tabs */
+      /* ==================== TABS ==================== */
       .tabs {
         display: flex;
-        margin-bottom: 30px;
-        background: var(--gray-light);
-        border-radius: 15px;
-        padding: 8px;
+        margin-bottom: 2rem;
+        background: var(--gray-200);
+        border-radius: var(--border-radius-lg);
+        padding: 0.5rem;
         box-shadow: inset var(--shadow);
       }
 
       .tab {
-        padding: 15px 25px;
+        padding: 1rem 1.5rem;
         cursor: pointer;
         background: transparent;
         border: none;
-        border-radius: 10px;
+        border-radius: var(--border-radius);
         font-weight: 600;
-        transition: all 0.3s ease;
-        color: var(--gray);
+        transition: var(--transition);
+        color: var(--gray-600);
         flex: 1;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
       }
 
       .tab.active {
-        background: white;
+        background: var(--white);
         color: var(--primary);
         box-shadow: var(--shadow);
         transform: translateY(-2px);
@@ -479,15 +717,19 @@
         }
       }
 
-      /* Upload Progress */
+      /* ==================== UPLOAD PROGRESS ==================== */
       .upload-progress {
-        margin-top: 20px;
+        margin-top: 2rem;
         display: none;
+        background: var(--gray-100);
+        padding: 2rem;
+        border-radius: var(--border-radius-lg);
+        border: 2px dashed var(--gray-300);
       }
 
       .progress-bar {
-        height: 10px;
-        background: var(--gray-light);
+        height: 12px;
+        background: var(--gray-300);
         border-radius: 50px;
         overflow: hidden;
         box-shadow: inset var(--shadow);
@@ -509,46 +751,33 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          45deg,
-          transparent 30%,
-          rgba(255, 255, 255, 0.3) 50%,
-          transparent 70%
-        );
+        background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
         animation: shimmer 2s infinite;
       }
 
-      @keyframes shimmer {
-        0% {
-          transform: translateX(-100%);
-        }
-        100% {
-          transform: translateX(100%);
-        }
-      }
-
       .progress-text {
-        font-size: 0.9rem;
-        margin-top: 8px;
-        color: var(--gray);
+        font-size: 1rem;
+        margin-top: 1rem;
+        color: var(--gray-700);
         text-align: center;
-        font-weight: 600;
+        font-weight: 700;
       }
 
-      /* Alert */
+      /* ==================== ALERTS ==================== */
       .alert {
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: var(--border-radius);
         font-size: 0.9rem;
         font-weight: 600;
         border: 2px solid;
         display: flex;
         align-items: center;
+        animation: slideIn 0.3s ease;
       }
 
       .alert i {
-        margin-right: 10px;
+        margin-right: 0.75rem;
         font-size: 1.1rem;
       }
 
@@ -564,7 +793,13 @@
         border-color: var(--danger);
       }
 
-      /* Modal */
+      .alert-info {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      /* ==================== MODAL ==================== */
       .modal {
         display: none;
         position: fixed;
@@ -572,23 +807,24 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.7);
         z-index: 2000;
         align-items: center;
         justify-content: center;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(12px);
       }
 
       .modal-content {
-        background: white;
-        padding: 35px;
-        border-radius: 20px;
+        background: var(--white);
+        padding: 2.5rem;
+        border-radius: var(--border-radius-xl);
         width: 90%;
         max-width: 500px;
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--border);
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--gray-200);
         transform: scale(0.9);
         transition: transform 0.3s ease;
+        position: relative;
       }
 
       .modal.show .modal-content {
@@ -596,37 +832,55 @@
       }
 
       .close {
-        float: right;
-        font-size: 28px;
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 1.5rem;
         font-weight: bold;
         cursor: pointer;
-        color: var(--gray);
-        transition: color 0.3s ease;
+        color: var(--gray-500);
+        transition: var(--transition);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--gray-100);
       }
 
       .close:hover {
         color: var(--danger);
+        background: var(--gray-200);
+        transform: rotate(90deg);
       }
 
-      /* Buttons */
+      /* ==================== BUTTONS ==================== */
       .btn {
-        padding: 15px 30px;
+        padding: 1rem 2rem;
         border: none;
-        border-radius: 12px;
+        border-radius: var(--border-radius);
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         text-transform: uppercase;
         letter-spacing: 0.5px;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 0.75rem;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
       }
 
       .btn:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-lg);
+      }
+
+      .btn:active {
+        transform: translateY(0);
       }
 
       .btn-primary {
@@ -635,23 +889,63 @@
       }
 
       .btn-secondary {
-        background: linear-gradient(135deg, var(--gray) 0%, #4b5563 100%);
+        background: var(--gradient-secondary);
+        color: white;
+      }
+
+      .btn-success {
+        background: var(--gradient-success);
+        color: white;
+      }
+
+      .btn-warning {
+        background: var(--gradient-warning);
+        color: white;
+      }
+
+      .btn-danger {
+        background: var(--gradient-danger);
         color: white;
       }
 
       .btn i {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
 
-      /* Loading */
+      /* ==================== LOADING STATES ==================== */
       .loading {
         text-align: center;
-        color: var(--gray);
+        color: var(--gray-500);
         font-style: italic;
-        padding: 30px;
+        padding: 3rem;
+        background: var(--gray-50);
+        border-radius: var(--border-radius);
       }
 
-      /* Responsive */
+      .loading i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: block;
+        color: var(--primary);
+        animation: spin 2s linear infinite;
+      }
+
+      .error-state {
+        text-align: center;
+        color: var(--danger);
+        padding: 3rem;
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-radius: var(--border-radius);
+        border: 2px dashed var(--danger);
+      }
+
+      .error-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      /* ==================== RESPONSIVE ==================== */
       @media (max-width: 1024px) {
         .sidebar {
           width: 80px;
@@ -684,7 +978,7 @@
       @media (max-width: 768px) {
         .main-content {
           margin-left: 0;
-          padding: 20px;
+          padding: 1rem;
         }
 
         .sidebar {
@@ -697,25 +991,60 @@
 
         .cards {
           grid-template-columns: 1fr;
+          gap: 1rem;
         }
 
         .header {
           flex-direction: column;
-          gap: 15px;
+          gap: 1rem;
+          padding: 1.5rem;
+        }
+
+        .header h2 {
+          font-size: 1.75rem;
         }
 
         .table-container {
           overflow-x: auto;
+          padding: 1rem;
+        }
+
+        .form-container {
+          padding: 1.5rem;
+        }
+
+        .modal-content {
+          margin: 1rem;
+          padding: 1.5rem;
+        }
+
+        .btn {
+          padding: 0.75rem 1.5rem;
+          font-size: 0.85rem;
         }
       }
 
-      /* Custom Scrollbar */
+      @media (max-width: 480px) {
+        .main-content {
+          padding: 0.5rem;
+        }
+
+        .card p {
+          font-size: 2rem;
+        }
+
+        .table-container h3 {
+          font-size: 1.25rem;
+        }
+      }
+
+      /* ==================== CUSTOM SCROLLBAR ==================== */
       ::-webkit-scrollbar {
         width: 8px;
       }
 
       ::-webkit-scrollbar-track {
-        background: var(--gray-light);
+        background: var(--gray-200);
         border-radius: 10px;
       }
 
@@ -728,15 +1057,15 @@
         background: var(--primary-dark);
       }
 
-      /* Animations */
+      /* ==================== ANIMATIONS ==================== */
       .slide-in {
-        animation: slideIn 0.5s ease;
+        animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       @keyframes slideIn {
         from {
           opacity: 0;
-          transform: translateX(-20px);
+          transform: translateX(-30px);
         }
         to {
           opacity: 1;
@@ -745,27 +1074,163 @@
       }
 
       .bounce {
-        animation: bounce 0.6s ease;
+        animation: bounce 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       @keyframes bounce {
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
+        0%, 20%, 50%, 80%, 100% {
           transform: translateY(0);
         }
         40% {
-          transform: translateY(-10px);
+          transform: translateY(-12px);
         }
         60% {
-          transform: translateY(-5px);
+          transform: translateY(-6px);
         }
+      }
+
+      .fade-in {
+        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ==================== MOBILE MENU TOGGLE ==================== */
+      .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1001;
+        background: var(--gradient-primary);
+        border: none;
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        color: white;
+        font-size: 1.25rem;
+        box-shadow: var(--shadow-lg);
+        transition: var(--transition);
+      }
+
+      .mobile-menu-toggle:hover {
+        transform: scale(1.1);
+      }
+
+      /* ==================== THEME TOGGLE ==================== */
+      .theme-toggle {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border: none;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        color: white;
+        cursor: pointer;
+        z-index: 1000;
+        font-size: 1.5rem;
+        box-shadow: var(--shadow-xl);
+        transition: var(--transition);
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.1) rotate(15deg);
+      }
+
+      /* ==================== ENHANCED STATES ==================== */
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .card.loading {
+        position: relative;
+      }
+
+      .card.loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+        animation: shimmer 1.5s infinite;
+      }
+
+      .tooltip {
+        position: absolute;
+        background: var(--dark);
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius);
+        font-size: 0.75rem;
+        font-weight: 500;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        box-shadow: var(--shadow-lg);
+        white-space: nowrap;
+      }
+
+      .tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid var(--dark);
+      }
+
+      /* ==================== ENHANCED FOCUS STATES ==================== */
+      *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      .btn:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
       }
     </style>
   </head>
   <body>
+    <!-- App Loader -->
+    <div class="app-loader" id="appLoader">
+      <div class="loader-content">
+        <div class="loader-logo">
+          <i class="fas fa-code"></i>
+          KaboreTech
+        </div>
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Chargement des données...</div>
+        <div class="loader-progress">
+          <div class="loader-progress-bar" id="loaderProgressBar"></div>
+        </div>
+        <div class="loader-percentage" id="loaderPercentage">0%</div>
+        <div class="loader-status" id="loaderStatus">Initialisation...</div>
+      </div>
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="sidebar-header">
@@ -774,16 +1239,28 @@
       <div class="sidebar-menu">
         <ul>
           <li>
-            <a href="#" class="active menu-item" data-section="dashboard"
-              ><i class="fas fa-tachometer-alt"></i>
-              <span>Tableau de Bord</span></a
-            >
+            <a href="#" class="active menu-item" data-section="dashboard">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Tableau de Bord</span>
+            </a>
           </li>
-
           <li>
-            <a href="#" class="menu-item" data-section="settings"
-              ><i class="fas fa-cog"></i> <span>Paramètres</span></a
-            >
+            <a href="#" class="menu-item" data-section="videos">
+              <i class="fas fa-video"></i>
+              <span>Gestion Vidéos</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="menu-item" data-section="users">
+              <i class="fas fa-users"></i>
+              <span>Utilisateurs</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="menu-item" data-section="settings">
+              <i class="fas fa-cog"></i>
+              <span>Paramètres</span>
+            </a>
           </li>
         </ul>
       </div>
@@ -795,19 +1272,21 @@
         <h2 id="page-title">Tableau de Bord</h2>
         <div class="user-info">
           <img
-            src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff"
+            src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff&size=48"
             alt="Admin"
-            width="45"
-            height="45"
+            class="user-avatar"
           />
           <span>Administrateur</span>
         </div>
       </div>
 
-      <!-- Dashboard -->
+      <!-- Dashboard Section -->
       <section id="dashboard-section" class="section active slide-in">
         <div class="cards">
           <div class="card total bounce">
+            <div class="card-icon">
+              <i class="fas fa-video"></i>
+            </div>
             <h3>Total Vidéos</h3>
             <p id="total-videos">0</p>
             <div class="trend">
@@ -816,6 +1295,9 @@
             </div>
           </div>
           <div class="card paid bounce" style="animation-delay: 0.1s">
+            <div class="card-icon">
+              <i class="fas fa-crown"></i>
+            </div>
             <h3>Vidéos Payantes</h3>
             <p id="paid-videos">0</p>
             <div class="trend">
@@ -824,6 +1306,9 @@
             </div>
           </div>
           <div class="card free bounce" style="animation-delay: 0.2s">
+            <div class="card-icon">
+              <i class="fas fa-gift"></i>
+            </div>
             <h3>Vidéos Gratuites</h3>
             <p id="free-videos">0</p>
             <div class="trend">
@@ -833,11 +1318,15 @@
           </div>
         </div>
 
-        <div class="table-container">
-          <h3><i class="fas fa-clock"></i> Vidéos Récentes</h3>
+        <div class="table-container fade-in">
+          <h3>
+            <i class="fas fa-clock"></i>
+            Vidéos Récentes
+          </h3>
           <table id="recent-videos-table">
             <thead>
               <tr>
+                <th>Aperçu</th>
                 <th>Titre</th>
                 <th>Catégorie</th>
                 <th>Partie</th>
@@ -847,29 +1336,44 @@
             </thead>
             <tbody>
               <tr>
-                <td colspan="5" class="loading">Chargement des données...</td>
+                <td colspan="6" class="loading">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  Chargement des données...
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- Videos -->
+      <!-- Videos Section -->
       <section id="videos-section" class="section">
-        <div class="tab" data-tab="add-video">
-          <i class="fas fa-plus"></i>
-          Ajouter une Vidéo
+        <div class="tabs">
+          <button class="tab active" data-tab="add-video">
+            <i class="fas fa-plus"></i>
+            Ajouter une Vidéo
+          </button>
+          <button class="tab" data-tab="videos-list">
+            <i class="fas fa-list"></i>
+            Toutes les Vidéos
+          </button>
         </div>
 
-        <div class="tab-content" id="add-video-tab">
+        <!-- Add Video Tab -->
+        <div class="tab-content active" id="add-video-tab">
           <div class="form-container">
             <h3 id="video-form-title">
-              <i class="fas fa-video"></i> Ajouter une Vidéo
+              <i class="fas fa-video"></i>
+              Ajouter une Vidéo
             </h3>
             <div id="video-alert"></div>
+            
             <form id="video-form">
               <div class="form-group">
-                <label for="title"><i class="fas fa-heading"></i> Titre</label>
+                <label for="title">
+                  <i class="fas fa-heading"></i>
+                  Titre
+                </label>
                 <input
                   type="text"
                   id="title"
@@ -880,7 +1384,10 @@
               </div>
 
               <div class="form-group">
-                <label for="isPaid"><i class="fas fa-tag"></i> Type</label>
+                <label for="isPaid">
+                  <i class="fas fa-tag"></i>
+                  Type
+                </label>
                 <select id="isPaid" class="form-control" required>
                   <option value="false">Gratuite</option>
                   <option value="true">Payante</option>
@@ -889,26 +1396,24 @@
 
               <div id="category-group">
                 <div class="form-group">
-                  <label for="category"
-                    ><i class="fas fa-folder"></i> Catégorie</label
-                  >
+                  <label for="category">
+                    <i class="fas fa-folder"></i>
+                    Catégorie
+                  </label>
                   <select id="category" class="form-control" required>
                     <option value="">Sélectionner une catégorie</option>
-                    <option value="Informatique">
-                      Maintenance Informatique
-                    </option>
+                    <option value="Informatique">Maintenance Informatique</option>
                     <option value="Marketing">Marketing Digital</option>
-                    <option value="Bureautique">
-                      Sécretariat Informatique
-                    </option>
+                    <option value="Bureautique">Secrétariat Informatique</option>
                     <option value="GSM">Réparation Téléphone</option>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="part"
-                    ><i class="fas fa-puzzle-piece"></i> Partie</label
-                  >
+                  <label for="part">
+                    <i class="fas fa-puzzle-piece"></i>
+                    Partie
+                  </label>
                   <select id="part" class="form-control" required>
                     <option value="">Sélectionner une partie</option>
                   </select>
@@ -916,9 +1421,10 @@
               </div>
 
               <div class="form-group">
-                <label for="description"
-                  ><i class="fas fa-align-left"></i> Description</label
-                >
+                <label for="description">
+                  <i class="fas fa-align-left"></i>
+                  Description
+                </label>
                 <textarea
                   id="description"
                   class="form-control"
@@ -929,9 +1435,10 @@
               </div>
 
               <div class="form-group">
-                <label for="videoFile"
-                  ><i class="fas fa-film"></i> Fichier Vidéo</label
-                >
+                <label for="videoFile">
+                  <i class="fas fa-film"></i>
+                  Fichier Vidéo
+                </label>
                 <input
                   type="file"
                   id="videoFile"
@@ -941,9 +1448,10 @@
               </div>
 
               <div class="form-group">
-                <label for="imageFile"
-                  ><i class="fas fa-image"></i> Image de Couverture</label
-                >
+                <label for="imageFile">
+                  <i class="fas fa-image"></i>
+                  Image de Couverture
+                </label>
                 <input
                   type="file"
                   id="imageFile"
@@ -952,21 +1460,17 @@
                 />
               </div>
 
-              <div class="upload-progress">
+              <div class="upload-progress" id="uploadProgress">
                 <div class="progress-bar">
                   <div class="progress-fill" id="progress-fill"></div>
                 </div>
-                <div class="progress-text" id="progress-text">0%</div>
+                <div class="progress-text" id="progress-text">Téléchargement: 0%</div>
               </div>
 
-              <div style="display: flex; gap: 15px; margin-top: 30px">
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  id="video-submit-btn"
-                >
+              <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap">
+                <button type="submit" class="btn btn-primary" id="video-submit-btn">
                   <i class="fas fa-save"></i>
-                  Ajouter
+                  Ajouter la Vidéo
                 </button>
                 <button
                   type="button"
@@ -981,22 +1485,67 @@
             </form>
           </div>
         </div>
+
+        <!-- Videos List Tab -->
+        <div class="tab-content" id="videos-list-tab">
+          <div class="table-container">
+            <h3>
+              <i class="fas fa-video"></i>
+              Toutes les Vidéos
+            </h3>
+            <table id="all-videos-table">
+              <thead>
+                <tr>
+                  <th>Aperçu</th>
+                  <th>Titre</th>
+                  <th>Catégorie</th>
+                  <th>Partie</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="7" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Chargement des vidéos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <!-- Users -->
+      <!-- Users Section -->
       <section id="users-section" class="section">
-        <div class="tab" data-tab="add-user">
-          <i class="fas fa-user-plus"></i>
-          Ajouter un Utilisateur
+        <div class="tabs">
+          <button class="tab active" data-tab="add-user">
+            <i class="fas fa-user-plus"></i>
+            Ajouter Utilisateur
+          </button>
+          <button class="tab" data-tab="users-list">
+            <i class="fas fa-users"></i>
+            Liste des Utilisateurs
+          </button>
         </div>
 
-        <div class="tab-content" id="add-user-tab">
+        <!-- Add User Tab -->
+        <div class="tab-content active" id="add-user-tab">
           <div class="form-container">
-            <h3><i class="fas fa-user-plus"></i> Ajouter un Utilisateur</h3>
+            <h3>
+              <i class="fas fa-user-plus"></i>
+              Ajouter un Utilisateur
+            </h3>
             <div id="user-alert"></div>
+            
             <form id="user-form">
               <div class="form-group">
-                <label><i class="fas fa-user"></i> Nom Complet</label>
+                <label for="user-name">
+                  <i class="fas fa-user"></i>
+                  Nom Complet
+                </label>
                 <input
                   type="text"
                   id="user-name"
@@ -1005,8 +1554,12 @@
                   placeholder="Nom et prénom"
                 />
               </div>
+              
               <div class="form-group">
-                <label><i class="fas fa-phone"></i> Téléphone</label>
+                <label for="user-phone">
+                  <i class="fas fa-phone"></i>
+                  Téléphone
+                </label>
                 <input
                   type="text"
                   id="user-phone"
@@ -1015,8 +1568,12 @@
                   required
                 />
               </div>
+              
               <div class="form-group">
-                <label><i class="fas fa-lock"></i> Mot de passe</label>
+                <label for="user-password">
+                  <i class="fas fa-lock"></i>
+                  Mot de passe
+                </label>
                 <input
                   type="password"
                   id="user-password"
@@ -1025,62 +1582,70 @@
                   placeholder="Mot de passe sécurisé"
                 />
               </div>
-              <button type="submit" class="btn btn-primary">
+              
+              <button type="submit" class="btn btn-success">
                 <i class="fas fa-user-plus"></i>
                 Ajouter Utilisateur
               </button>
             </form>
           </div>
         </div>
-      </section>
-      <div class="tab" data-tab="users-list">
-        <i class="fas fa-users"></i>
-      </div>
-      <div class="tab-content" id="users-list-tab">
-        <div class="table-container">
-            
-          <h3><i class="fas fa-users"></i> </h3>
-          <table id="users-table">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Téléphone</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Les utilisateurs seront chargés ici via JS -->
-            </tbody>
-          </table>
+
+        <!-- Users List Tab -->
+        <div class="tab-content" id="users-list-tab">
+          <div class="table-container">
+            <h3>
+              <i class="fas fa-users"></i>
+              Liste des Utilisateurs
+            </h3>
+            <table id="users-table">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Téléphone</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Chargement des utilisateurs...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- Settings Section -->
       <section id="settings-section" class="section">
         <div class="form-container">
-          <h3><i class="fas fa-cog"></i> Paramètres du Système</h3>
+          <h3>
+            <i class="fas fa-cog"></i>
+            Paramètres du Système
+          </h3>
+          <div id="settings-alert"></div>
+          
           <div class="form-group">
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                cursor: pointer;
-              "
-            >
+            <label style="display: flex; align-items: center; gap: 1rem; cursor: pointer; padding: 1rem; background: var(--gray-100); border-radius: var(--border-radius); border: 2px solid var(--gray-300); transition: var(--transition);">
               <input
                 type="checkbox"
                 id="screen-capture-toggle"
-                style="transform: scale(1.5)"
+                style="transform: scale(1.8); accent-color: var(--primary);"
               />
-              <span
-                ><i class="fas fa-camera"></i> Autoriser la capture
-                d'écran</span
-              >
+              <div style="flex: 1;">
+                <div style="font-weight: 600; color: var(--dark); margin-bottom: 0.25rem;">
+                  <i class="fas fa-camera" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                  Autoriser la capture d'écran
+                </div>
+                <small style="color: var(--gray-600);">
+                  Permet aux utilisateurs de faire des captures d'écran de l'application
+                </small>
+              </div>
             </label>
-            <small style="color: var(--gray); margin-top: 10px; display: block">
-              Permet aux utilisateurs de faire des captures d'écran de
-              l'application
-            </small>
           </div>
         </div>
       </section>
@@ -1089,16 +1654,29 @@
     <!-- Reset Password Modal -->
     <div id="password-modal" class="modal">
       <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3><i class="fas fa-key"></i> Réinitialiser le mot de passe</h3>
+        <span class="close" id="closeModal">
+          <i class="fas fa-times"></i>
+        </span>
+        <h3 style="margin-bottom: 2rem; display: flex; align-items: center;">
+          <i class="fas fa-key" style="margin-right: 0.75rem; color: var(--primary);"></i>
+          Réinitialiser le mot de passe
+        </h3>
         <div id="password-alert"></div>
+        
         <form id="password-form">
           <div class="form-group">
-            <label><i class="fas fa-phone"></i> Téléphone</label>
+            <label for="reset-phone">
+              <i class="fas fa-phone"></i>
+              Téléphone
+            </label>
             <input type="text" id="reset-phone" class="form-control" readonly />
           </div>
+          
           <div class="form-group">
-            <label><i class="fas fa-shield-alt"></i> Code OTP</label>
+            <label for="reset-otp">
+              <i class="fas fa-shield-alt"></i>
+              Code OTP
+            </label>
             <input
               type="text"
               id="reset-otp"
@@ -1107,8 +1685,12 @@
               placeholder="Entrez le code OTP"
             />
           </div>
+          
           <div class="form-group">
-            <label><i class="fas fa-lock"></i> Nouveau mot de passe</label>
+            <label for="reset-new-password">
+              <i class="fas fa-lock"></i>
+              Nouveau mot de passe
+            </label>
             <input
               type="password"
               id="reset-new-password"
@@ -1117,12 +1699,13 @@
               placeholder="Nouveau mot de passe"
             />
           </div>
-          <div style="display: flex; gap: 15px; margin-top: 25px">
-            <button type="submit" class="btn btn-primary">
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-success">
               <i class="fas fa-check"></i>
               Réinitialiser
             </button>
-            <button type="button" class="btn btn-secondary" id="send-otp-btn">
+            <button type="button" class="btn btn-warning" id="send-otp-btn">
               <i class="fas fa-paper-plane"></i>
               Envoyer OTP
             </button>
@@ -1132,28 +1715,20 @@
     </div>
 
     <!-- Mobile Menu Toggle -->
-    <button
-      id="mobile-menu-toggle"
-      style="
-        display: none;
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-        background: var(--gradient-primary);
-        border: none;
-        padding: 15px;
-        border-radius: 12px;
-        color: white;
-        font-size: 1.2rem;
-      "
-    >
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" style="display: none;">
       <i class="fas fa-bars"></i>
     </button>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+
     <script>
       const API_BASE = "https://kaboretech.cursusbf.com";
       let videosData = [];
       let currentVideoId = null;
+      let loadingProgress = 0;
 
       // Mapping Catégorie → Parties
       const partOptions = {
@@ -1170,23 +1745,81 @@
       const getRandomPart = (cat) =>
         partOptions[cat][Math.floor(Math.random() * partOptions[cat].length)];
 
-      // Initialisation au chargement
+      // ==================== LOADER MANAGEMENT ====================
+      function updateLoader(percentage, status) {
+        const progressBar = document.getElementById('loaderProgressBar');
+        const percentageEl = document.getElementById('loaderPercentage');
+        const statusEl = document.getElementById('loaderStatus');
+        
+        if (progressBar) progressBar.style.width = percentage + '%';
+        if (percentageEl) percentageEl.textContent = percentage + '%';
+        if (statusEl) statusEl.textContent = status;
+      }
+
+      function hideLoader() {
+        const loader = document.getElementById('appLoader');
+        setTimeout(() => {
+          loader.classList.add('hide');
+          setTimeout(() => {
+            loader.style.display = 'none';
+          }, 600);
+        }, 500);
+      }
+
+      async function simulateLoading() {
+        const steps = [
+          { progress: 10, status: 'Initialisation du système...' },
+          { progress: 25, status: 'Connexion au serveur...' },
+          { progress: 40, status: 'Chargement des vidéos...' },
+          { progress: 60, status: 'Récupération des utilisateurs...' },
+          { progress: 80, status: 'Configuration des paramètres...' },
+          { progress: 95, status: 'Finalisation...' },
+          { progress: 100, status: 'Prêt !' }
+        ];
+
+        for (let step of steps) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          updateLoader(step.progress, step.status);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+        hideLoader();
+      }
+
+      // ==================== INITIALIZATION ====================
       document.addEventListener("DOMContentLoaded", async () => {
-        initializeApp();
+        // Start loading simulation
+        simulateLoading();
+        
+        // Initialize app components
+        await initializeApp();
         await loadVideosData();
         loadUsers();
         loadScreenCaptureSetting();
         setupTabs();
-      });
-
-      async function initializeApp() {
         setupEventListeners();
         setupMobileMenu();
         setupThemeToggle();
         setupTooltips();
+      });
 
+      async function initializeApp() {
         // Animation d'apparition
         setTimeout(() => document.body.classList.add("loaded"), 100);
+        
+        // Setup responsive behavior
+        handleResize();
+        window.addEventListener('resize', handleResize);
+      }
+
+      function handleResize() {
+        const toggle = document.getElementById('mobileMenuToggle');
+        if (window.innerWidth <= 768) {
+          toggle.style.display = 'block';
+        } else {
+          toggle.style.display = 'none';
+          document.querySelector('.sidebar').classList.remove('mobile-open');
+        }
       }
 
       function setupEventListeners() {
@@ -1198,60 +1831,8 @@
             switchSection(section);
           });
         });
-        async function handleUserSubmit(e) {
-          e.preventDefault();
-          const form = e.target;
-          const submitBtn = form.querySelector('button[type="submit"]');
-          const originalText = submitBtn.innerHTML;
 
-          submitBtn.innerHTML =
-            '<i class="fas fa-spinner fa-spin"></i> Ajout en cours...';
-          submitBtn.disabled = true;
-
-          try {
-            const data = {
-              name: form["user-name"].value,
-              phone: form["user-phone"].value,
-              password: form["user-password"].value,
-            };
-
-            const res = await fetch(`${BASE_URL}/register`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-            });
-
-            if (res.ok) {
-              showAlert(
-                "user-alert",
-                '<i class="fas fa-check-circle"></i> Utilisateur ajouté avec succès',
-                "success"
-              );
-              form.reset();
-              loadUsers();
-              setTimeout(
-                () =>
-                  document.querySelector('.tab[data-tab="users-list"]').click(),
-                2000
-              );
-            } else {
-              const error = await res.text();
-              throw new Error(error || "Erreur serveur");
-            }
-          } catch (e) {
-            console.error("Erreur lors de l'ajout:", e);
-            showAlert(
-              "user-alert",
-              `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
-              "danger"
-            );
-          } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-          }
-        }
-
-        // Formulaires
+        // Forms
         document
           .getElementById("isPaid")
           ?.addEventListener("change", toggleCategoryGroup);
@@ -1276,11 +1857,13 @@
         document
           .getElementById("cancel-edit-btn")
           ?.addEventListener("click", cancelEdit);
-        document.querySelector(".close")?.addEventListener("click", closeModal);
+        document
+          .getElementById("closeModal")
+          ?.addEventListener("click", closeModal);
       }
 
       function setupMobileMenu() {
-        const toggle = document.getElementById("mobile-menu-toggle");
+        const toggle = document.getElementById("mobileMenuToggle");
         const sidebar = document.querySelector(".sidebar");
 
         toggle?.addEventListener("click", () => {
@@ -1298,7 +1881,32 @@
         });
       }
 
+      function setupThemeToggle() {
+        const toggle = document.getElementById("themeToggle");
+        
+        toggle?.addEventListener("click", () => {
+          document.body.classList.toggle("dark-theme");
+          const icon = toggle.querySelector("i");
+          
+          if (document.body.classList.contains("dark-theme")) {
+            icon.className = "fas fa-sun";
+            localStorage.setItem('theme', 'dark');
+          } else {
+            icon.className = "fas fa-moon";
+            localStorage.setItem('theme', 'light');
+          }
+        });
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+          document.body.classList.add('dark-theme');
+          toggle.querySelector('i').className = 'fas fa-sun';
+        }
+      }
+
       function switchSection(sectionName) {
+        // Update active menu item
         document
           .querySelectorAll(".menu-item")
           .forEach((item) => item.classList.remove("active"));
@@ -1306,6 +1914,7 @@
           .querySelector(`[data-section="${sectionName}"]`)
           ?.classList.add("active");
 
+        // Update page title
         const titles = {
           dashboard: "Tableau de Bord",
           videos: "Gestion des Vidéos",
@@ -1314,12 +1923,14 @@
         };
         document.getElementById("page-title").textContent = titles[sectionName];
 
+        // Show selected section
         document
           .querySelectorAll(".section")
-          .forEach((s) => (s.style.display = "none"));
-        document.getElementById(`${sectionName}-section`).style.display =
-          "block";
+          .forEach((s) => s.classList.remove("active"));
+        const targetSection = document.getElementById(`${sectionName}-section`);
+        targetSection.classList.add("active");
 
+        // Load section-specific data
         if (sectionName === "videos") {
           if (!document.getElementById("videos-section").dataset.loaded) {
             loadAllVideos();
@@ -1330,27 +1941,33 @@
         if (sectionName === "users") loadUsers();
         if (sectionName === "settings") loadScreenCaptureSetting();
 
-        sidebar.classList.remove("mobile-open");
+        // Close mobile sidebar
+        document.querySelector(".sidebar").classList.remove("mobile-open");
       }
 
+      // ==================== VIDEO MANAGEMENT ====================
       async function loadVideosData() {
         try {
+          updateLoader(40, 'Chargement des vidéos...');
+          
           const res = await fetch(`${API_BASE}/api/videos`);
           if (!res.ok) throw new Error(`Échec du chargement: ${res.status}`);
+          
           videosData = await res.json();
           updateDashboard();
+          
+          updateLoader(60, 'Vidéos chargées avec succès');
         } catch (error) {
           console.error("Erreur:", error);
           showErrorState("recent-videos-table", error.message);
+          updateLoader(60, 'Erreur lors du chargement des vidéos');
         }
       }
 
       function updateDashboard() {
         if (!videosData || videosData.length === 0) return;
 
-        let total = 0,
-          paid = 0,
-          free = 0;
+        let total = 0, paid = 0, free = 0;
         const allVideos = [];
 
         videosData.forEach((cat) => {
@@ -1363,15 +1980,18 @@
           }
         });
 
+        // Animate counters
         animateCounter("total-videos", total);
         animateCounter("paid-videos", paid);
         animateCounter("free-videos", free);
 
+        // Sort by newest first
         allVideos.sort(
           (a, b) =>
             parseInt(b.id.substring(0, 8), 16) -
             parseInt(a.id.substring(0, 8), 16)
         );
+        
         populateRecentVideosTable(allVideos.slice(0, 10));
       }
 
@@ -1380,56 +2000,66 @@
         tbody.innerHTML = "";
 
         if (videos.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="loading">
+                <i class="fas fa-info-circle"></i>
+                Aucune vidéo disponible
+              </td>
+            </tr>`;
           return;
         }
 
-        videos.forEach((video) => {
+        videos.forEach((video, index) => {
           const row = createVideoTableRow(video, false);
           tbody.appendChild(row);
+          
+          // Animate row appearance
+          setTimeout(() => {
+            row.style.opacity = "1";
+            row.style.transform = "translateY(0)";
+          }, index * 100);
         });
       }
 
-      function createVideoTableRow(video, showDescription) {
+      function createVideoTableRow(video, showDescription = false) {
         const tr = document.createElement("tr");
         tr.style.opacity = "0";
         tr.style.transform = "translateY(20px)";
+        tr.style.transition = "all 0.5s ease";
 
         const desc = video.details?.description || "Pas de description";
-        const truncated =
-          desc.length > 80 ? desc.substring(0, 80) + "..." : desc;
+        const truncated = desc.length > 80 ? desc.substring(0, 80) + "..." : desc;
 
         tr.innerHTML = `
-      <td><div class="video-thumbnail" title="Lire"><i class="fas fa-play"></i></div></td>
-      <td style="font-weight:600" title="${video.title}">${video.title}</td>
-      <td><span class="category-tag">${video.categoryName}</span></td>
-      <td><span class="category-tag">${video.part}</span></td>
-      <td><span class="status ${video.isPaid ? "paid" : "free"}">${
-          video.isPaid ? "Payante" : "Gratuite"
-        }</span></td>
-      ${
-        showDescription
-          ? `<td style="max-width:250px" title="${desc}">${truncated}</td>`
-          : ""
-      }
-      <td>
-        <button class="action-btn view-btn" onclick="viewVideo('${
-          video.id
-        }')" title="Voir"><i class="fas fa-eye"></i></button>
-        <button class="action-btn edit-btn" data-id="${
-          video.id
-        }" title="Modifier"><i class="fas fa-edit"></i></button>
-        <button class="action-btn delete-btn" data-id="${
-          video.id
-        }" title="Supprimer"><i class="fas fa-trash"></i></button>
-      </td>
-    `;
-
-        setTimeout(() => {
-          tr.style.transition = "all 0.5s ease";
-          tr.style.opacity = "1";
-          tr.style.transform = "translateY(0)";
-        }, Math.random() * 300);
+          <td>
+            <div class="video-thumbnail" onclick="viewVideo('${video.id}')" title="Voir la vidéo">
+              <i class="fas fa-play"></i>
+            </div>
+          </td>
+          <td style="font-weight:600; max-width: 200px;" title="${video.title}">
+            ${video.title.length > 30 ? video.title.substring(0, 30) + '...' : video.title}
+          </td>
+          <td><span class="category-tag">${video.categoryName}</span></td>
+          <td><span class="category-tag" style="background: var(--secondary);">${video.part}</span></td>
+          <td>
+            <span class="status ${video.isPaid ? "paid" : "free"}">
+              ${video.isPaid ? "Payante" : "Gratuite"}
+            </span>
+          </td>
+          ${showDescription ? `<td style="max-width:250px" title="${desc}">${truncated}</td>` : ""}
+          <td>
+            <button class="action-btn view-btn" onclick="viewVideo('${video.id}')" title="Voir">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="action-btn edit-btn" data-id="${video.id}" title="Modifier">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete-btn" data-id="${video.id}" title="Supprimer">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
 
         return tr;
       }
@@ -1439,7 +2069,13 @@
         tbody.innerHTML = "";
 
         if (!videosData || videosData.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-info-circle"></i> Aucune vidéo</td></tr>`;
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="loading">
+                <i class="fas fa-info-circle"></i>
+                Aucune vidéo disponible
+              </td>
+            </tr>`;
           return;
         }
 
@@ -1458,9 +2094,15 @@
             parseInt(a.id.substring(0, 8), 16)
         );
 
-        allVideos.forEach((video) => {
+        allVideos.forEach((video, index) => {
           const row = createVideoTableRow(video, true);
           tbody.appendChild(row);
+          
+          // Animate row appearance
+          setTimeout(() => {
+            row.style.opacity = "1";
+            row.style.transform = "translateY(0)";
+          }, index * 50);
         });
 
         addVideoActionHandlers();
@@ -1475,9 +2117,8 @@
 
         document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            if (
-              confirm("Supprimer cette vidéo ? Cette action est irréversible.")
-            ) {
+            const videoTitle = e.target.closest('tr').children[1].textContent.trim();
+            if (confirm(`Supprimer la vidéo "${videoTitle}" ?\nCette action est irréversible.`)) {
               deleteVideo(e.target.closest("button").dataset.id);
             }
           });
@@ -1485,9 +2126,8 @@
       }
 
       async function deleteVideo(id) {
-        const btn = document.querySelector(
-          `button[data-id="${id}"].delete-btn`
-        );
+        const btn = document.querySelector(`button[data-id="${id}"].delete-btn`);
+        const originalContent = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
 
@@ -1495,17 +2135,23 @@
           const res = await fetch(`${API_BASE}/api/videos/${id}`, {
             method: "DELETE",
           });
+          
           if (res.ok) {
-            showAlert("video-alert", "✅ Vidéo supprimée", "success");
+            showAlert("video-alert", '<i class="fas fa-check-circle"></i> Vidéo supprimée avec succès', "success");
             await loadVideosData();
             loadAllVideos();
+            
+            // Remove the row with animation
+            const row = btn.closest('tr');
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-100%)';
+            setTimeout(() => row.remove(), 300);
           } else {
             throw new Error("Échec de suppression");
           }
         } catch (e) {
-          showAlert("video-alert", "❌ " + e.message, "danger");
-        } finally {
-          btn.innerHTML = '<i class="fas fa-trash"></i>';
+          showAlert("video-alert", `<i class="fas fa-exclamation-triangle"></i> ${e.message}`, "danger");
+          btn.innerHTML = originalContent;
           btn.disabled = false;
         }
       }
@@ -1513,7 +2159,7 @@
       async function editVideo(id) {
         let video = null;
         for (const cat of videosData) {
-          video = cat.videos.find((v) => v.id === id);
+          video = cat.videos?.find((v) => v.id === id);
           if (video) break;
         }
         if (!video) return;
@@ -1524,44 +2170,36 @@
         document.getElementById("category").value = video.categoryId || "";
         updatePartOptions();
         document.getElementById("part").value = video.part || "";
-        document.getElementById("description").value =
-          video.details?.description || "";
+        document.getElementById("description").value = video.details?.description || "";
 
         document.getElementById("video-form-title").innerHTML =
           '<i class="fas fa-edit"></i> Modifier la Vidéo';
         document.getElementById("video-submit-btn").innerHTML =
           '<i class="fas fa-save"></i> Mettre à jour';
-        document.getElementById("cancel-edit-btn").style.display =
-          "inline-flex";
+        document.getElementById("cancel-edit-btn").style.display = "inline-flex";
         document.getElementById("category-group").style.display = "block";
 
         switchSection("videos");
         document.querySelector('.tab[data-tab="add-video"]')?.click();
-        showAlert("video-alert", "Mode édition activé", "success");
+        showAlert("video-alert", '<i class="fas fa-info-circle"></i> Mode édition activé', "info");
       }
 
       async function handleVideoSubmit(e) {
         e.preventDefault();
         const btn = document.getElementById("video-submit-btn");
         const original = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
         btn.disabled = true;
 
         try {
           const formData = new FormData();
           formData.append("title", document.getElementById("title").value);
           formData.append("isPaid", document.getElementById("isPaid").value);
-          formData.append(
-            "description",
-            document.getElementById("description").value
-          );
+          formData.append("description", document.getElementById("description").value);
 
           const isPaid = document.getElementById("isPaid").value === "true";
           if (isPaid) {
-            formData.append(
-              "categoryId",
-              document.getElementById("category").value
-            );
+            formData.append("categoryId", document.getElementById("category").value);
             formData.append("part", document.getElementById("part").value);
           } else {
             const cat = getRandomCategory();
@@ -1579,49 +2217,50 @@
             : `${API_BASE}/api/add-video`;
           const method = currentVideoId ? "PUT" : "POST";
 
+          // Show upload progress
+          document.getElementById("uploadProgress").style.display = "block";
+
           const xhr = new XMLHttpRequest();
           xhr.open(method, url, true);
+          
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
               const percent = Math.round((e.loaded / e.total) * 100);
-              document.getElementById("progress-fill").style.width =
-                percent + "%";
-              document.getElementById("progress-text").textContent =
-                percent + "%";
+              document.getElementById("progress-fill").style.width = percent + "%";
+              document.getElementById("progress-text").textContent = `Téléchargement: ${percent}%`;
             }
           };
 
           xhr.onload = async () => {
             if (xhr.status === 200 || xhr.status === 201) {
+              const action = currentVideoId ? "mise à jour" : "ajout";
               showAlert(
                 "video-alert",
-                "✅ Vidéo ajoutée/mise à jour",
+                `<i class="fas fa-check-circle"></i> Vidéo ${action}ée avec succès`,
                 "success"
               );
               resetVideoForm();
               await loadVideosData();
               loadAllVideos();
-              setTimeout(
-                () =>
-                  document
-                    .querySelector('.tab[data-tab="videos-list"]')
-                    ?.click(),
-                1000
-              );
+              setTimeout(() => {
+                document.querySelector('.tab[data-tab="videos-list"]')?.click();
+              }, 1500);
             } else {
               throw new Error("Erreur serveur");
             }
           };
 
-          xhr.onerror = () =>
-            showAlert("video-alert", "❌ Erreur réseau", "danger");
+          xhr.onerror = () => showAlert("video-alert", '<i class="fas fa-wifi"></i> Erreur réseau', "danger");
           xhr.send(formData);
+          
         } catch (e) {
-          showAlert("video-alert", "❌ " + e.message, "danger");
+          showAlert("video-alert", `<i class="fas fa-exclamation-triangle"></i> ${e.message}`, "danger");
         } finally {
           btn.innerHTML = original;
           btn.disabled = false;
-          document.querySelector(".upload-progress").style.display = "none";
+          setTimeout(() => {
+            document.getElementById("uploadProgress").style.display = "none";
+          }, 2000);
         }
       }
 
@@ -1630,11 +2269,11 @@
         document.getElementById("video-form-title").innerHTML =
           '<i class="fas fa-video"></i> Ajouter une Vidéo';
         document.getElementById("video-submit-btn").innerHTML =
-          '<i class="fas fa-save"></i> Ajouter';
+          '<i class="fas fa-save"></i> Ajouter la Vidéo';
         document.getElementById("cancel-edit-btn").style.display = "none";
         currentVideoId = null;
         document.getElementById("progress-fill").style.width = "0%";
-        document.getElementById("progress-text").textContent = "0%";
+        document.getElementById("progress-text").textContent = "Téléchargement: 0%";
       }
 
       function cancelEdit() {
@@ -1646,6 +2285,7 @@
         const isPaid = document.getElementById("isPaid").value === "true";
         const group = document.getElementById("category-group");
         group.style.display = isPaid ? "block" : "none";
+        
         if (!isPaid) {
           const cat = getRandomCategory();
           document.getElementById("category").value = cat;
@@ -1657,7 +2297,8 @@
       function updatePartOptions() {
         const cat = document.getElementById("category").value;
         const select = document.getElementById("part");
-        select.innerHTML = '<option value="">Sélectionner</option>';
+        select.innerHTML = '<option value="">Sélectionner une partie</option>';
+        
         if (partOptions[cat]) {
           partOptions[cat].forEach((p) => {
             const opt = document.createElement("option");
@@ -1668,8 +2309,10 @@
         }
       }
 
-      // === GESTION DES UTILISATEURS ===
+      // ==================== USER MANAGEMENT ====================
       async function loadUsers() {
+        updateLoader(80, 'Chargement des utilisateurs...');
+        
         try {
           const res = await fetch(`${API_BASE}/api/users`);
           if (!res.ok) throw new Error("Échec du chargement");
@@ -1679,32 +2322,53 @@
           tbody.innerHTML = "";
 
           if (!data.users || data.users.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="loading">Aucun utilisateur</td></tr>`;
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="4" class="loading">
+                  <i class="fas fa-info-circle"></i>
+                  Aucun utilisateur trouvé
+                </td>
+              </tr>`;
             return;
           }
 
-          data.users.forEach((u) => {
+          data.users.forEach((u, index) => {
             const tr = document.createElement("tr");
+            tr.style.opacity = "0";
+            tr.style.transform = "translateY(20px)";
+            tr.style.transition = "all 0.5s ease";
+            
             tr.innerHTML = `
-          <td style="font-weight:600">
-            <div style="display:flex;align-items:center">
-              <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient-primary);color:white;display:flex;align-items:center;justify-content:center;margin-right:12px">
-                ${u.name.charAt(0).toUpperCase()}
-              </div>
-              ${u.name}
-            </div>
-          </td>
-          <td style="font-family:monospace">${u.phone}</td>
-          <td><span style="color:var(--gray)">${getUserStatus(u)}</span></td>
-          <td>
-            <button class="action-btn reset-btn" data-phone="${
-              u.phone
-            }" title="Réinitialiser">
-              <i class="fas fa-key"></i>
-            </button>
-          </td>
-        `;
+              <td style="font-weight:600">
+                <div style="display:flex;align-items:center">
+                  <div style="width:48px;height:48px;border-radius:50%;background:var(--gradient-primary);color:white;display:flex;align-items:center;justify-content:center;margin-right:1rem;font-weight:700;font-size:1.2rem;">
+                    ${u.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style="font-weight:600;color:var(--dark)">${u.name}</div>
+                    <div style="font-size:0.85rem;color:var(--gray-600)">Utilisateur</div>
+                  </div>
+                </div>
+              </td>
+              <td style="font-family:monospace;font-weight:600;color:var(--primary)">${u.phone}</td>
+              <td>
+                <div style="font-size:0.85rem;color:var(--gray-600);background:var(--gray-100);padding:0.5rem;border-radius:var(--border-radius);border:1px solid var(--gray-300)">
+                  ${getUserStatus(u)}
+                </div>
+              </td>
+              <td>
+                <button class="action-btn reset-btn" data-phone="${u.phone}" title="Réinitialiser le mot de passe">
+                  <i class="fas fa-key"></i>
+                </button>
+              </td>
+            `;
             tbody.appendChild(tr);
+            
+            // Animate row appearance
+            setTimeout(() => {
+              tr.style.opacity = "1";
+              tr.style.transform = "translateY(0)";
+            }, index * 100);
           });
 
           document.querySelectorAll(".reset-btn").forEach((btn) => {
@@ -1712,8 +2376,10 @@
               openPasswordModal(btn.dataset.phone)
             );
           });
+          
         } catch (e) {
           console.error("Erreur users:", e);
+          showErrorState("users-table", "Erreur lors du chargement des utilisateurs");
         }
       }
 
@@ -1728,10 +2394,62 @@
           gsmHardware: "GSM Hardware",
           gsmSoftware: "GSM Software",
         };
+        
         const status = Object.keys(map)
           .filter((k) => user.status?.[k])
           .map((k) => map[k]);
-        return status.length ? status.join(", ") : "Aucun accès";
+        
+        return status.length ? status.join(", ") : "Aucun accès configuré";
+      }
+
+      async function handleUserSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+        submitBtn.disabled = true;
+
+        try {
+          const data = {
+            name: form["user-name"].value,
+            phone: form["user-phone"].value,
+            password: form["user-password"].value,
+          };
+
+          const res = await fetch(`${API_BASE}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          if (res.ok) {
+            showAlert(
+              "user-alert",
+              '<i class="fas fa-check-circle"></i> Utilisateur créé avec succès',
+              "success"
+            );
+            form.reset();
+            loadUsers();
+            setTimeout(() => {
+              document.querySelector('.tab[data-tab="users-list"]')?.click();
+            }, 2000);
+          } else {
+            const error = await res.text();
+            throw new Error(error || "Erreur serveur");
+          }
+        } catch (e) {
+          console.error("Erreur lors de l'ajout:", e);
+          showAlert(
+            "user-alert",
+            `<i class="fas fa-exclamation-triangle"></i> ${e.message}`,
+            "danger"
+          );
+        } finally {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
       }
 
       function openPasswordModal(phone) {
@@ -1766,12 +2484,12 @@
           });
 
           if (res.ok) {
-            showAlert("password-alert", "✅ Code envoyé", "success");
+            showAlert("password-alert", '<i class="fas fa-check-circle"></i> Code OTP envoyé', "success");
           } else {
-            throw new Error("Échec de l'envoi");
+            throw new Error("Échec de l'envoi du code");
           }
         } catch (e) {
-          showAlert("password-alert", "❌ " + e.message, "danger");
+          showAlert("password-alert", `<i class="fas fa-exclamation-triangle"></i> ${e.message}`, "danger");
         } finally {
           btn.innerHTML = original;
           btn.disabled = false;
@@ -1783,8 +2501,7 @@
         const form = e.target;
         const btn = form.querySelector("button[type='submit']");
         const original = btn.innerHTML;
-        btn.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
         btn.disabled = true;
 
         try {
@@ -1803,21 +2520,22 @@
           if (res.ok) {
             showAlert(
               "password-alert",
-              "✅ Mot de passe réinitialisé",
+              '<i class="fas fa-check-circle"></i> Mot de passe réinitialisé avec succès',
               "success"
             );
             setTimeout(closeModal, 2000);
           } else {
-            throw new Error("Code invalide");
+            throw new Error("Code OTP invalide ou expiré");
           }
         } catch (e) {
-          showAlert("password-alert", "❌ " + e.message, "danger");
+          showAlert("password-alert", `<i class="fas fa-exclamation-triangle"></i> ${e.message}`, "danger");
         } finally {
           btn.innerHTML = original;
           btn.disabled = false;
         }
       }
 
+      // ==================== SETTINGS ====================
       async function loadScreenCaptureSetting() {
         try {
           const res = await fetch(`${API_BASE}/api/screen-capture`);
@@ -1826,13 +2544,13 @@
 
           const toggle = document.getElementById("screen-capture-toggle");
           if (toggle) {
-            toggle.checked = data.allowScreenCapture; // ✅ Affectation simple, pas de if
+            toggle.checked = data.allowScreenCapture;
           }
         } catch (e) {
           console.error("Erreur paramètres:", e);
           showAlert(
             "settings-alert",
-            "❌ Impossible de charger les paramètres",
+            '<i class="fas fa-exclamation-triangle"></i> Impossible de charger les paramètres',
             "danger"
           );
         }
@@ -1840,6 +2558,11 @@
 
       async function toggleScreenCapture() {
         const enabled = this.checked;
+        const label = this.closest('label');
+        
+        // Visual feedback
+        label.style.opacity = '0.6';
+        
         try {
           const res = await fetch(`${API_BASE}/api/screen-capture`, {
             method: "POST",
@@ -1847,76 +2570,68 @@
             body: JSON.stringify({ allowScreenCapture: enabled }),
           });
 
-          if (!res.ok) throw new Error("Échec");
+          if (!res.ok) throw new Error("Échec de la mise à jour");
+          
           showAlert(
             "settings-alert",
-            `Capture ${enabled ? "activée" : "désactivée"}`,
+            `<i class="fas fa-check-circle"></i> Capture d'écran ${enabled ? "activée" : "désactivée"}`,
             "success"
           );
+          
+          label.style.borderColor = enabled ? 'var(--success)' : 'var(--gray-300)';
+          
         } catch (e) {
           this.checked = !enabled;
-          showAlert("settings-alert", "❌ Erreur", "danger");
+          showAlert("settings-alert", '<i class="fas fa-exclamation-triangle"></i> Erreur de mise à jour', "danger");
+        } finally {
+          label.style.opacity = '1';
         }
       }
 
-      // === FONCTIONS UTILITAIRES ===
+      // ==================== UTILITY FUNCTIONS ====================
       function setupTabs() {
         document.querySelectorAll(".tab").forEach((tab) => {
           tab.addEventListener("click", () => {
             const tabId = tab.dataset.tab;
             const parent = tab.closest(".section");
+            
+            // Remove active class from all tabs and content
             parent
               .querySelectorAll(".tab, .tab-content")
               .forEach((el) => el.classList.remove("active"));
+              
+            // Add active class to clicked tab and corresponding content
             tab.classList.add("active");
             document.getElementById(`${tabId}-tab`).classList.add("active");
           });
         });
       }
 
-      function setupThemeToggle() {
-        const btn = document.createElement("button");
-        btn.innerHTML = '<i class="fas fa-moon"></i>';
-        btn.style.cssText =
-          "position:fixed;bottom:20px;right:20px;padding:12px;border:none;border-radius:50%;background:var(--primary);color:white;cursor:pointer;z-index:1000;";
-        btn.onclick = () => {
-          document.body.classList.toggle("dark-theme");
-          btn.innerHTML = document.body.classList.contains("dark-theme")
-            ? '<i class="fas fa-sun"></i>'
-            : '<i class="fas fa-moon"></i>';
-        };
-        document.body.appendChild(btn);
-      }
-
       function setupTooltips() {
-        document.querySelectorAll("[title]").forEach((el) => {
-          el.addEventListener("mouseenter", function () {
-            const tooltip = document.createElement("div");
-            tooltip.className = "tooltip";
-            tooltip.textContent = this.title;
-            tooltip.style.cssText = `
-          position:absolute;background:#333;color:white;padding:6px 10px;border-radius:6px;
-          font-size:0.8rem;z-index:10000;opacity:0;transition:opacity 0.3s;left:50%;top:-40px;
-          transform:translateX(-50%);white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,0.2);
-        `;
+        document.addEventListener('mouseenter', function(e) {
+          if (e.target.hasAttribute('title')) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = e.target.title;
             document.body.appendChild(tooltip);
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left =
-              rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + "px";
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + "px";
-            setTimeout(() => (tooltip.style.opacity = "1"), 10);
-            this.addEventListener("mouseleave", () => tooltip.remove(), {
-              once: true,
-            });
-          });
-        });
+            
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + 'px';
+            
+            setTimeout(() => tooltip.style.opacity = '1', 10);
+            
+            e.target.addEventListener('mouseleave', () => tooltip.remove(), { once: true });
+          }
+        }, true);
       }
 
       function animateCounter(id, target) {
         const el = document.getElementById(id);
         const start = parseInt(el.textContent) || 0;
-        const duration = 1500;
+        const duration = 2000;
         const startTime = performance.now();
+        
         function step(currentTime) {
           const elapsed = currentTime - startTime;
           const progress = Math.min(elapsed / duration, 1);
@@ -1932,39 +2647,51 @@
         if (el) {
           el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
           setTimeout(() => {
-            if (el.innerHTML.includes(msg)) el.innerHTML = "";
-          }, 5000);
+            if (el.innerHTML.includes(msg)) {
+              el.innerHTML = "";
+            }
+          }, 6000);
         }
       }
 
       function showErrorState(tableId, message) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = `
-      <tr><td colspan="6" class="error-state"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>
-    `;
+          <tr>
+            <td colspan="6" class="error-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              ${message}
+            </td>
+          </tr>
+        `;
       }
 
-      // === Gestion des vidéos (ouverture)
       function viewVideo(videoId) {
         const video = findVideoById(videoId);
         if (video?.details?.video) {
           window.open(`${API_BASE}${video.details.video}`, "_blank");
         } else {
-          alert("Vidéo non disponible");
+          alert("Vidéo non disponible ou en cours de traitement");
         }
       }
 
       function findVideoById(id) {
         for (const cat of videosData) {
-          const video = cat.videos.find((v) => v.id === id);
+          const video = cat.videos?.find((v) => v.id === id);
           if (video) return { ...video, categoryName: cat.name };
         }
         return null;
       }
 
-      console.log(
-        "✅ KaboreTech Admin - Toutes les fonctionnalités sont activées."
-      );
+      // ==================== CONSOLE LOG ====================
+      console.log("🚀 KaboreTech Admin Dashboard - Version améliorée chargée avec succès!");
+      console.log("📊 Fonctionnalités disponibles:");
+      console.log("  • Loader animé avec progression");
+      console.log("  • Interface moderne et responsive");
+      console.log("  • Gestion complète des vidéos");
+      console.log("  • Système d'utilisateurs avancé");
+      console.log("  • Paramètres de configuration");
+      console.log("  • Animations et transitions fluides");
     </script>
   </body>
 </html>
