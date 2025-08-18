@@ -79,8 +79,6 @@ const mongooseOptions = {
   maxPoolSize: 50, // Maintient jusqu'à 50 connexions socket
   serverSelectionTimeoutMS: 5000, // Timeout après 5s
   socketTimeoutMS: 45000, // Ferme les sockets après 45s d'inactivité
-  bufferCommands: false, // Désactive le buffering mongoose
-  bufferMaxEntries: 0 // Désactive le buffering mongoose
 };
 
 mongoose.connect(process.env.MONGODB_URI, mongooseOptions)
