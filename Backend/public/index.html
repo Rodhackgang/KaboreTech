@@ -1640,7 +1640,7 @@
         btn.disabled = true;
 
         try {
-          const res = await fetch(`${API_BASE}/api/videos/${id}`, {
+          const res = await fetch(`${API_BASE}/api/delete-video/${id}`, {
             method: "DELETE",
           });
           if (res.ok) {
