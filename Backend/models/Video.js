@@ -1,36 +1,14 @@
 const mongoose = require('mongoose');
 
-const videoSchema = new mongoose.Schema({
-  title: { 
-    type: String, 
-    required: true 
-  },
-  categoryId: { 
-    type: String,
-    enum: ['Informatique', 'Marketing', 'Energie', 'Réparation', 'Bureautique'],
-    required: true 
-  },
-  isPaid: { 
-    type: Boolean, 
-    required: true 
-  },
-  description: { 
-    type: String, 
-    required: true 
-  },
-  videoFileId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    required: true 
-  }, // Référence GridFS pour la vidéo
-  imageFileId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    required: true 
-  },  // Référence GridFS pour l'image
-  part: { 
-    type: String, 
-    enum: ['Hardware', 'Software', 'Partie1', 'Partie2','Social','Contenue'], 
-    required: false 
-  } 
-});
+const Video = mongoose.model('Video', new mongoose.Schema({
+  title: { type: String, required: true },
+  categoryId: { type: String, required: true },
+  part: { type: String, required: true, enum: ['Hardware', 'Software', 'Social', 'Content'] },
+  isPaid: { type: Boolean, default: false },
+  description: { type: String, default: '' },
+  videoFileId: { type: String, required: true }, // ID Google Drive
+  imageFileId: { type: String, required: true }, // ID Google Drive
+  createdAt: { type: Date, default: Date.now }
+}));
 
-module.exports = mongoose.model('Video', videoSchema);
+module.exports = mongoose.model('Video', Video);
