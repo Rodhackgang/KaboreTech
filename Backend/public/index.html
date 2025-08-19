@@ -1564,14 +1564,17 @@
             <button class="action-btn view-btn" onclick="viewVideo('${
               video.id
             }')" title="Voir"><i class="fas fa-eye"></i></button>
+         
+          </td>
+        `;
+        /*
             <button class="action-btn edit-btn" data-id="${
               video.id
             }" title="Modifier"><i class="fas fa-edit"></i></button>
             <button class="action-btn delete-btn" data-id="${
               video.id
             }" title="Supprimer"><i class="fas fa-trash"></i></button>
-          </td>
-        `;
+        */
 
         setTimeout(() => {
           tr.style.transition = "all 0.5s ease";
@@ -1621,11 +1624,11 @@
           );
         });
 
-        document.querySelectorAll(".delete-btn").forEach((btn) => {
+        /*document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
            deleteVideo(e.target.closest("button").dataset.id);
           });
-        });
+        });*/
       }
 /*
       async function deleteVideo(id) {
