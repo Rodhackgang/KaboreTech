@@ -1623,11 +1623,7 @@
 
         document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            if (
-              confirm("Supprimer cette vidéo ? Cette action est irréversible.")
-            ) {
-              deleteVideo(e.target.closest("button").dataset.id);
-            }
+           deleteVideo(e.target.closest("button").dataset.id);
           });
         });
       }
