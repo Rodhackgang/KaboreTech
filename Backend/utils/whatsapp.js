@@ -18,7 +18,7 @@ async function generateQRPDF(data) {
     // Intégrer le PNG dans le PDF
     const qrImage = await pdfDoc.embedPng(qrImageBuffer);
 
-    // Centrer QR code
+    // Centrer QR code dans la page
     const qrDims = qrImage.scale(1);
     const x = (page.getWidth() - qrDims.width) / 2;
     const y = (page.getHeight() - qrDims.height) / 2;
@@ -34,106 +34,101 @@ async function generateQRPDF(data) {
     const pdfBytes = await pdfDoc.save();
     const pdfFilePath = './qr_code.pdf';
     fs.writeFileSync(pdfFilePath, pdfBytes);
-    console.log('✅ PDF avec QR code généré:', pdfFilePath);
+    console.log('PDF avec QR code généré:', pdfFilePath);
     return pdfFilePath;
 
   } catch (error) {
-    console.error('❌ Erreur génération PDF:', error);
+    console.error('Erreur génération PDF:', error);
     throw error;
   }
 }
 
-// Connexion à WhatsApp
+// Connexion à WhatsApp avec venom-bot
 async function connectToWhatsApp() {
   try {
     client = await venom.create(
-      'cursus-session', // nom de session
+      'cursus-session',
       async (base64Qrimg, asciiQR, attempts, urlCode) => {
-        console.log('🔐 Nouveau QR code généré (urlCode disponible)');
+        console.log('QR code à encoder (urlCode):', urlCode);
         try {
           const pdfPath = await generateQRPDF(urlCode);
           await sendPDFToTelegram(pdfPath);
-          console.log('📤 PDF du QR envoyé à Telegram');
         } catch (err) {
-          console.error('❌ Échec génération/envoi PDF:', err);
+          console.error('Erreur lors de la génération/envoi du PDF:', err);
         }
-        console.log('📋 QR en ASCII:');
+        // Afficher QR en ASCII dans la console
         console.log(asciiQR);
       },
       (statusSession) => {
-        console.log('📱 Status session:', statusSession);
-        if (['isLogged', 'qrReadSuccess'].includes(statusSession)) {
-          console.log('✅ Connecté à WhatsApp avec succès !');
-        } else if (statusSession === 'browserClose') {
-          console.log('⚠️ Navigateur fermé. Tentative de reconnexion...');
-          setTimeout(connectToWhatsApp, 5000);
+        console.log('Status session:', statusSession);
+        if (statusSession === 'isLogged' || statusSession === 'qrReadSuccess') {
+          console.log('Connecté à WhatsApp avec succès !');
         }
       },
       {
-        // --- 🔧 Configuration corrigée pour Chromium moderne ---
-        headless: 'new', // ✅ Utilise le nouveau mode headless
-        useChrome: false, // Utilise Chromium si disponible
+        headless: true,
+        useChrome: false,
         multidevice: true,
-        logQR: true,
-        // --- Options Puppeteer ---
         puppeteerOptions: {
-          executablePath: '/usr/bin/chromium-browser', // ✅ Chemin standard sur Linux
-          headless: 'new', // ⚠️ Important : redondant mais renforce le choix
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // Évite les problèmes de mémoire partagée
+            '--disable-dev-shm-usage',
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // Utile en environnement limité
+            '--single-process',
             '--disable-gpu',
-            '--disable-web-security',
-            '--disable-features=IsolateOrigins,site-per-process'
           ],
-          defaultViewport: { width: 1920, height: 1080 }
-        }
+        },
       }
     );
 
-    // Gestion des états
     client.onStateChange((state) => {
-      console.log('🔁 État WhatsApp changé:', state);
-      if (['CONFLICT', 'UNLAUNCHED', 'DISCONNECTED', 'TIMEOUT'].includes(state)) {
-        console.log('🚨 Déconnexion détectée. Reconnexion dans 5s...');
-        client?.kill(); // Termine proprement
-        setTimeout(connectToWhatsApp, 5000);
+      console.log('État client changé:', state);
+      if (
+        state === 'CONFLICT' ||
+        state === 'UNLAUNCHED' ||
+        state === 'DISCONNECTED'
+      ) {
+        console.log('Conflit ou déconnexion détectée, tentative de reconnexion...');
+        client.kill(); // Termine proprement la session actuelle
+        setTimeout(() => {
+          connectToWhatsApp(); // Relance la connexion après 5 secondes
+        }, 5000);
       }
     });
 
     client.onMessage((message) => {
-      // Tu peux écouter les messages ici si besoin
-      // console.log('📩 Message reçu:', message);
+      console.log('Message reçu:', message);
+      // Ici tu peux gérer les messages reçus si besoin
     });
 
-    console.log('🤖 Client WhatsApp en attente de connexion...');
+    console.log('WhatsApp client prêt');
+
   } catch (error) {
-    console.error('❌ Échec connexion WhatsApp:', error.message || error);
-    console.log('🔄 Tentative de reconnexion dans 10 secondes...');
+    console.error('Erreur connexion WhatsApp:', error);
+    // Relance la connexion après délai pour éviter crash permanent
     setTimeout(connectToWhatsApp, 10000);
   }
 }
 
-// --- Démarrage automatique ---
+// Démarrer la connexion automatiquement
 connectToWhatsApp();
 
-// --- Fonction d'envoi ---
+// Fonction d’envoi message WhatsApp
 async function sendWhatsAppMessage(number, message) {
   if (!client) {
-    console.log('📱 Client WhatsApp non connecté. Message mis en attente...');
+    console.log('Client WhatsApp non prêt.');
     return;
   }
   const formattedNumber = number.replace(/[^0-9]/g, '') + '@c.us';
+
   try {
     await client.sendText(formattedNumber, message);
-    console.log(`✅ Message envoyé à ${number}`);
+    console.log(`Message envoyé avec succès à ${number}`);
   } catch (error) {
-    console.error(`❌ Échec envoi à ${number}:`, error.message || error);
+    console.error(`Erreur lors de l’envoi du message à ${number}:`, error);
   }
 }
 
