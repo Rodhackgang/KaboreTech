@@ -1545,7 +1545,7 @@
           <td>
             <div class="video-thumbnail" title="Lire">
               ${video.details?.image 
-                ? `<img src="${API_BASE}${video.details.image}" alt="${video.title}" style="width:60px;height:40px;border-radius:6px;object-fit:cover">`
+                ? `<img src="${video.details.image}" alt="${video.title}" style="width:60px;height:40px;border-radius:6px;object-fit:cover">`
                 : `<i class="fas fa-play"></i>`}
             </div>
           </td>
@@ -2183,7 +2183,7 @@
       function viewVideo(videoId) {
         const video = findVideoById(videoId);
         if (video?.details?.video) {
-          window.open(`${API_BASE}${video.details.video}`, "_blank");
+          window.open(`${video.details.video}`, "_blank");
         } else {
           alert("Vidéo non disponible");
         }
