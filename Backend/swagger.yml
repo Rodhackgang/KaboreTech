@@ -1,0 +1,371 @@
+openapi: 3.0.0
+info:
+  title: KaboreTech API
+  description: API Documentation for the KaboreTech Platform
+  version: 1.0.0
+servers:
+  - url: "https://kaboretech.cursusbf.com"
+    description: Local development server
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      description: Register a user and return a success message
+      requestBody:
+        content:
+          application/json:
+            schema: https://kaboretech.cursusbf.com
+              type: object
+              required:
+                - name
+                - phone
+                - password
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "En attente de validation VIP"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur d'inscription"
+
+  /api/login:
+    post:
+      summary: Login user
+      description: Login a user with their phone number and password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - password
+              properties:
+                phone:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: User successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Connexion réussie"
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      phone:
+                        type: string
+        "401":
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Mot de passe incorrect"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur non trouvé"
+
+  /api/forgot-password:
+    post:
+      summary: Request password reset
+      description: Request an OTP for resetting password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+              properties:
+                phone:
+                  type: string
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Code OTP envoyé avec succès."
+        "404":
+          description: Phone number not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Numéro de téléphone non trouvé."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur interne du serveur."
+
+  /api/reset-password:
+    post:
+      summary: Reset password using OTP
+      description: Reset the user's password using OTP
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone
+                - otp
+                - newPassword
+              properties:
+                phone:
+                  type: string
+                otp:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password successfully reset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Mot de passe réinitialisé avec succès."
+        "400":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Code OTP invalide ou expiré."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur interne du serveur."
+
+  /api/add-video:
+    post:
+      summary: Add a new video to the platform
+      description: This endpoint allows adding a video along with its associated image.
+      tags:
+        - Video
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the video
+                  example: "Introduction to Web Development"
+                categoryId:
+                  type: string
+                  description: Category of the video
+                  example: "web-development"
+                part:
+                  type: string
+                  description: The specific part/category of the video (e.g., Hardware, Software)
+                  example: "Hardware"
+                isPaid:
+                  type: boolean
+                  description: Whether the video is paid content
+                  example: true
+                description:
+                  type: string
+                  description: A description of the video
+                  example: "This video provides an introduction to web development focusing on HTML and CSS."
+                videoFile:
+                  type: string
+                  format: binary
+                  description: The video file to be uploaded
+                imageFile:
+                  type: string
+                  format: binary
+                  description: The image file for the video thumbnail
+      responses:
+        "201":
+          description: Video successfully added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vidéo sauvegardée dans MongoDB !"
+                  video:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                        example: "Introduction to Web Development"
+                      categoryId:
+                        type: string
+                        example: "Informatique"
+                      part:
+                        type: string
+                        example: "Hardware"
+                      isPaid:
+                        type: boolean
+                        example: true
+                      description:
+                        type: string
+                        example: "This video provides an introduction to web development focusing on HTML and CSS."
+                      videoFileId:
+                        type: string
+                        example: "607c1f77bcf86cd799439011"
+                      imageFileId:
+                        type: string
+                        example: "607c1f77bcf86cd799439012"
+        "400":
+          description: Bad request - Missing video or image file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Les fichiers vidéo et image sont requis."
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Erreur interne du serveur."
+
+  /api/video/{id}:
+    get:
+      summary: Retrieve a video
+      description: Fetch a video from GridFS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the video
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Video found and streamed
+        "404":
+          description: Video not found
+
+  /api/image/{id}:
+    get:
+      summary: Retrieve an image
+      description: Fetch an image from GridFS
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the image
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Image found and streamed
+        "404":
+          description: Image not found
+
+  /api/videos:
+    get:
+      summary: Retrieve all videos
+      description: Fetch a list of all videos
+      responses:
+        "200":
+          description: List of videos retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+                    isPaid:
+                      type: boolean
+                    categoryId:
+                      type: string
+                    part:
+                      type: string
+                    image:
+                      type: string
+                    details:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        video:
+                          type: string
+                        description:
+                          type: string
