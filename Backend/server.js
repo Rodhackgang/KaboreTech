@@ -41,7 +41,7 @@ const Video = mongoose.model('Video', new mongoose.Schema({
   part: {
     type: String,
     required: true,
-    enum: ['Hardware', 'Software', 'Social', 'Content']
+    enum: ['Hardware', 'Software', 'Partie1', 'Partie2','Social','Contenue']
   },
   isPaid: {
     type: Boolean,
@@ -103,26 +103,20 @@ const drive = google.drive({
 
 const ensureValidToken = async () => {
   try {
-    // Vérifier si le token actuel est encore valide
-    const { credentials } = await oauth2Client.getAccessToken();
+    // Obtenir les informations actuelles du token
+    const tokenInfo = await oauth2Client.getAccessToken();
     
-    if (!credentials.access_token) {
+    if (!tokenInfo.token) {
       throw new Error('Aucun access token disponible');
     }
     
-    // Vérifier l'expiration
-    if (credentials.expiry_date && credentials.expiry_date <= Date.now()) {
-      console.log('🔄 Token expiré, rafraîchissement en cours...');
-      await oauth2Client.getAccessToken(); // Force le rafraîchissement
-    }
-    
+    console.log('✅ Token d\'accès valide obtenu');
     return true;
   } catch (error) {
     console.error('❌ Erreur lors de la vérification/rafraîchissement du token:', error);
     throw error;
   }
 };
-
 const driveApiCall = async (apiFunction) => {
   try {
     // S'assurer que le token est valide avant l'appel
@@ -178,7 +172,7 @@ const initializeGoogleDrive = async () => {
 
 // Middleware
 const corsOptions = {
-  origin: ['https://kaboretech.cursusbf.com','http://192.168.100.16:8000'],
+   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -283,22 +277,30 @@ const deleteFromGoogleDrive = async (fileId) => {
     });
   });
 };
+// Fonction améliorée pour obtenir les informations du token
 const getTokenInfo = async () => {
   try {
-    const { credentials } = await oauth2Client.getAccessToken();
+    const tokenInfo = await oauth2Client.getAccessToken();
+    const credentials = oauth2Client.credentials;
     
     return {
-      hasAccessToken: !!credentials.access_token,
+      hasAccessToken: !!tokenInfo.token,
       hasRefreshToken: !!credentials.refresh_token,
       expiryDate: credentials.expiry_date ? new Date(credentials.expiry_date) : null,
-      isExpired: credentials.expiry_date ? credentials.expiry_date <= Date.now() : false
+      isExpired: credentials.expiry_date ? credentials.expiry_date <= Date.now() : false,
+      tokenInfo: tokenInfo
     };
   } catch (error) {
     console.error('Erreur lors de la récupération des infos du token:', error);
-    return null;
+    return {
+      hasAccessToken: false,
+      hasRefreshToken: false,
+      expiryDate: null,
+      isExpired: true,
+      error: error.message
+    };
   }
 };
-
 app.get('/api/token-info', async (req, res) => {
   try {
     const tokenInfo = await getTokenInfo();
