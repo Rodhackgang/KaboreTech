@@ -24,7 +24,7 @@ const TabArr = [
   },
   {
     route: 'Informatique',
-    label: 'Informatique',
+    label: 'Maintenance Informatique',
     type: Icons.MaterialCommunityIcons,
     activeIcon: 'laptop',
     inActiveIcon: 'laptop-off',
@@ -32,15 +32,15 @@ const TabArr = [
   },
   {
     route: 'Bureautique',
-    label: 'Bureautique',
+    label: 'Sécretariat Informatique',
     type: Icons.MaterialCommunityIcons,
     activeIcon: 'folder-account',
     inActiveIcon: 'folder-account-outline',
-    component: Bureautique,
+    component: Bureautique, 
   },
   {
     route: 'Marketing Digital',
-    label: 'Marketing',
+    label: 'Marketing Digital',
     type: Icons.MaterialCommunityIcons,
     activeIcon: 'bullhorn',
     inActiveIcon: 'bullhorn-outline',
@@ -48,7 +48,7 @@ const TabArr = [
   },
   {
     route: 'Formation GSM',
-    label: 'Réparation',
+    label: 'Réparation Téléphone',
     type: Icons.MaterialCommunityIcons,
     activeIcon: 'cellphone',
     inActiveIcon: 'cellphone-off',

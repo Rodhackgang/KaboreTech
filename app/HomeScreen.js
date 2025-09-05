@@ -4,30 +4,33 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   FlatList,
   RefreshControl,
   Alert,
   ToastAndroid,
-  Platform
+  Platform,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyHeader from '../components/MyHeader';
-import Colors from '../constants/Colors';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const HomeScreen = ({ route, navigation }) => {
+const { width } = Dimensions.get('window');
+
+const HomeScreen = ({ navigation }) => {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [userInfo, setUserInfo] = useState({ phoneNumber: '' });
   const [vipStatus, setVipStatus] = useState({
     Informatique: { hardware: false, software: false },
     Marketing: { social: false, content: false },
-    GSM: { hardware: false, software: false }
+    GSM: { hardware: false, software: false },
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [haveAccount, sethaveAccount] = useState(true); // Default to true to avoid flash
+  const [haveAccount, setHaveAccount] = useState(true);
 
-  // Fonction pour afficher le toast
+  // Afficher un toast
   const showToast = (message) => {
     if (Platform.OS === 'android') {
       ToastAndroid.show(message, ToastAndroid.LONG);
@@ -36,30 +39,26 @@ const HomeScreen = ({ route, navigation }) => {
     }
   };
 
-  // Load user data and categories
+  // Charger les données utilisateur
   const loadUserData = async () => {
     try {
-      const [phoneNumber, accountStatus] = await Promise.all([
-        AsyncStorage.getItem('userPhone'),
-        AsyncStorage.getItem('haveAccount')
-      ]);
-
-      setUserInfo({ phoneNumber: phoneNumber || '' });
-      sethaveAccount(accountStatus === 'true');
+      const phone = await AsyncStorage.getItem('userPhone');
+      const hasAccount = await AsyncStorage.getItem('haveAccount');
+      setUserInfo({ phoneNumber: phone || '' });
+      setHaveAccount(hasAccount === 'true');
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('Erreur chargement utilisateur:', error);
     }
   };
 
+  // Charger les catégories (cache + API)
   const loadCategoriesFromCache = async () => {
     try {
-      const cachedData = await AsyncStorage.getItem('categoriesData');
-      if (cachedData) {
-        setCategories(JSON.parse(cachedData));
-      }
+      const cached = await AsyncStorage.getItem('categoriesData');
+      if (cached) setCategories(JSON.parse(cached));
       await fetchCategories();
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('Erreur cache:', error);
     }
   };
 
@@ -67,65 +66,65 @@ const HomeScreen = ({ route, navigation }) => {
     try {
       const response = await fetch('https://kaboretech.cursusbf.com/api/videos');
       const data = await response.json();
+      
       await AsyncStorage.setItem('categoriesData', JSON.stringify(data));
       setCategories(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Erreur chargement vidéos:', error);
       Alert.alert('Erreur', 'Impossible de charger les formations');
     }
   };
 
+  // Charger le statut VIP
   const loadVipStatus = async () => {
     try {
       const status = {
         Informatique: {
-          hardware: await AsyncStorage.getItem('isVIPInformatiqueHardware') === 'true',
-          software: await AsyncStorage.getItem('isVIPInformatiqueSoftware') === 'true'
+          hardware: (await AsyncStorage.getItem('isVIPInformatiqueHardware')) === 'true',
+          software: (await AsyncStorage.getItem('isVIPInformatiqueSoftware')) === 'true',
         },
         Marketing: {
-          social: await AsyncStorage.getItem('isVIPMarketingSocial') === 'true',
-          content: await AsyncStorage.getItem('isVIPMarketingContent') === 'true'
+          social: (await AsyncStorage.getItem('isVIPMarketingSocial')) === 'true',
+          content: (await AsyncStorage.getItem('isVIPMarketingContent')) === 'true',
         },
         GSM: {
-          hardware: await AsyncStorage.getItem('isVIPGsmHardware') === 'true',
-          software: await AsyncStorage.getItem('isVIPGsmSoftware') === 'true'
-        }
+          hardware: (await AsyncStorage.getItem('isVIPGsmHardware')) === 'true',
+          software: (await AsyncStorage.getItem('isVIPGsmSoftware')) === 'true',
+        },
       };
       setVipStatus(status);
     } catch (error) {
-      console.error('Error loading VIP status:', error);
+      console.error('Erreur chargement VIP:', error);
     }
   };
 
+  // Rafraîchir le statut VIP
   const refreshVipStatus = async () => {
     if (!userInfo.phoneNumber) return;
-
     setIsRefreshing(true);
     try {
-      const response = await fetch(`https://kaboretech.cursusbf.com/api/vip-status?phone=${userInfo.phoneNumber}`);
-      const data = await response.json();
-
+      const res = await fetch(`https://kaboretech.cursusbf.com/api/vip-status?phone=${userInfo.phoneNumber}`);
+      const data = await res.json();
       if (data.vipDomains) {
-        const updatedStatus = {
+        const newStatus = {
           Informatique: {
             hardware: data.vipDomains.includes('Informatique Hardware'),
-            software: data.vipDomains.includes('Informatique Software')
+            software: data.vipDomains.includes('Informatique Software'),
           },
           Marketing: {
             social: data.vipDomains.includes('Marketing Social'),
-            content: data.vipDomains.includes('Marketing Content')
+            content: data.vipDomains.includes('Marketing Content'),
           },
           GSM: {
             hardware: data.vipDomains.includes('GSM Hardware'),
-            software: data.vipDomains.includes('GSM Software')
-          }
+            software: data.vipDomains.includes('GSM Software'),
+          },
         };
-
-        setVipStatus(updatedStatus);
-        await saveVipStatus(updatedStatus);
+        setVipStatus(newStatus);
+        await saveVipStatus(newStatus);
       }
     } catch (error) {
-      console.error('Error refreshing VIP status:', error);
+      console.error('Erreur mise à jour VIP:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -139,298 +138,483 @@ const HomeScreen = ({ route, navigation }) => {
         AsyncStorage.setItem('isVIPMarketingSocial', status.Marketing.social.toString()),
         AsyncStorage.setItem('isVIPMarketingContent', status.Marketing.content.toString()),
         AsyncStorage.setItem('isVIPGsmHardware', status.GSM.hardware.toString()),
-        AsyncStorage.setItem('isVIPGsmSoftware', status.GSM.software.toString())
+        AsyncStorage.setItem('isVIPGsmSoftware', status.GSM.software.toString()),
       ]);
     } catch (error) {
-      console.error('Error saving VIP status:', error);
+      console.error('Erreur sauvegarde VIP:', error);
     }
   };
 
-  useEffect(() => {
-    const initializeData = async () => {
-      await loadUserData();
-      await loadCategoriesFromCache();
-      await loadVipStatus();
-    };
-    initializeData();
-  }, []);
+  // Vérifie si une vidéo est gratuite (VIP ou non payante)
+  const isVideoFree = useCallback((video) => {
+    if (!video.categoryId) return false;
+    const category = vipStatus[video.categoryId];
+    if (!category) return false;
 
-  const handleLoginPress = () => {
-    navigation.navigate('Login', {
-      onSuccess: () => {
-        sethaveAccount(true);
-        loadUserData();
-        refreshVipStatus();
-      }
-    });
-  };
+    const isVIP = video.part
+      ? category[video.part.toLowerCase()]
+      : Object.values(category).some(Boolean);
 
-  // Fonction pour gérer le clic sur une card
+    return isVIP || !video.isPaid;
+  }, [vipStatus]);
+
+  // Récupérer toutes les vidéos gratuites
+  const getFreeVideos = useCallback(() => {
+    const freeVideos = [];
+    categories.forEach((cat) =>
+      cat.videos.forEach((video) => {
+        if (isVideoFree(video)) {
+          freeVideos.push({ ...video });
+        }
+      })
+    );
+    return freeVideos;
+  }, [categories, isVideoFree]);
+
+  // Gérer le clic sur une vidéo
   const handleCardPress = (video) => {
-    // Vérifier si l'utilisateur est connecté
     if (!haveAccount) {
-      showToast('Veuillez vous inscrire ou vous connecter pour bénéficier de ce service');
+      showToast('Veuillez vous connecter pour accéder à cette vidéo');
       return;
     }
 
-    // Si l'utilisateur est connecté, naviguer vers les détails
-    const isVIP = checkVipStatus(video);
-    const isPaid = isVIP ? false : video.isPaid;
+    const isVIP = isVideoFree(video) && video.isPaid;
+    const isPaid = !isVIP && video.isPaid;
+     const videoUrl = video.details?.video;
 
     navigation.navigate('Details', {
       title: video.title,
-      videoLink: video.video,
-      description: video.description,
+      videoLink: videoUrl,
+      description: video.details?.description || 'Aucune description',
       categoryId: video.categoryId,
       videoData: video,
       image: video.image,
-      isPaid: isPaid
-    });
+      isPaid,
+    },
+    console.log({
+      title: video.title,
+      videoLink: videoUrl,
+      description: video.details?.description || 'Aucune description',
+      categoryId: video.categoryId,
+      videoData: video,
+      image: video.image,
+      isPaid,
+    })
+  );
   };
 
+  // Bouton de connexion modernisé
   const renderLoginPrompt = () => (
-    <View style={styles.loginPrompt}>
-      <Text style={styles.loginText}>
-        Veuillez vous connecter pour bénéficier de toutes les formations de KaboreTech
-      </Text>
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={handleLoginPress}
-      >
-        <Text style={styles.loginButtonText}>Se connecter</Text>
-      </TouchableOpacity>
-    </View>
+    <LinearGradient
+      colors={['#667eea', '#764ba2']}
+      style={styles.loginPrompt}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <View style={styles.loginContent}>
+        <Text style={styles.loginEmoji}>🚀</Text>
+        <Text style={styles.loginTitle}>Bienvenue sur KaboreTech!</Text>
+        <Text style={styles.loginText}>
+          Débloquez l'accès à toutes nos formations premium
+        </Text>
+        <TouchableOpacity 
+          style={styles.loginButton} 
+          onPress={() => navigation.navigate('Login')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.loginButtonText}>Commencer maintenant</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 
-  const renderVideoCard = (video, index) => {
-    const isVIP = checkVipStatus(video);
-    const buttonText = isVIP ? 'Visionner' : 'S\'abonner';
-    const isLastCard = index === categories[categories.length - 1].videos.length - 1;
+  // Carte vidéo modernisée
+  const renderVideoCard = (video, isFreeSection = false) => {
+    const isVIP = isVideoFree(video) && video.isPaid;
+    const buttonText = isFreeSection ? 'Regarder' : isVIP ? 'Regarder' : 'Premium';
+    const imageUrl = `${video.image}`;
 
     return (
-      <TouchableOpacity
-        style={[
-          styles.card,
-          isVIP ? styles.freeCard : styles.paidCard,
-          isLastCard && { marginBottom: 500 }
-        ]}
-        onPress={() => handleCardPress(video)}
-        activeOpacity={0.8}
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={() => handleCardPress(video)} 
+        activeOpacity={0.9}
       >
-        <Image
-          source={{ uri: `https://kaboretech.cursusbf.com${video.image}` }}
-          style={styles.cardImage}
-        />
-        <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>{video.title}</Text>
-          <Text style={[
-            styles.cardStatus,
-            isVIP ? styles.freeStatus : styles.paidStatus
-          ]}>
-            {isVIP ? 'Gratuit' : 'Payant'}
-          </Text>
-          {video.part && (
-            <Text style={styles.partTag}>{video.part}</Text>
+        <View style={styles.cardImageContainer}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.cardImage}
+            cachePolicy="memory-disk"
+            recyclingKey={video.id.toString()}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.7)']}
+            style={styles.imageOverlay}
+          />
+          {!isFreeSection && video.isPaid && !isVIP && (
+            <View style={styles.premiumBadge}>
+              <Text style={styles.premiumText}>PREMIUM</Text>
+            </View>
           )}
-          <View
-            style={[
-              styles.actionButton,
-              isVIP ? styles.freeButton : styles.paidButton
-            ]}
-          >
-            <Text style={styles.actionButtonText}>{buttonText}</Text>
-          </View>
+          {isVIP && (
+            <View style={styles.vipBadge}>
+              <Text style={styles.vipText}>VIP</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">
+            {video.title}
+          </Text>
+          
+          {!isFreeSection && video.part && (
+            <View style={styles.partContainer}>
+              <Text style={styles.partTag}>{video.part}</Text>
+            </View>
+          )}
+          
+          <TouchableOpacity 
+          onPress={() => handleCardPress(video)} 
+          style={[
+            styles.actionButton,
+            isVIP || isFreeSection ? styles.playButton : styles.subscribeButton
+            
+          ]}>
+            <Text style={styles.actionButtonText}>
+              {buttonText} {isVIP || isFreeSection ? '▶️' : '⭐'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
   };
 
+  // Section vidéos gratuites
+  const renderFreeSection = () => {
+    const freeVideos = getFreeVideos();
+    if (freeVideos.length === 0) return null;
 
-  const checkVipStatus = (video) => {
-    if (!video.categoryId) return false;
-
-    const category = vipStatus[video.categoryId];
-    if (!category) return false;
-
-    if (!video.part) {
-      return Object.values(category).some(status => status);
-    }
-
-    return category[video.part.toLowerCase()] || false;
+    return (
+      <View style={styles.categoryContainer}>
+        <View style={styles.categoryHeader}>
+          <Text style={styles.freeSectionTitle}>🎁 Vidéos Gratuites</Text>
+          <Text style={styles.categorySubtitle}>Commencez votre apprentissage</Text>
+        </View>
+        <FlatList
+          horizontal
+          data={freeVideos}
+          renderItem={({ item }) => renderVideoCard(item, true)}
+          keyExtractor={(item) => `free-${item.id}`}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.videosContainer}
+        />
+      </View>
+    );
   };
 
-  const renderCategory = ({ item: category }) => (
-    <View style={styles.categoryContainer}>
-      <Text style={styles.categoryTitle}>{category.name}</Text>
-      <FlatList
-        horizontal
-        data={category.videos.slice(0, expandedCategory === category.id ? undefined : 3)}
-        renderItem={({ item }) => renderVideoCard(item)}
-        keyExtractor={item => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.videosContainer}
-      />
-      {category.videos.length > 3 && (
-        <TouchableOpacity
-          style={styles.viewMoreButton}
-          onPress={() => setExpandedCategory(
-            expandedCategory === category.id ? null : category.id
-          )}
-        >
-          <Text style={styles.viewMoreText}>
-            {expandedCategory === category.id ? 'Voir moins' : 'Voir plus'}
+  // Rendu des catégories modernisé
+  const renderCategory = ({ item: category }) => {
+    const paidVideos = category.videos.filter((video) => !isVideoFree(video));
+    if (paidVideos.length === 0) return null;
+
+    const categoryIcons = {
+      'Informatique': '💻',
+      'Marketing': '📈',
+      'GSM': '📱'
+    };
+
+    return (
+      <View style={styles.categoryContainer} key={category.id}>
+        <View style={styles.categoryHeader}>
+          <Text style={styles.categoryTitle}>
+            {categoryIcons[category.name] || '📚'} {category.name}
           </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+          <Text style={styles.categorySubtitle}>
+            {paidVideos.length} formation{paidVideos.length > 1 ? 's' : ''}
+          </Text>
+        </View>
+        
+        <FlatList
+          horizontal
+          data={paidVideos.slice(0, expandedCategory === category.id ? undefined : 4)}
+          renderItem={({ item }) => renderVideoCard(item, false)}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.videosContainer}
+        />
+        
+        {paidVideos.length > 4 && (
+          <TouchableOpacity
+            style={styles.viewMoreButton}
+            onPress={() =>
+              setExpandedCategory(expandedCategory === category.id ? null : category.id)
+            }
+          >
+            <Text style={styles.viewMoreText}>
+              {expandedCategory === category.id ? '↑ Voir moins' : '↓ Voir plus'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  // Initialisation
+  useEffect(() => {
+    const init = async () => {
+      await loadUserData();
+      await loadCategoriesFromCache();
+      await loadVipStatus();
+    };
+    init();
+  }, []);
 
   return (
     <View style={styles.container}>
-      <MyHeader title="Toutes les formations" />
-
+      <MyHeader title="Formations KaboreTech" />
       {!haveAccount && renderLoginPrompt()}
-
       <FlatList
-        data={categories}
-        renderItem={renderCategory}
-        keyExtractor={item => item.id}
+        data={[{ id: 'free', type: 'free' }, ...categories]}
+        renderItem={({ item }) =>
+          item.type === 'free' ? renderFreeSection() : renderCategory({ item })
+        }
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={async () => {
-              await Promise.all([
-                fetchCategories(),
-                refreshVipStatus()
-              ]);
+              await Promise.all([fetchCategories(), refreshVipStatus()]);
             }}
-            colors={['#9Bd35A', '#689F38']}
+            colors={['#667eea', '#764ba2']}
+            tintColor="#667eea"
           />
         }
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 };
 
+// Styles modernisés
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: '#f8fafc',
   },
+  
+  // Login Prompt
   loginPrompt: {
-    padding: 5,
-    margin: 0,
-    borderRadius: 8,
+    margin: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  loginContent: {
+    padding: 24,
     alignItems: 'center',
   },
+  loginEmoji: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  loginTitle: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
   loginText: {
-    color: "black",
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 5,
-    fontWeight: '500',
+    marginBottom: 20,
+    lineHeight: 22,
   },
   loginButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   loginButtonText: {
-    color:"white",
+    color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
+  
+  // Liste et contenu
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
+  
+  // Catégories
   categoryContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 16,
+    marginBottom: 32,
+  },
+  categoryHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   categoryTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: "#007BFF",
-    marginBottom: 12,
-    textTransform: 'uppercase',
+    color: '#1e293b',
+    marginBottom: 4,
   },
+  freeSectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  categorySubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  
+  // Vidéos
   videosContainer: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
+  
+  // Cartes
   card: {
-    width: 180,
-    marginRight: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: "white",
-    elevation: 3,
+    width: width * 0.42,
+    height: 280,
+    marginRight: 16,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
-  freeCard: {
-    borderWidth: 2,
-    borderColor: "red",
-  },
-  paidCard: {
-    borderWidth: 2,
-    borderColor: "yellow",
+  cardImageContainer: {
+    position: 'relative',
+    height: 140,
   },
   cardImage: {
     width: '100%',
-    height: 100,
+    height: '100%',
   },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+  },
+  
+  // Badges
+  premiumBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  premiumText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  vipBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#8b5cf6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  vipText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  
+  // Contenu carte
   cardContent: {
-    padding: 10,
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: "black",
-    marginBottom: 4,
-  },
-  cardStatus: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#1e293b',
+    lineHeight: 20,
     marginBottom: 8,
   },
-  freeStatus: {
-    color: "red",
-  },
-  paidStatus: {
-    color: "yellow",
+  
+  // Part tag
+  partContainer: {
+    marginBottom: 12,
   },
   partTag: {
-    fontSize: 11,
-    color: "#007BFF",
-    marginBottom: 8,
-    fontStyle: 'italic',
+    fontSize: 12,
+    color: '#6366f1',
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    fontWeight: '500',
   },
+  
+  // Boutons d'action
   actionButton: {
-    paddingVertical: 6,
-    borderRadius: 15,
+    paddingVertical: 10,
+    borderRadius: 12,
     alignItems: 'center',
+    marginTop: 'auto',
   },
-  freeButton: {
-    backgroundColor: "red",
+  playButton: {
+    backgroundColor: '#10b981',
   },
-  paidButton: {
-    backgroundColor: "yellow",
+  subscribeButton: {
+    backgroundColor: '#6366f1',
   },
   actionButtonText: {
-    color: "white",
-    fontSize: 12,
+    color: 'white',
+    fontSize: 13,
     fontWeight: 'bold',
   },
+  
+  // Voir plus
   viewMoreButton: {
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   viewMoreText: {
-    color:"#007BFF",
-    fontWeight: 'bold',
+    color: '#6366f1',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 
